@@ -11,9 +11,9 @@ export function LoginForm({
   return (
       <form className={cn("flex flex-col gap-6", className)} {...props}>
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-3xl font-black uppercase tracking-tighter">Login</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tighter italic">Login</h1>
           <p className="text-sm font-bold text-zinc-500 uppercase">
-            Enter uplink credentials
+              Continue your quest.
           </p>
         </div>
 
@@ -86,10 +86,9 @@ export function LoginForm({
             </Button>
         </div>
 
-          {/* TODO: Add a "Sign up" link that leads to the registration page */}
         <div className="text-center text-xs font-bold uppercase">
           New candidate?{" "}
-          <a href="#" className="underline decoration-yellow-400 decoration-2 underline-offset-4">
+          <a href="/signup" className="underline decoration-yellow-400 decoration-2 underline-offset-4">
             Register Bio-data
           </a>
         </div>
