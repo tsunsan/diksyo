@@ -3,43 +3,70 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function login(formData: FormData) {
+
+export type AuthState = {
+    error?: string;
+    errorTitle?: string;
+    success?: string;
+};
+
+export async function login(prevState: AuthState, formData: FormData): Promise<AuthState> {
     const supabase = await createClient()
-    const data = {
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    if (!email || !password) {
+        return {
+            error: 'Email and password are required.',
+            errorTitle: 'ACCESS DENIED'
+        }
     }
-    const { error } = await supabase.auth.signInWithPassword(data)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-        redirect('/error')
+        if (error.message === "Email not confirmed") {
+            return {
+                error: 'Please check your inbox and confirm your email uplink first.',
+                errorTitle: 'ACCESS DENIED'
+            }
+        }
+        if (error.message === "Invalid login credentials") {
+            return {
+                error: 'Email and password do not match.',
+                errorTitle: 'ACCESS DENIED'
+            }
+        }
+        return {
+            error: error.message,
+            errorTitle: 'SYSTEM ERROR'
+        }
     }
 
-    // TODO: "redirect to the page the user was trying to access before being prompted to log in"
     redirect('/dashboard')
 }
 
-export async function signup(formData: FormData) {
+export async function signup(prevState: AuthState, formData: FormData): Promise<AuthState> {
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirm-password') as string
     const name = formData.get('name') as string
-
-    // TODO: EMAIL AND PASSWORD DO NOT MATCH
-    if (password !== confirmPassword) {
-        redirect('/error?message=Passwords do not match')
-    }
-
-    if(password.length < 8) {
-        redirect('/error?message=Password must be at least 8 characters long')
-    }
-
-    // TODO: EMAIL AND PASSWORD ARE REQUIRED
     if (!email || !password) {
-        console.error("Missing credentials in formData")
-        return redirect('/error?message=Email and Password are required')
+        return {
+            error: 'Email and password are required.',
+            errorTitle: 'VALIDATION FAILED'
+        }
     }
-
+    if (password !== confirmPassword) {
+        return {
+            error: 'Passwords do not match.',
+            errorTitle: 'VALIDATION FAILED'
+        }
+    }
+    if(password.length < 8) {
+        return {
+            error: 'Password must be at least 8 characters long.',
+            errorTitle: 'VALIDATION FAILED'
+        }
+    }
     const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -49,18 +76,21 @@ export async function signup(formData: FormData) {
             },
         },
     })
-
     if (error) {
         console.error("Supabase Auth Error:", error.message)
         if (error.message === "User already registered") {
-            // TODO: "redirect to the login page with a message prompting them to sign in instead"
-            redirect('/login?message=Account already exists. Please sign in.')
+            return {
+                error: 'Account already exists. Please switch to the Login tab.',
+                errorTitle: 'REGISTRATION HALTED'
+            }
         }
-        redirect(`/error?message=${error.message}`)
+        return {
+            error: error.message,
+            errorTitle: 'SYSTEM ERROR'
+        }
     }
 
-    // TODO: "redirect to a page instructing the user to check their email for a confirmation link"
-    redirect('/login?message=Check your email to confirm')
+    return { success: 'Welcome to Diksyo. Rerouting to dashboard...' }
 }
 
 export async function logout() {
