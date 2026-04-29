@@ -1,5 +1,6 @@
 import { db } from "@/db";
 
+
 export default async function LexiconPage() {
     // Fetch all roots and include their derived words
     const allRoots = await db.query.roots.findMany({

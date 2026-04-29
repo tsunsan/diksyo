@@ -12,8 +12,10 @@ export const words = pgTable("words", {
     rootId: uuid("root_id").references(() => roots.id),
     word: text("word").notNull(),
     slug: text("slug").unique().notNull(),
+    partOfSpeech: text("part_of_speech"),
     translation: text("translation").notNull(),
     meaningFilipino: text("meaning_filipino"),
+    originalExplanation: text("original_explanation"),
     usageExamples: jsonb("usage_examples").$type<{ s: string; t: string }[]>(),
 });
 
