@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/login-form"
+import { Zap, Target, Flame, BookOpen, Sparkles } from "lucide-react"
 
 export default function LoginPage() {
     return (
@@ -22,38 +23,84 @@ export default function LoginPage() {
             </div>
 
 
-            <div className="relative hidden bg-purple-600 lg:block overflow-hidden border-l-4 border-black">
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #000 2px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-                <div className="absolute top-0 w-full border-b-4 border-black bg-yellow-400 py-2 overflow-hidden whitespace-nowrap">
-                    <div className="inline-block animate-marquee font-black uppercase text-sm">
-                     - Login to the Diksyo Mainframe // SRS v2.0 [cite: 43] &#x2022; Transhuman Evolution in Progress [cite: 50] &#x2022; Access Level: Lakan # Limited
-                    </div>
-                </div>
+            {/* Right Side: Neo-Brutalist Showcase */}
+            <div className="relative hidden bg-indigo-400 lg:flex flex-col items-center justify-center overflow-hidden border-l-4 border-black">
+
+                {/* 1. Pure CSS Polka-Dot Background */}
+                <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, #000 3px, transparent 0)',
+                        backgroundSize: '32px 32px'
+                    }}
+                ></div>
 
                 <div className="absolute inset-0 flex items-center justify-center p-12">
 
-                    {/* The "Astro Card" */}
-                    <div className="relative border-4 border-black bg-white p-8 shadow-[16px_16px_0_0_#000]">
-                        <img
-                            src="/images/Astro.svg"
-                            alt="Transhuman Evolution"
-                            className="h-auto w-full max-w-lg object-contain transition-transform hover:rotate-2 duration-300"
-                        />
+                    {/* 2. The Main Showcase Card */}
+                    <div className="relative z-10 w-full max-w-md border-4 border-black bg-white p-6 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-1 duration-300">
 
-                        {/* 3. Refined Progression Badge */}
-                        <div className="absolute -bottom-8 -left-8 bg-black text-white border-4 border-white px-6 py-3 font-black shadow-[8px_8px_0_0_#000] -rotate-3 uppercase italic text-lg">
-                            Level: Lakan [cite: 50]
+                        {/* Illustration Container with "Pleasing" Grid Background */}
+                        <div className="border-4 border-black bg-cyan-200 mb-6 p-6 relative overflow-hidden">
+                            {/* Inner Grid Pattern */}
+                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#0000001a_1px,transparent_1px),linear-gradient(to_bottom,#0000001a_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+
+                            {/* Decorative Circle */}
+                            <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white rounded-full border-4 border-black opacity-40 pointer-events-none"></div>
+
+                            <img
+                                src="/images/Experiments.svg"
+                                alt="Language Synthesis"
+                                className="relative z-10 h-48 w-full object-contain drop-shadow-[6px_6px_0_rgba(0,0,0,1)] transition-transform hover:scale-105 duration-300"
+                            />
                         </div>
 
-                        {/* 4. Feature Callout */}
-                        <div className="absolute -top-10 -right-10 bg-zinc-900 border-4 border-yellow-400 px-4 py-2 font-bold text-yellow-400 shadow-[6px_6px_0_0_#000] rotate-3 text-xs">
-                            GENERATE CONTEXT // SRS v2.0 [cite: 43]
+                        {/* Card Content */}
+                        <div className="mb-4">
+                            <h2 className="text-3xl font-black uppercase tracking-tight text-black leading-[1.1]">
+                                Formulate <br/> <span className="bg-black text-white px-2 py-0.5 mt-1 inline-block">Fluency.</span>
+                            </h2>
+                            <p className="mt-4 text-sm font-bold text-gray-600 uppercase tracking-widest border-l-4 border-pink-400 pl-3">
+                                FSRS Engine Ready
+                            </p>
+                        </div>
+
+                        {/* =========================================
+                            FIXED STICKER CARDS (Rank & Streak)
+                            ========================================= */}
+
+                        {/* Rank Sticker */}
+                        <div className="absolute -top-5 -left-8 border-4 border-black bg-white px-4 py-2 font-black text-black shadow-[4px_4px_0_0_#000] -rotate-3 uppercase flex items-center gap-2 transition-transform hover:scale-105">
+                            <Target className="h-5 w-5 text-purple-500" />
+                            Rank: Lakan
+                        </div>
+
+                        {/* Streak Sticker */}
+                        <div className="absolute -bottom-5 -right-6 border-4 border-black bg-white px-5 py-2 font-black text-black shadow-[4px_4px_0_0_#000] rotate-2 uppercase flex items-center gap-2 transition-transform hover:scale-105">
+                            <Flame className="h-5 w-5 text-red-500 fill-red-500" />
+                            12 Day Streak
+                        </div>
+
+                        {/* =========================================
+                            MORE FLOATING "LIGHTNING" ACCENT CARDS
+                            ========================================= */}
+
+                        {/* Top Right Accent */}
+                        <div className="absolute top-12 -right-7 border-4 border-black bg-yellow-400 p-2 shadow-[4px_4px_0_0_#000] rotate-6 transition-transform hover:rotate-12">
+                            <Zap className="h-6 w-6 text-black fill-black" />
+                        </div>
+
+                        {/* Mid Left Accent */}
+                        <div className="absolute top-1/2 -left-8 border-4 border-black bg-pink-400 p-2 shadow-[4px_4px_0_0_#000] -rotate-12 transition-transform hover:-rotate-6">
+                            <BookOpen className="h-6 w-6 text-black fill-black" />
+                        </div>
+
+                        {/* Bottom Left Accent */}
+                        <div className="absolute -bottom-8 left-12 border-4 border-black bg-cyan-300 p-2 shadow-[4px_4px_0_0_#000] rotate-12 transition-transform hover:rotate-0">
+                            <Sparkles className="h-6 w-6 text-black fill-black" />
                         </div>
                     </div>
                 </div>
-
-                {/* Gritty Texture Overlay */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 pointer-events-none"></div>
             </div>
         </div>
     )

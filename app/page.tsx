@@ -1,77 +1,373 @@
-import { db } from "@/db";
+import Link from "next/link";
+import { ArrowRight, BookOpen, Flame, Shuffle, Zap, Search, List, Gamepad2, Dices } from "lucide-react";
 
-
-export default async function LexiconPage() {
-    // Fetch all roots and include their derived words
-    const allRoots = await db.query.roots.findMany({
-        with: {
-            words: true,
-        },
-    });
-
+export default function LandingPage() {
     return (
-        <main className="min-h-screen bg-zinc-50 p-8 font-mono">
-            <h1 className="text-5xl font-black uppercase mb-12 tracking-tighter italic">
-                Diksyo Lexicon
-            </h1>
+        <div className="min-h-screen bg-white font-sans text-black selection:bg-cyan-300 selection:text-black">
+            {/* Navigation - Restructured for responsive spacing */}
+            <nav className="flex flex-col gap-4 border-b-4 border-black bg-yellow-400 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-6">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                {allRoots.map((root) => (
-                    <div
-                        key={root.id}
-                        className="bg-white border-4 border-black p-6 rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex flex-col"
+                {/* Left: Logo */}
+                <div className="flex w-full justify-center md:w-1/3 md:justify-start">
+                    <Link href="/" className="text-4xl font-black uppercase tracking-tighter hover:scale-105 transition-transform">
+                        DIKSYO
+                    </Link>
+                </div>
+
+                {/* Center: Simple Text Nav Links */}
+                <div className="flex w-full flex-wrap justify-center gap-6 font-black uppercase tracking-tight text-sm md:w-1/3 md:gap-8 md:text-base">
+                    <Link
+                        href="/dictionary"
+                        className="flex items-center gap-2 transition-opacity hover:opacity-60"
                     >
-                        {/* Root Section */}
-                        <div className="mb-6">
-              <span className="text-[10px] font-black uppercase bg-yellow-400 px-2 py-1 border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                Root / Ugat
-              </span>
-                            <h2 className="text-4xl font-black mt-3 uppercase tracking-tight">{root.name}</h2>
-                            <p className="text-zinc-500 italic text-sm mt-1 border-l-4 border-zinc-200 pl-3">
-                                {root.definition}
+                        <BookOpen className="h-5 w-5" /> Dictionary
+                    </Link>
+                    <Link
+                        href="/lists"
+                        className="flex items-center gap-2 transition-opacity hover:opacity-60"
+                    >
+                        <List className="h-5 w-5" /> Vocab Lists
+                    </Link>
+                </div>
+
+                {/* Right: Auth Buttons */}
+                <div className="flex w-full justify-center gap-3 font-bold md:w-1/3 md:justify-end md:gap-4">
+                    <Link
+                        href="/login"
+                        className="border-4 border-black bg-purple-400 px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3"
+                    >
+                        Log In
+                    </Link>
+                    <Link
+                        href="/signup"
+                        className="border-4 border-black bg-white px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3"
+                    >
+                        Sign Up
+                    </Link>
+                </div>
+            </nav>
+
+            <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
+
+                {/* REDESIGNED HERO SECTION - Mobile Optimized */}
+                <section className="relative mb-16 flex flex-col items-center justify-center overflow-hidden border-4 border-black bg-indigo-400 p-6 py-12 text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:mb-24 md:p-8 md:py-20 md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+
+                    {/* Transhumans SVGs (Hidden on Mobile) */}
+                    <img
+                        src="/images/Whoa.svg"
+                        alt="Character Illustration"
+                        className="absolute -bottom-4 -left-12 hidden w-64 md:block lg:w-80"
+                    />
+                    <img
+                        src="/images/Entertainment.svg"
+                        alt="Character Illustration"
+                        className="absolute -top-4 -right-16 hidden w-56 md:block lg:w-72"
+                    />
+
+                    <div className="relative z-10 flex w-full max-w-3xl flex-col items-center">
+                        <h1 className="mb-6 flex flex-col items-center text-4xl font-black uppercase leading-[1.1] tracking-tighter sm:text-5xl md:mb-8 md:text-7xl">
+                            {/* Solid highlighted blocks */}
+                            <span className="mb-2 sm:mb-4 inline-block border-4 border-black bg-white px-4 py-2 sm:px-8 sm:py-2 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                                Decode Filipino.
+                            </span>
+                        </h1>
+                        <p className="mb-8 max-w-2xl text-lg font-bold text-white sm:text-xl md:mb-10 md:text-2xl">
+                            Type any word to uncover its meaning, roots, and real-life context. Start your quest today.
+                        </p>
+
+                        {/* Search Bar with built-in Random Button - Flexbox Fixed for Mobile */}
+                        <form action="/search" className="flex w-full flex-col border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform focus-within:-translate-y-1 sm:flex-row md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                            <div className="flex flex-1 items-center bg-white px-2 py-2 sm:px-4 sm:py-0">
+                                <Search className="mx-2 h-6 w-6 shrink-0 text-gray-400 sm:h-8 sm:w-8" />
+                                <input
+                                    type="text"
+                                    name="q"
+                                    placeholder="Search Diksyo..."
+                                    className="w-full min-w-0 bg-transparent p-2 text-lg font-bold text-black outline-none placeholder:text-gray-400 sm:p-4 sm:text-xl md:text-2xl"
+                                    autoComplete="off"
+                                />
+                                {/* Random Button inside search */}
+                                <Link
+                                    href="/salita/random"
+                                    className="group mr-2 flex shrink-0 items-center justify-center border-4 border-black bg-cyan-300 p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none sm:mr-4"
+                                    title="Random Word"
+                                >
+                                    <Shuffle className="h-5 w-5 text-black transition-transform group-hover:rotate-180 sm:h-6 sm:w-6" />
+                                </Link>
+                            </div>
+                            <button
+                                type="submit"
+                                className="border-t-4 border-black bg-green-400 px-6 py-3 text-xl font-black uppercase transition-colors hover:bg-green-500 sm:border-l-4 sm:border-t-0 sm:px-8 sm:py-4 sm:text-2xl"
+                            >
+                                Search
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                {/* =========================================
+                    VOCABULARY.COM INSPIRED "LOOKING FOR" SECTION
+                    ========================================= */}
+                <section className="mb-24 flex flex-col gap-8 md:gap-12">
+
+                    {/* Block 1: For Everyone (Dictionary Focus) */}
+                    <div className="flex flex-col-reverse items-stretch gap-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:flex-row md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="flex w-full flex-col items-start justify-center bg-cyan-300 p-6 md:w-1/2 md:p-12">
+                            <div className="mb-4 inline-block border-2 border-black bg-white px-3 py-1 text-sm font-bold uppercase tracking-widest">
+                                For Everyone
+                            </div>
+                            <h2 className="mb-4 text-3xl font-black uppercase tracking-tighter sm:text-4xl md:text-5xl">
+                                A dictionary for learning
+                            </h2>
+                            <p className="mb-8 text-lg font-bold sm:text-xl">
+                                Whether you’re looking up a specific word or just browsing, you’ll find a universe of friendly explanations and fun activities designed to educate and entertain.
+                            </p>
+                            <Link
+                                href="/dictionary"
+                                className="group flex items-center gap-2 border-4 border-black bg-white px-6 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                            >
+                                Learn more <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </div>
+
+                        {/* Interactive Dictionary Mockup Showcase */}
+                        <div className="relative flex min-h-[350px] w-full items-center justify-center overflow-hidden border-b-4 border-black bg-yellow-400 p-4 sm:p-8 md:w-1/2 md:border-b-0 md:border-l-4">
+
+                            {/* Mock Lexicon Card - Neo-Brutalist Style */}
+                            <div className="w-full max-w-sm rotate-3 transform border-4 border-black bg-white p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:rotate-0">
+
+                                {/* Root Section */}
+                                <div className="mb-4 sm:mb-6">
+                                    <span className="inline-block border-2 border-black bg-cyan-300 px-2 py-1 text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                        Root / Ugat
+                                    </span>
+                                    <h2 className="mt-4 text-3xl sm:text-4xl font-black uppercase tracking-tight">Aral</h2>
+                                    <p className="mt-2 border-l-4 border-black pl-3 text-sm font-bold italic text-gray-700">
+                                        To study or to learn.
+                                    </p>
+                                </div>
+
+                                {/* Derived Words List - Simplified layout */}
+                                <div className="space-y-4 border-t-4 border-black pt-4 sm:pt-6">
+                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                                        Derived Word
+                                    </h3>
+
+                                    <div className="group border-4 border-black bg-gray-50 p-3 sm:p-4 transition-colors hover:bg-yellow-100">
+                                        <div className="mb-2 flex items-start justify-between">
+                                            <p className="text-lg sm:text-xl font-black uppercase italic leading-none group-hover:underline">
+                                                Mag-aral
+                                            </p>
+                                            <div className="h-4 w-4 shrink-0 border-2 border-black bg-green-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" title="Mastery Level" />
+                                        </div>
+
+                                        {/* Kahulugan (Tagalog Meaning) */}
+                                        <div className="mb-2 mt-3">
+                                            <p className="text-[10px] font-black uppercase text-gray-500">Kahulugan:</p>
+                                            <p className="text-sm sm:text-md font-bold leading-tight text-black">
+                                                Ang proseso ng pagkatuto o pagtuklas ng kaalaman.
+                                            </p>
+                                        </div>
+
+                                        {/* English Translation */}
+                                        <div className="border-t-2 border-dashed border-gray-400 pt-2">
+                                            <p className="text-[10px] font-black uppercase text-gray-500">Translation:</p>
+                                            <p className="text-sm italic text-gray-700">
+                                                To study
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Block 2: For Learners (Gamified Engine Focus) */}
+                    <div className="flex flex-col items-stretch gap-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:flex-row md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+
+                        {/* Interactive Quiz Flashcard Mockup */}
+                        <div className="relative flex min-h-[350px] w-full items-center justify-center overflow-hidden border-b-4 border-black bg-pink-400 p-4 sm:p-8 md:w-1/2 md:border-b-0 md:border-r-4">
+
+                            {/* Decorative background cards to look like a flashcard stack */}
+                            <div className="absolute h-64 w-72 sm:h-72 sm:w-80 rotate-6 border-4 border-black bg-cyan-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"></div>
+                            <div className="absolute h-64 w-72 sm:h-72 sm:w-80 -rotate-3 border-4 border-black bg-yellow-400 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"></div>
+
+                            {/* Top Card - The Active Recall Interface */}
+                            <div className="group relative z-10 flex w-full max-w-sm flex-col border-4 border-black bg-white p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2">
+
+                                <div className="mb-4 flex items-center justify-between border-b-4 border-black pb-4">
+                                    <span className="border-2 border-black bg-pink-400 px-2 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-white">Active Recall</span>
+                                    <div className="flex items-center gap-1">
+                                        <Flame className="h-4 w-4 sm:h-5 sm:w-5 fill-red-500 text-red-500" />
+                                        <span className="text-sm sm:text-base font-bold">12 Day Streak</span>
+                                    </div>
+                                </div>
+
+                                <p className="mb-2 text-center text-xs sm:text-sm font-black uppercase tracking-widest text-gray-500">Translate to Filipino:</p>
+                                <p className="mb-6 sm:mb-8 text-center text-2xl sm:text-3xl font-black italic">"To study"</p>
+
+                                {/* Typing Input Area Mockup */}
+                                <div className="flex w-full items-center border-4 border-black bg-gray-50 p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                    <span className="font-mono text-xl sm:text-2xl font-black uppercase">Mag-ar</span>
+                                    <span className="ml-1 inline-block h-6 w-2 sm:h-7 sm:w-3 animate-pulse bg-black"></span>
+                                </div>
+
+                                {/* Fake Keyboard Hint */}
+                                <div className="mt-4 sm:mt-6 flex justify-center">
+                                    <span className="flex items-center gap-2 text-[10px] sm:text-xs font-bold uppercase text-gray-400">
+                                        Press <kbd className="border-2 border-gray-300 bg-gray-100 px-2 py-1 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">ENTER</kbd> to submit
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex w-full flex-col items-start justify-center bg-white p-6 md:w-1/2 md:p-12">
+                            <div className="mb-4 inline-block border-2 border-black bg-yellow-400 px-3 py-1 text-sm font-bold uppercase tracking-widest">
+                                For Learners
+                            </div>
+                            <h2 className="mb-4 text-3xl font-black uppercase tracking-tighter sm:text-4xl md:text-5xl">
+                                A scientific and fun way to improve vocabulary
+                            </h2>
+                            <p className="mb-8 text-lg font-bold sm:text-xl">
+                                Play games and compete in activities on your own. With our advanced Spaced Repetition (FSRS) teaching algorithm and study tools, get ready for your vocabulary to expand!
+                            </p>
+                            <Link
+                                href="/signup"
+                                className="group flex items-center gap-2 border-4 border-black bg-green-400 px-6 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                            >
+                                Subscribe Now <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+                {/* ========================================= */}
+
+                {/* Word of the Day & Random Word Controls */}
+                <section className="mb-24 grid gap-8 lg:grid-cols-2">
+
+                    {/* Redesigned "Pleasing" Word of the Day Banner */}
+                    <div className="relative flex flex-col overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                        {/* Header Area */}
+                        <div className="flex items-center gap-2 border-b-4 border-black bg-cyan-300 px-6 py-4 sm:px-8">
+                            <Flame className="h-6 w-6 shrink-0 fill-red-500 text-red-500" />
+                            <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black">Word of the Day</h2>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="relative z-10 flex flex-1 flex-col p-6 sm:p-8">
+                            <div className="mb-6 flex flex-wrap items-baseline gap-3 sm:gap-4">
+                                <span className="text-4xl font-black text-black sm:text-5xl lg:text-6xl">Makisig</span>
+                                <span className="inline-block border-2 border-black bg-purple-400 px-3 py-1 text-[10px] sm:text-xs font-black uppercase tracking-widest text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                    Pang-uri
+                                </span>
+                            </div>
+
+                            <div className="mb-8 border-l-4 border-black pl-4">
+                                <p className="mb-1 text-xs sm:text-sm font-black uppercase text-gray-500">Meaning</p>
+                                <p className="text-lg sm:text-xl font-bold text-gray-800">
+                                    Handsome, elegant, or dashing.
+                                </p>
+                            </div>
+
+                            <div className="mt-auto">
+                                <Link
+                                    href="/salita/makisig"
+                                    className="group flex w-fit items-center gap-2 border-4 border-black bg-yellow-400 px-4 py-3 sm:px-6 font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                                >
+                                    View Context <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Geometric Decoration */}
+                        <div className="absolute -bottom-16 -right-16 h-48 w-48 rounded-full border-4 border-black bg-pink-400 opacity-20 pointer-events-none"></div>
+                    </div>
+
+                    {/* Redesigned "Pleasing" Random Word Card */}
+                    <div className="relative flex flex-col overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                        {/* Header Area */}
+                        <div className="flex items-center gap-2 border-b-4 border-black bg-pink-400 px-6 py-4 sm:px-8">
+                            <Dices className="h-6 w-6 shrink-0 text-black" />
+                            <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black">Random Discovery</h2>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="relative z-10 flex flex-1 flex-col justify-center p-6 sm:p-8">
+                            <h3 className="mb-4 text-3xl font-black uppercase tracking-tight text-black sm:text-4xl md:text-5xl">
+                                Lost for words?
+                            </h3>
+                            <p className="mb-8 max-w-sm text-base sm:text-lg font-bold text-gray-700">
+                                Jump directly into the dictionary and let Diksyo handpick a random word for your quest.
+                            </p>
+
+                            <div className="mt-auto">
+                                <Link
+                                    href="/salita/random"
+                                    className="group flex w-fit items-center gap-2 border-4 border-black bg-green-400 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                                >
+                                    <Shuffle className="h-5 w-5 sm:h-6 sm:w-6 transition-transform group-hover:rotate-180" /> Roll the Dice
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Geometric Decoration */}
+                        <div className="absolute -right-10 -top-10 h-32 w-32 rotate-12 border-4 border-black bg-yellow-400 opacity-30 pointer-events-none"></div>
+                        <div className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full border-4 border-black bg-cyan-300 opacity-40 pointer-events-none"></div>
+                    </div>
+
+                </section>
+
+                {/* THE CORE ENGINE FEATURES */}
+                <section className="mb-24">
+                    <h2 className="mb-8 text-center text-4xl sm:text-5xl font-black uppercase tracking-tighter">Why Diksyo?</h2>
+                    <div className="grid gap-6 sm:gap-8 md:grid-cols-3">
+                        {/* Feature 1 */}
+                        <div className="relative border-4 border-black bg-white p-6 sm:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2 sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                            <div className="mb-4 sm:mb-6 inline-block border-4 border-black bg-green-400 p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-black" />
+                            </div>
+                            <h3 className="mb-2 sm:mb-4 text-xl sm:text-2xl font-black uppercase">Active Recall Quiz</h3>
+                            <p className="text-base sm:text-lg font-medium">
+                                Don't just recognize words, produce them. Type the Filipino translation directly and get instant feedback.
                             </p>
                         </div>
 
-                        {/* Derived Words List */}
-                        <div className="space-y-6 pt-6 border-t-4 border-black">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
-                                Derived Words
-                            </h3>
+                        {/* Feature 2 */}
+                        <div className="relative border-4 border-black bg-white p-6 sm:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2 sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                            <div className="mb-4 sm:mb-6 inline-block border-4 border-black bg-yellow-400 p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-black" />
+                            </div>
+                            <h3 className="mb-2 sm:mb-4 text-xl sm:text-2xl font-black uppercase">Smart FSRS Logic</h3>
+                            <p className="text-base sm:text-lg font-medium">
+                                An advanced algorithm calculates your optimal review date based on difficulty. See difficult words more often.
+                            </p>
+                        </div>
 
-                            {root.words.map((word) => (
-                                <div
-                                    key={word.id}
-                                    className="p-4 bg-zinc-50 border-2 border-black rounded-xl hover:bg-yellow-50 transition-colors group"
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <p className="font-black text-xl leading-none group-hover:underline uppercase italic">
-                                            {word.word}
-                                        </p>
-                                        {/* Mastery Dot Placeholder */}
-                                        <div className="w-3 h-3 bg-green-400 border-2 border-black rounded-full" title="Mastery Level" />
-                                    </div>
-
-                                    {/* Kahulugan (Tagalog Meaning) */}
-                                    <div className="mt-3 mb-2">
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase">Kahulugan:</p>
-                                        <p className="text-md font-bold leading-tight">
-                                            {word.meaningFilipino || "Wala pang kahulugan."}
-                                        </p>
-                                    </div>
-
-                                    {/* English Translation */}
-                                    <div className="pt-2 border-t-2 border-dashed border-zinc-300">
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase">Translation:</p>
-                                        <p className="text-sm italic text-zinc-600">
-                                            {word.translation}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
+                        {/* Feature 3 */}
+                        <div className="relative border-4 border-black bg-white p-6 sm:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2 sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                            <div className="mb-4 sm:mb-6 inline-block border-4 border-black bg-purple-400 p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                <List className="h-6 w-6 sm:h-8 sm:w-8 text-black" />
+                            </div>
+                            <h3 className="mb-2 sm:mb-4 text-xl sm:text-2xl font-black uppercase">Custom Vaults</h3>
+                            <p className="text-base sm:text-lg font-medium">
+                                Build your own skill tree. Curate personalized vocabulary lists for your job, school, or daily life.
+                            </p>
                         </div>
                     </div>
-                ))}
-            </div>
-        </main>
+                </section>
+            </main>
+
+            {/* Footer */}
+            <footer className="border-t-4 border-black bg-black px-4 py-8 text-white sm:px-6 sm:py-12">
+                <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row md:gap-6">
+                    <div className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">
+                        DIKSYO
+                    </div>
+                    <div className="text-sm sm:text-base font-bold text-gray-400">
+                        © 2026 DIKSYO. All rights reserved.
+                    </div>
+                </div>
+            </footer>
+        </div>
     );
 }
