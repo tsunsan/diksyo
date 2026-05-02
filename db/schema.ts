@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import {pgTable, uuid, text, integer, timestamp, jsonb, primaryKey, boolean} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const roots = pgTable("roots", {
@@ -30,10 +30,45 @@ export const userProgress = pgTable("user_progress", {
     mastery: integer("mastery").default(0),
 });
 
+// 1. The Lists Table (The "Books" or "Sets")
+export const lists = pgTable("lists", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    isSystem: boolean("is_system").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+// 2. The Join Table (Links Words to Lists)
+export const listWords = pgTable("list_words", {
+    listId: uuid("list_id").references(() => lists.id, { onDelete: "cascade" }).notNull(),
+    wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }).notNull(),
+    addedAt: timestamp("added_at").defaultNow(),
+}, (t) => ({
+    // Composite Primary Key ensures a word can only be added to a specific list once
+    pk: primaryKey({ columns: [t.listId, t.wordId] }),
+}));
+
+// ==============================
+// UPDATED RELATIONS
+// ==============================
+
 export const rootRelations = relations(roots, ({ many }) => ({
     words: many(words),
 }));
 
-export const wordRelations = relations(words, ({ one }) => ({
+export const wordRelations = relations(words, ({ one, many }) => ({
     root: one(roots, { fields: [words.rootId], references: [roots.id] }),
+    lists: many(listWords), // Allows querying which lists contain this word
+}));
+
+// New Relations for the Lists
+export const listRelations = relations(lists, ({ many }) => ({
+    words: many(listWords),
+}));
+
+export const listWordsRelations = relations(listWords, ({ one }) => ({
+    list: one(lists, { fields: [listWords.listId], references: [lists.id] }),
+    word: one(words, { fields: [listWords.wordId], references: [words.id] }),
 }));

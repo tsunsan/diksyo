@@ -1,5 +1,6 @@
 import { db } from "@/db"; // Adjust this import based on your setup
-import { roots, words } from "@/db/schema";
+import {lists, listWords, roots, words} from "@/db/schema";
+import {eq} from "drizzle-orm";
 
 const seedData = [
     {
@@ -195,9 +196,11 @@ const seedData = [
         }
     }
 ];
-
 export async function seed() {
     console.log("Seeding started...");
+
+    // We need to store the generated Word IDs to link them to lists later
+    const wordIdMap: Record<string, string> = {};
 
     for (const item of seedData) {
         // 1. Insert or find the root word
@@ -212,22 +215,75 @@ export async function seed() {
             })
             .returning();
 
-        // 2. Insert the word with the root relation
+        // 2. Insert the word
         await db.insert(words)
             .values({
                 rootId: insertedRoot.id,
                 word: item.word.word,
                 slug: item.word.slug,
-                partOfSpeech: item.word.partOfSpeech, // Added Part of Speech here!
+                partOfSpeech: item.word.partOfSpeech,
                 translation: item.word.translation,
                 meaningFilipino: item.word.meaningFilipino,
                 originalExplanation: item.word.originalExplanation,
                 usageExamples: item.word.usageExamples,
             })
             .onConflictDoNothing(); // Skip if slug already exists
+
+        // 3. Fetch the word ID (whether it was just inserted or already existed)
+        const savedWord = await db.query.words.findFirst({
+            where: eq(words.slug, item.word.slug)
+        });
+
+        if (savedWord) {
+            wordIdMap[savedWord.slug] = savedWord.id;
+        }
     }
 
-    console.log("Seeding complete! Ready for the dictionary quest.");
+    console.log("Words seeded. Building Custom Lists...");
+
+    // 4. Create a Dummy User ID for the Seed Lists
+    // (In the real app, this comes from Supabase auth)
+    const dummyUserId = "11111111-1111-1111-1111-111111111111";
+
+    // 5. Create the Lists
+    const [datingList] = await db.insert(lists).values({
+        userId: dummyUserId, // Admin user ID
+        title: "Dating Convo",
+        description: "Words to survive Filipino romance.",
+        isSystem: true, // <-- Mark as an official Diksyo set
+    }).returning();
+
+    const [slangList] = await db.insert(lists).values({
+        userId: dummyUserId,
+        title: "Street Slang",
+        description: "Essential words for the kanto.",
+        isSystem: true, // <-- Mark as an official Diksyo set
+    }).returning();
+
+    // 6. Map slugs to their respective lists
+    const datingSlugs = ["kilig", "tampo", "torpe", "maarte"];
+    const slangSlugs = ["chika", "diskarte", "japorms", "gigil"];
+
+    // 7. Insert the relations into the Join Table
+    for (const slug of datingSlugs) {
+        if (wordIdMap[slug]) {
+            await db.insert(listWords).values({
+                listId: datingList.id,
+                wordId: wordIdMap[slug],
+            }).onConflictDoNothing();
+        }
+    }
+
+    for (const slug of slangSlugs) {
+        if (wordIdMap[slug]) {
+            await db.insert(listWords).values({
+                listId: slangList.id,
+                wordId: wordIdMap[slug],
+            }).onConflictDoNothing();
+        }
+    }
+
+    console.log("Seeding complete! Lists and Words are wired up.");
 }
 
 // Execute the seed function
