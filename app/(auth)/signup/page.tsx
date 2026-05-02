@@ -14,7 +14,7 @@ export default function SignupPage() {
                 <div className="flex items-center gap-2 self-center font-medium">
                     <div
                         className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                        <a href="#" className="flex items-center gap-3 font-bold uppercase tracking-tighter text-xl">
+                        <a href="/" className="flex items-center gap-3 font-bold uppercase tracking-tighter text-xl">
                             <img
                                 src="/icon.svg"
                                 alt="Diksyo Logo"

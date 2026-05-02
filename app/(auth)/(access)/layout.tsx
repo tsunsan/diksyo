@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {/* Left Side: Dynamic Content (Forms) */}
             <div className="flex flex-col gap-4 p-6 md:p-10 border-r-4 border-black">
                 <div className="flex justify-center gap-2 md:justify-start">
-                    <a href="/public" className="flex items-center gap-3 font-bold uppercase tracking-tighter text-xl">
+                    <a href="/" className="flex items-center gap-3 font-bold uppercase tracking-tighter text-xl">
                         <img
                             src="/icon.svg"
                             alt="Diksyo Logo"

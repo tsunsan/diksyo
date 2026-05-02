@@ -107,7 +107,7 @@ export async function requestPasswordReset(prevState: AuthState, formData: FormD
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
         // Change this to your actual production URL later
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/update-password`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/update-password`,
     })
 
     if (error) {

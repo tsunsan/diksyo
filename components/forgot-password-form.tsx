@@ -5,7 +5,8 @@ import { requestPasswordReset } from "@/app/actions/auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { AlertTriangle, CheckCircle2, Link } from "lucide-react"
+import { AlertTriangle, CheckCircle2 } from "lucide-react"
+import Link from "next/link"
 
 const initialState = { error: '', errorTitle: '', success: '' }
 
