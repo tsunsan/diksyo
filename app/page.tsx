@@ -1,10 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, Flame, Shuffle, Zap, Search, List, Gamepad2, Dices } from "lucide-react";
-import SearchBar from "@/components/search-bar"; // <-- Added the import here
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { ArrowRight, BookOpen, Flame, Shuffle, Zap, List, Dices } from "lucide-react";
+import SearchBar from "@/components/search-bar";
 
 export default function LandingPage() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const checkSession = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsLoggedIn(!!session);
+            setIsLoading(false);
+        };
+
+        checkSession();
+    }, []);
+
     return (
         <div className="min-h-screen bg-white font-sans text-black selection:bg-cyan-300 selection:text-black">
             {/* Navigation - Restructured for responsive spacing */}
@@ -33,20 +49,33 @@ export default function LandingPage() {
                     </Link>
                 </div>
 
-                {/* Right: Auth Buttons */}
+                {/* Right: Dynamic Auth Buttons */}
                 <div className="flex w-full justify-center gap-3 font-bold md:w-1/3 md:justify-end md:gap-4">
-                    <Link
-                        href="/login"
-                        className="border-4 border-black bg-purple-400 px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3"
-                    >
-                        Log In
-                    </Link>
-                    <Link
-                        href="/signup"
-                        className="border-4 border-black bg-white px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3"
-                    >
-                        Sign Up
-                    </Link>
+                    {!isLoading && (
+                        isLoggedIn ? (
+                            <Link
+                                href="/dashboard"
+                                className="border-4 border-black bg-green-400 px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3 flex items-center gap-2"
+                            >
+                                BACK TO DASHBOARD <ArrowRight className="h-5 w-5" />
+                            </Link>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/login"
+                                    className="border-4 border-black bg-purple-400 px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3"
+                                >
+                                    Log In
+                                </Link>
+                                <Link
+                                    href="/signup"
+                                    className="border-4 border-black bg-white px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3"
+                                >
+                                    Sign Up
+                                </Link>
+                            </>
+                        )
+                    )}
                 </div>
             </nav>
 

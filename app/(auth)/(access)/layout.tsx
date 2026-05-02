@@ -1,6 +1,19 @@
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 import { Zap, Target, Flame, BookOpen, Sparkles } from "lucide-react"
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+    // 1. Instantiate the Supabase server client
+    const supabase = await createClient()
+
+    // 2. Check if a valid session currently exists
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // 3. If they are already logged in, instantly bounce them to the dashboard
+    if (user) {
+        redirect('/dashboard')
+    }
+
     return (
         <div className="grid min-h-svh lg:grid-cols-2 font-mono bg-zinc-50">
             {/* Left Side: Dynamic Content (Forms) */}
