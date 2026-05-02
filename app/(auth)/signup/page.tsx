@@ -3,7 +3,6 @@ import { SignupForm } from "@/components/signup-form"
 export default function SignupPage() {
     return (
         <div className="relative min-h-svh flex flex-col items-center justify-center p-6 md:p-10 font-mono bg-zinc-50 overflow-hidden">
-            {/* Added z-0 here to push the dots to the back */}
             <div
                 className="absolute inset-0 z-0 opacity-10 pointer-events-none"
                 style={{
@@ -11,7 +10,6 @@ export default function SignupPage() {
                     backgroundSize: '40px 40px'
                 }}
             ></div>
-            {/* Added relative and z-10 here to pull the content to the front */}
             <div className="relative z-10 flex w-full max-w-sm flex-col gap-6">
                 <div className="flex items-center gap-2 self-center font-medium">
                     <div

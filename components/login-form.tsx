@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { login, type AuthState } from "@/app/(auth)/actions"
+import { login, type AuthState } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -64,7 +64,7 @@ export function LoginForm({
                 <div className="grid gap-2">
                     <div className="flex items-center">
                         <Label htmlFor="password" className="font-bold uppercase text-xs">Password</Label>
-                        <a href="#" className="ml-auto text-xs font-bold underline underline-offset-4 decoration-2">
+                        <a href="forgot-password" className="ml-auto text-xs font-bold underline underline-offset-4 decoration-2">
                             Forgot?
                         </a>
                     </div>
