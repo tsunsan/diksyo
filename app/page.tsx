@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, BookOpen, Flame, Shuffle, Zap, Search, List, Gamepad2, Dices } from "lucide-react";
 
@@ -26,7 +28,7 @@ export default function LandingPage() {
                         href="/lists"
                         className="flex items-center gap-2 transition-opacity hover:opacity-60"
                     >
-                        <List className="h-5 w-5" /> Vocab Lists
+                        <List className="h-5 w-5" /> Vocabulary Lists
                     </Link>
                 </div>
 
@@ -133,8 +135,12 @@ export default function LandingPage() {
                         {/* Interactive Dictionary Mockup Showcase */}
                         <div className="relative flex min-h-[350px] w-full items-center justify-center overflow-hidden border-b-4 border-black bg-yellow-400 p-4 sm:p-8 md:w-1/2 md:border-b-0 md:border-l-4">
 
-                            {/* Mock Lexicon Card - Neo-Brutalist Style */}
-                            <div className="w-full max-w-sm rotate-3 transform border-4 border-black bg-white p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:rotate-0">
+                            {/* Mock Lexicon Card - Neo-Brutalist Style with mobile active state and Safari Hack added */}
+                            <div
+                                tabIndex={0}
+                                onClick={() => {}}
+                                className="w-full max-w-sm rotate-3 transform cursor-pointer border-4 border-black bg-white p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:rotate-0 active:rotate-0 focus:rotate-0"
+                            >
 
                                 {/* Root Section */}
                                 <div className="mb-4 sm:mb-6">
@@ -192,8 +198,12 @@ export default function LandingPage() {
                             <div className="absolute h-64 w-72 sm:h-72 sm:w-80 rotate-6 border-4 border-black bg-cyan-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"></div>
                             <div className="absolute h-64 w-72 sm:h-72 sm:w-80 -rotate-3 border-4 border-black bg-yellow-400 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"></div>
 
-                            {/* Top Card - The Active Recall Interface */}
-                            <div className="group relative z-10 flex w-full max-w-sm flex-col border-4 border-black bg-white p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2">
+                            {/* Top Card - The Active Recall Interface with mobile active state and Safari Hack added */}
+                            <div
+                                tabIndex={0}
+                                onClick={() => {}}
+                                className="group relative z-10 flex w-full max-w-sm cursor-pointer flex-col border-4 border-black bg-white p-4 sm:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2 active:-translate-y-2 focus:-translate-y-2"
+                            >
 
                                 <div className="mb-4 flex items-center justify-between border-b-4 border-black pb-4">
                                     <span className="border-2 border-black bg-pink-400 px-2 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-white">Active Recall</span>
@@ -249,7 +259,7 @@ export default function LandingPage() {
                     <div className="relative flex flex-col overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                         {/* Header Area */}
                         <div className="flex items-center gap-2 border-b-4 border-black bg-cyan-300 px-6 py-4 sm:px-8">
-                            <Flame className="h-6 w-6 shrink-0 fill-red-500 text-red-500" />
+                            <Flame className="h-6 w-6 shrink-0 fill-red-500 text-black-500" />
                             <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black">Word of the Day</h2>
                         </div>
 
@@ -272,9 +282,9 @@ export default function LandingPage() {
                             <div className="mt-auto">
                                 <Link
                                     href="/salita/makisig"
-                                    className="group flex w-fit items-center gap-2 border-4 border-black bg-yellow-400 px-4 py-3 sm:px-6 font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                                    className="group flex w-fit items-center gap-3 border-4 border-black bg-yellow-400 px-6 py-4 text-lg font-black uppercase text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none"
                                 >
-                                    View Context <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                    View Context <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
                                 </Link>
                             </div>
                         </div>
@@ -287,7 +297,7 @@ export default function LandingPage() {
                     <div className="relative flex flex-col overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                         {/* Header Area */}
                         <div className="flex items-center gap-2 border-b-4 border-black bg-pink-400 px-6 py-4 sm:px-8">
-                            <Dices className="h-6 w-6 shrink-0 text-black" />
+                            <Dices className="h-6 w-6 shrink-0 fill-blue-500 text-black-500" />
                             <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black">Random Discovery</h2>
                         </div>
 
@@ -303,9 +313,9 @@ export default function LandingPage() {
                             <div className="mt-auto">
                                 <Link
                                     href="/salita/random"
-                                    className="group flex w-fit items-center gap-2 border-4 border-black bg-green-400 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                                    className="group flex w-fit items-center gap-3 border-4 border-black bg-green-400 px-6 py-4 text-lg font-black uppercase text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none"
                                 >
-                                    <Shuffle className="h-5 w-5 sm:h-6 sm:w-6 transition-transform group-hover:rotate-180" /> Roll the Dice
+                                    <Shuffle className="h-6 w-6 transition-transform group-hover:rotate-180" /> Roll the Dice
                                 </Link>
                             </div>
                         </div>
