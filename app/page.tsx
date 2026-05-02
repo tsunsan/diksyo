@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, BookOpen, Flame, Shuffle, Zap, Search, List, Gamepad2, Dices } from "lucide-react";
+import SearchBar from "@/components/search-bar"; // <-- Added the import here
 
 export default function LandingPage() {
     return (
@@ -19,7 +20,7 @@ export default function LandingPage() {
                 {/* Center: Simple Text Nav Links */}
                 <div className="flex w-full flex-wrap justify-center gap-6 font-black uppercase tracking-tight text-sm md:w-1/3 md:gap-8 md:text-base">
                     <Link
-                        href="/dictionary"
+                        href="/salita"
                         className="flex items-center gap-2 transition-opacity hover:opacity-60"
                     >
                         <BookOpen className="h-5 w-5" /> Dictionary
@@ -77,33 +78,10 @@ export default function LandingPage() {
                             Type any word to uncover its meaning, roots, and real-life context. Start your quest today.
                         </p>
 
-                        {/* Search Bar with built-in Random Button - Flexbox Fixed for Mobile */}
-                        <form action="/search" className="flex w-full flex-col border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform focus-within:-translate-y-1 sm:flex-row md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                            <div className="flex flex-1 items-center bg-white px-2 py-2 sm:px-4 sm:py-0">
-                                <Search className="mx-2 h-6 w-6 shrink-0 text-gray-400 sm:h-8 sm:w-8" />
-                                <input
-                                    type="text"
-                                    name="q"
-                                    placeholder="Search Diksyo..."
-                                    className="w-full min-w-0 bg-transparent p-2 text-lg font-bold text-black outline-none placeholder:text-gray-400 sm:p-4 sm:text-xl md:text-2xl"
-                                    autoComplete="off"
-                                />
-                                {/* Random Button inside search */}
-                                <Link
-                                    href="/salita/random"
-                                    className="group mr-2 flex shrink-0 items-center justify-center border-4 border-black bg-cyan-300 p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none sm:mr-4"
-                                    title="Random Word"
-                                >
-                                    <Shuffle className="h-5 w-5 text-black transition-transform group-hover:rotate-180 sm:h-6 sm:w-6" />
-                                </Link>
-                            </div>
-                            <button
-                                type="submit"
-                                className="border-t-4 border-black bg-green-400 px-6 py-3 text-xl font-black uppercase transition-colors hover:bg-green-500 sm:border-l-4 sm:border-t-0 sm:px-8 sm:py-4 sm:text-2xl"
-                            >
-                                Search
-                            </button>
-                        </form>
+                        {/* Drop in the new Debounced Search Component here */}
+                        <div className="w-full">
+                            <SearchBar />
+                        </div>
                     </div>
                 </section>
 
@@ -125,7 +103,7 @@ export default function LandingPage() {
                                 Whether you’re looking up a specific word or just browsing, you’ll find a universe of friendly explanations and fun activities designed to educate and entertain.
                             </p>
                             <Link
-                                href="/dictionary"
+                                href="/salita"
                                 className="group flex items-center gap-2 border-4 border-black bg-white px-6 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                             >
                                 Learn more <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
