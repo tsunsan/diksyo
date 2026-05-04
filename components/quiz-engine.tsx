@@ -2,15 +2,12 @@
 
 import { useState } from 'react';
 import { useQuizStore } from '@/store/quiz-store';
-import { FSRSGrade } from '@/lib/fsrs-logic'; // 1. Import the grade type
 
 export default function QuizEngine() {
-    // 2. Pull gradeAnswer instead of nextCard
-    const { deck, currentIndex, status, submitAnswer, gradeAnswer } = useQuizStore();
+    const { deck, currentIndex, status, autoGradeResult, submitAnswer, nextCard } = useQuizStore();
     const [input, setInput] = useState('');
     const [isFeedbackCorrect, setIsFeedbackCorrect] = useState<boolean | null>(null);
 
-    // Fallbacks for empty or completed states
     if (deck.length === 0) return <div className="font-bold text-2xl">No words due today! 🔥</div>;
     if (status === 'completed') return <div className="font-bold text-2xl">Quiz Complete! XP Gained!</div>;
 
@@ -20,17 +17,13 @@ export default function QuizEngine() {
         e.preventDefault();
         if (status !== 'typing' || !input.trim()) return;
 
-        // Checks the answer in our Zustand store
+        // submitAnswer now automatically handles the FSRS calculation based on time
         const correct = submitAnswer(input);
         setIsFeedbackCorrect(correct);
     };
 
-    // 3. Update the parameter type and use the new action
-    const handleGrade = (rating: FSRSGrade) => {
-        // Send the rating to the Brain! It calculates the next review date AND moves to the next card.
-        gradeAnswer(rating);
-
-        // Reset local UI state for the next card
+    const handleNext = () => {
+        nextCard();
         setInput('');
         setIsFeedbackCorrect(null);
     };
@@ -82,20 +75,30 @@ export default function QuizEngine() {
                 )}
             </form>
 
-            {/* The Reveal & FSRS Controls */}
+            {/* The Reveal: Root Word & Next Button */}
             {status === 'revealed' && (
                 <div className="mt-6 border-t-4 border-black pt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="text-center mb-6">
+                    <div className="text-center mb-4">
                         <span className="text-lg font-bold">Root Word: </span>
                         <span className="text-2xl font-black underline">{currentWord.rootWord || currentWord.word}</span>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2">
-                        <button onClick={() => handleGrade('again')} className="border-2 border-black bg-gray-200 py-2 font-bold hover:bg-gray-300 active:translate-y-1">Again</button>
-                        <button onClick={() => handleGrade('hard')} className="border-2 border-black bg-red-200 py-2 font-bold hover:bg-red-300 active:translate-y-1">Hard</button>
-                        <button onClick={() => handleGrade('good')} className="border-2 border-black bg-blue-200 py-2 font-bold hover:bg-blue-300 active:translate-y-1">Good</button>
-                        <button onClick={() => handleGrade('easy')} className="border-2 border-black bg-green-200 py-2 font-bold hover:bg-green-300 active:translate-y-1">Easy</button>
+                    {/* Show the user how the system graded them based on their speed */}
+                    <div className="text-center mb-6 text-sm font-bold text-gray-500">
+                        AUTO-SCORE: <span className={`uppercase ${
+                        autoGradeResult === 'again' ? 'text-red-600' :
+                            autoGradeResult === 'easy' ? 'text-green-600' :
+                                autoGradeResult === 'good' ? 'text-blue-600' : 'text-orange-600'
+                    }`}>{autoGradeResult}</span>
                     </div>
+
+                    <button
+                        onClick={handleNext}
+                        autoFocus
+                        className="w-full border-4 border-black bg-white hover:bg-gray-100 py-3 font-black text-xl transition-transform active:translate-y-1"
+                    >
+                        NEXT WORD ➔
+                    </button>
                 </div>
             )}
         </div>
