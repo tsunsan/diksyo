@@ -23,7 +23,7 @@ export function UpdatePasswordForm() {
 
     useEffect(() => {
         if (state?.success) {
-            toast.success("SECURITY REINFORCED", {
+            toast.success("PASSWORD UPDATED", {
                 description: state.success,
                 duration: 3000,
                 unstyled: true,
@@ -42,9 +42,9 @@ export function UpdatePasswordForm() {
     return (
         <form action={formAction} className="flex flex-col gap-6">
             <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-black uppercase tracking-tight">Reinforce Security</h1>
+                <h1 className="text-2xl font-black uppercase tracking-tight">Update Password</h1>
                 <p className="text-sm text-zinc-600 mt-2 font-medium">
-                    Input your new credentials below.
+                    Enter your new password below.
                 </p>
             </div>
 
@@ -53,11 +53,11 @@ export function UpdatePasswordForm() {
                 <div className="border-4 border-black bg-red-400 p-3 shadow-[4px_4px_0_0_#000]">
                     <div className="flex items-center gap-2 font-black uppercase text-sm mb-1">
                         <AlertTriangle className="h-4 w-4" />
-                        {isExpired ? 'LINK EXPIRED' : (state.errorTitle || 'SYSTEM ERROR')}
+                        {isExpired ? 'LINK EXPIRED' : (state.errorTitle || 'ERROR')}
                     </div>
                     <p className="text-xs font-bold text-black/80">
                         {isExpired
-                            ? "This secure link is invalid or has already been used. Please return to the recovery page and request a new one."
+                            ? "This link is invalid or has already been used. Please return to the recovery page and request a new one."
                             : state.error}
                     </p>
                 </div>
@@ -93,7 +93,7 @@ export function UpdatePasswordForm() {
                 disabled={isPending || !!state?.success || isExpired}
                 className="w-full border-4 border-black bg-black text-white rounded-none shadow-[6px_6px_0_0_#f43f5e] hover:shadow-[2px_2px_0_0_#f43f5e] hover:translate-y-[4px] hover:translate-x-[4px] transition-all font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                {isPending ? "Encrypting..." : "Save New Password"}
+                {isPending ? "SAVING..." : "SAVE NEW PASSWORD"}
             </Button>
 
             {/* Helpful fallback link if they are stuck with a dead token */}

@@ -10,6 +10,7 @@ import { AlertCircle, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   Card,
   CardContent,
@@ -17,15 +18,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 
 const initialState: AuthState = {
   error: undefined,
@@ -71,7 +63,7 @@ export function SignupForm({
               Create Account
             </CardTitle>
             <CardDescription className="text-sm font-bold text-zinc-500 uppercase">
-              Begin your quest from Baguhan to Lakan.
+              Start your journey from Baguhan to Lakan.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -86,7 +78,7 @@ export function SignupForm({
                           <ShieldAlert className="h-4 w-4 stroke-black" />
                       )}
                       <AlertTitle className="font-black uppercase tracking-tighter text-black">
-                        {state.errorTitle || "SYSTEM ERROR"}
+                        {state.errorTitle || "ERROR"}
                       </AlertTitle>
                       <AlertDescription className="font-bold text-zinc-50 text-xs uppercase leading-tight">
                         {state.error}
@@ -153,14 +145,14 @@ export function SignupForm({
                     disabled={isPending}
                     className="mt-2 rounded-none border-2 border-black bg-yellow-400 font-bold text-black shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isPending ? "Processing..." : "Initialize Profile"}
+                  {isPending ? "CREATING ACCOUNT..." : "SIGN UP"}
                 </Button>
                 <div className="text-center pt-1 text-[10px] font-bold uppercase text-black">
                   Already have an account?{" "}
-                  <a href="/login"
-                     className="underline decoration-yellow-400 decoration-2 underline-offset-4">
-                    Execute Login
-                  </a>
+                  <Link href="/login"
+                        className="underline decoration-yellow-400 decoration-2 underline-offset-4 hover:bg-yellow-400 hover:decoration-transparent transition-all px-1 -mr-1">
+                    Log in
+                  </Link>
                 </div>
               </div>
             </form>
@@ -170,7 +162,7 @@ export function SignupForm({
         <div className="flex flex-col gap-3">
           <div
               className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t-2 after:border-black">
-            <span className="relative z-10 bg-zinc-50 px-2 font-black uppercase text-xs">Auth Uplink</span>
+            <span className="relative z-10 bg-zinc-50 px-2 font-black uppercase text-xs">Or sign up with</span>
           </div>
 
           <Button
@@ -192,40 +184,20 @@ export function SignupForm({
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"
                   fill="#EA4335" />
             </svg>
-            Google Uplink
+            Continue with Google
           </Button>
         </div>
 
         <div className="text-center flex flex-col gap-2">
-          <p className="text-[10px] font-bold uppercase text-zinc-500">
-            By proceeding, you accept the{" "}
-            <Dialog>
-              {/* REPLACED BUTTON WITH SPAN TO PREVENT NESTING & ASCHILD ERROR */}
-              <DialogTrigger className="underline decoration-zinc-500 decoration-2 underline-offset-4 hover:text-black transition-colors cursor-pointer">
-                PROTOCOL TERMS
-              </DialogTrigger>
-              <DialogContent className="rounded-none border-4 border-black bg-zinc-50 shadow-[8px_8px_0_0_#000] max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic">
-                    Protocol Terms
-                  </DialogTitle>
-                  <DialogDescription className="font-bold text-black text-xs uppercase pt-2">
-                    System Guidelines for Diksyo Mastery
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="max-h-[300px] overflow-y-auto pr-2 text-xs font-bold leading-relaxed uppercase text-zinc-700">
-                  <p className="mb-4">
-                    1. User Conduct: Candidates must pursue Filipino mastery with honor.
-                  </p>
-                  <p className="mb-4">
-                    2. Data Uplink: Progress is tracked via the Smart Learning System engine.
-                  </p>
-                  <p>
-                    3. Intellectual Property: All cognitive assets belong to the Diksyo Protocol.
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
+          <p className="text-[10px] font-bold uppercase text-zinc-500 leading-relaxed">
+            By proceeding, you agree to our{" "}
+            <Link href="/terms" className="underline decoration-zinc-500 decoration-2 underline-offset-4 hover:text-black transition-colors">
+              Terms of Service
+            </Link>
+            {" "}and{" "}
+            <Link href="/privacy" className="underline decoration-zinc-500 decoration-2 underline-offset-4 hover:text-black transition-colors">
+              Privacy Policy
+            </Link>.
           </p>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, ShieldAlert } from "lucide-react" // Imported ShieldAlert
+import { AlertCircle, ShieldAlert } from "lucide-react"
 import { useActionState } from "react"
 
 const initialState: AuthState = {
@@ -26,7 +26,7 @@ export function LoginForm({
             <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-3xl font-black uppercase tracking-tighter italic">Login</h1>
                 <p className="text-sm font-bold text-zinc-500 uppercase">
-                    Continue your quest.
+                    Welcome back
                 </p>
             </div>
 
@@ -40,7 +40,7 @@ export function LoginForm({
                         )}
 
                         <AlertTitle className="font-black uppercase tracking-tighter">
-                            {state.errorTitle || "SYSTEM ERROR"}
+                            {state.errorTitle || "ERROR"}
                         </AlertTitle>
 
                         <AlertDescription className="font-bold text-zinc-50 text-xs uppercase leading-tight">
@@ -64,7 +64,10 @@ export function LoginForm({
                 <div className="grid gap-2">
                     <div className="flex items-center">
                         <Label htmlFor="password" className="font-bold uppercase text-xs">Password</Label>
-                        <a href="forgot-password" className="ml-auto text-xs font-bold underline underline-offset-4 decoration-2">
+                        <a
+                            href="forgot-password"
+                            className="ml-auto text-xs font-bold underline underline-offset-4 decoration-2 hover:bg-yellow-400 hover:decoration-transparent active:bg-yellow-500 active:translate-y-[1px] transition-all px-1 -mr-1"
+                        >
                             Forgot?
                         </a>
                     </div>
@@ -82,7 +85,7 @@ export function LoginForm({
                     disabled={isPending}
                     className="rounded-none border-2 border-black bg-yellow-400 font-bold text-black shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isPending ? "EXECUTING..." : "EXECUTE LOGIN"}
+                    {isPending ? "LOGGING IN..." : "LOGIN"}
                 </Button>
 
                 <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t-2 after:border-black">
@@ -112,14 +115,17 @@ export function LoginForm({
                             fill="#EA4335"
                         />
                     </svg>
-                    GOOGLE UPLINK
+                    CONTINUE WITH GOOGLE
                 </Button>
             </div>
 
             <div className="text-center text-xs font-bold uppercase">
-                New candidate?{" "}
-                <a href="/signup" className="underline decoration-yellow-400 decoration-2 underline-offset-4">
-                    Register Bio-data
+                Don't have an account?{" "}
+                <a
+                    href="/signup"
+                    className="underline decoration-yellow-400 decoration-2 underline-offset-4 hover:bg-yellow-400 hover:decoration-transparent active:bg-yellow-500 active:translate-y-[1px] transition-all px-1 -mr-1 text-black"
+                >
+                    Sign Up
                 </a>
             </div>
         </form>
