@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Shield } from "lucide-react";
 
 const DiksyoIcon = () => (
@@ -76,6 +79,8 @@ const SECTIONS = [
 ];
 
 export default function PrivacyPage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-[#FFFBF0] font-sans relative overflow-x-hidden">
       {/* Decorative background dots */}
@@ -90,13 +95,13 @@ export default function PrivacyPage() {
       {/* Top bar */}
       <div className="sticky top-0 z-50 w-full border-b-4 border-black bg-white/80 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link
-            href="/signup"
-            className="flex items-center gap-2 text-black hover:bg-yellow-400 px-3 py-1.5 border-2 border-transparent hover:border-black transition-all uppercase tracking-widest text-xs font-black group"
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-black hover:bg-yellow-400 px-3 py-1.5 border-2 border-transparent hover:border-black transition-all uppercase tracking-widest text-xs font-black group cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back
-          </Link>
+          </button>
           <div className="flex items-center gap-2">
             <DiksyoIcon />
             <span className="text-black uppercase tracking-[0.2em] font-black text-sm italic">
