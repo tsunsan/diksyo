@@ -465,6 +465,10 @@ export default function LandingPage() {
                         <Link href="/terms" className="hover:text-yellow-400 hover:underline">
                             Terms & Conditions
                         </Link>
+                        <span className="hidden md:inline">•</span>
+                        <Link href="/contact-us" className="hover:text-yellow-400 hover:underline">
+                            Contact Us
+                        </Link>
                     </div>
                 </div>
             </footer>

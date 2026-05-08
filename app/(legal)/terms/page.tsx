@@ -92,12 +92,13 @@ export default function TermsPage() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back
           </button>
-          <div className="flex items-center gap-2">
+          
+          <Link href="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
             <DiksyoIcon />
             <span className="text-black uppercase tracking-[0.2em] font-black text-sm italic">
               DIKSYO
             </span>
-          </div>
+          </Link>
         </div>
       </div>
 
