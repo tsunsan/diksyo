@@ -336,9 +336,10 @@ export default function QuizPage2() {
       </div>
 
       <div className="relative">
-        <AnimatePresence mode="wait">
-          <motion.div key={currentIndex + (flipped ? "-flipped" : "")} animate={controls} initial={{ y: 100, opacity: 0, rotateX: 45, scale: 0.8 }} animate={{ y: 0, opacity: 1, rotateX: 0, scale: 1 }} exit={{ y: -100, opacity: 0, rotateX: -45, scale: 0.8 }} transition={{ type: "spring", stiffness: 200, damping: 20 }} className="border-[4px] border-black shadow-[15px_15px_0_#000] p-12 mb-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center" style={{ background: cardBg, perspective: "1000px", transformStyle: "preserve-3d" }}>
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "20px 20px" }} />
+        <motion.div animate={controls}>
+          <AnimatePresence mode="wait">
+            <motion.div key={currentIndex + (flipped ? "-flipped" : "")} initial={{ y: 100, opacity: 0, rotateX: 45, scale: 0.8 }} animate={{ y: 0, opacity: 1, rotateX: 0, scale: 1 }} exit={{ y: -100, opacity: 0, rotateX: -45, scale: 0.8 }} transition={{ type: "spring", stiffness: 200, damping: 20 }} className="border-[4px] border-black shadow-[15px_15px_0_#000] p-12 mb-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center" style={{ background: cardBg, perspective: "1000px", transformStyle: "preserve-3d" }}>
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "20px 20px" }} />
             {timeLeft <= 3 && feedback === "idle" && <motion.div animate={{ opacity: [0, 0.2, 0] }} transition={{ repeat: Infinity, duration: 0.5 }} className="absolute inset-0 bg-red-600 pointer-events-none" />}
             
             <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
@@ -394,8 +395,9 @@ export default function QuizPage2() {
                 <div className="inline-block bg-white/50 border-[2px] border-black p-4"><p className="text-xs text-black uppercase font-bold">"{current.word}" is derived from "{current.rootWord}"</p></div>
               </motion.div>
             )}
-          </motion.div>
-        </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
         <motion.div animate={{ y: [0, -20, 0], rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute -right-12 top-1/2 -z-10 opacity-10"><Star className="w-32 h-32 text-black" /></motion.div>
       </div>
 
