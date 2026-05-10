@@ -1,5 +1,5 @@
 import { searchWords, getUserSavedWordIds } from "@/app/actions/dictionary";
-import DictionaryClient from "@/components/dictionary-client";
+import DictionaryClient from "@/components/dictionary";
 
 export default async function DictionaryPage() {
   const initialWords = await searchWords("");

@@ -36,6 +36,7 @@ export const userProgress = pgTable("user_progress", {
     lastReview: timestamp("last_review"),
     nextReview: timestamp("next_review").defaultNow(),
     mastery: integer("mastery").default(0),
+    isArchived: boolean("is_archived").default(false),
 });
 
 export const rootRelations = relations(roots, ({ many }) => ({

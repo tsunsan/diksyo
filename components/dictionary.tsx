@@ -11,9 +11,11 @@ import {
   Bookmark,
   BookMarked,
   Loader2,
-  Check
+  Check,
+  BookmarkMinus
 } from "lucide-react";
-import { searchWords, saveWordToVault } from "@/app/actions/dictionary";
+import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
+import { toast } from "sonner";
 
 const POS_COLORS: Record<string, { bg: string; text: string }> = {
   PANGNGALAN: { bg: "#7C3AED", text: "#fff" },
@@ -85,15 +87,50 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
   const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
 
   const handleSaveToVault = async (id: string) => {
-    if (savedIds.has(id)) return; // prevent duplicate clicks just in case
     try {
         setSavingId(id);
-        const result = await saveWordToVault(id);
+        const willSave = !savedIds.has(id);
+        const result = willSave ? await saveWordToVault(id) : await removeWordFromVault(id);
+
         if (result?.success) {
-            setSavedIds(prev => new Set(prev).add(id));
+            setSavedIds(prev => {
+                const next = new Set(prev);
+                if (willSave) next.add(id);
+                else next.delete(id);
+                return next;
+            });
+            
+            if (willSave) {
+              toast.success("ADDED TO VAULT", {
+                description: `"${word?.word}" has been saved for review.`,
+                duration: 3000,
+                unstyled: true,
+                classNames: {
+                  toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-green-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
+                  title: "text-lg font-black uppercase tracking-tighter",
+                  description: "font-bold text-xs text-black/90 uppercase",
+                  icon: "text-black w-6 h-6",
+                },
+              });
+            } else {
+              toast.success("REMOVED", {
+                description: `"${word?.word}" was removed from your vault.`,
+                duration: 3000,
+                unstyled: true,
+                classNames: {
+                  toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-yellow-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
+                  title: "text-lg font-black uppercase tracking-tighter",
+                  description: "font-bold text-xs text-black/90 uppercase",
+                  icon: "text-black w-6 h-6",
+                },
+              });
+            }
+        } else {
+            toast.error(willSave ? "Failed to save word." : "Failed to remove word.");
         }
     } catch (e) {
-        console.error("Failed to save word.");
+        console.error("Vault action failed.", e);
+        toast.error("An error occurred.");
     } finally {
         setSavingId(null);
     }
@@ -259,21 +296,25 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                   <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => handleSaveToVault(word.id)}
-                      disabled={savingId === word.id || isSaved}
-                      className={`w-10 h-10 border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] ${
-                        isSaved ? "bg-[#7C3AED] shadow-none translate-x-[2px] translate-y-[2px]" : 
-                        savingId === word.id ? "opacity-50 cursor-not-allowed bg-[#7C3AED]" : 
-                        "bg-[#f0f0f0] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-[#7C3AED] hover:text-white"
+                      disabled={savingId === word.id}
+                      className={`px-4 h-11 border-[2.5px] border-black flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_#000] font-black uppercase text-xs ${
+                        isSaved ? "bg-[#00C853] text-black shadow-none translate-x-[4px] translate-y-[4px] hover:bg-red-400 hover:text-black group" : 
+                        savingId === word.id ? "opacity-75 cursor-wait bg-[#7C3AED] text-white" : 
+                        "bg-[#FDE047] text-black active:translate-x-[4px] active:translate-y-[4px] active:shadow-none hover:bg-[#FACC15]"
                       }`}
-                      title={isSaved ? "Saved to Vault" : "Save to Vault"}
+                      title={isSaved ? "Remove from Vault" : "Save to Vault"}
                     >
                       {savingId === word.id ? (
-                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : isSaved ? (
-                        <Check className="w-5 h-5 text-white" />
+                        <>
+                          <Check className="w-4 h-4 group-hover:hidden" />
+                          <BookmarkMinus className="w-4 h-4 hidden group-hover:block" />
+                        </>
                       ) : (
-                        <Bookmark className="w-5 h-5 text-black" />
+                        <Bookmark className="w-4 h-4" />
                       )}
+                      <span>{savingId === word.id ? "UPDATING..." : isSaved ? "SAVED" : "SAVE TO VAULT"}</span>
                     </button>
                   </div>
                 </div>

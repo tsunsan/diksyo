@@ -17,12 +17,10 @@ import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 
 const navItems = [
-  // These links assume your authenticated routes will live under `/home/*`.
-  // You would then create pages like `/app/home/dashboard/page.tsx`.
-  { href: "/home/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/home/dictionary", icon: BookOpen, label: "Dictionary" },
-  { href: "/home/quiz", icon: Zap, label: "Quick Quiz" },
-  { href: "/home/vault", icon: BookMarked, label: "Vocabulary Vault" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/dictionary", icon: BookOpen, label: "Dictionary" },
+  { href: "/quiz", icon: Zap, label: "Quick Quiz" },
+  { href: "/vault", icon: BookMarked, label: "Vocabulary Vault" },
 ];
 
 export function AppSidebar({

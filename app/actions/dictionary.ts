@@ -50,6 +50,13 @@ export async function saveWordToVault(wordId: string) {
     });
 
     if (existingEntry) {
+        if (existingEntry.isArchived) {
+            // Restore from soft-delete
+            await db.update(userProgress)
+                .set({ isArchived: false })
+                .where(eq(userProgress.id, existingEntry.id));
+            return { success: true, message: "Word successfully restored to vault." };
+        }
         return { success: false, message: "Word is already saved in your vault." };
     }
 
@@ -60,9 +67,30 @@ export async function saveWordToVault(wordId: string) {
         stability: 0,
         difficulty: 0,
         mastery: 0,
+        isArchived: false,
     });
 
     return { success: true, message: "Word successfully saved to vault." };
+}
+
+export async function removeWordFromVault(wordId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: "Unauthorized: You must be logged in to remove words." };
+    }
+
+    await db.update(userProgress)
+        .set({ isArchived: true })
+        .where(
+            and(
+                eq(userProgress.userId, user.id),
+                eq(userProgress.wordId, wordId)
+            )
+        );
+
+    return { success: true, message: "Word successfully removed from vault." };
 }
 
 export async function getUserSavedWordIds() {
@@ -71,7 +99,10 @@ export async function getUserSavedWordIds() {
     if (!user) return [];
 
     const saved = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, user.id),
+        where: and(
+            eq(userProgress.userId, user.id),
+            eq(userProgress.isArchived, false)
+        ),
         columns: { wordId: true }
     });
     return saved.map(s => s.wordId).filter((id): id is string => id !== null);
