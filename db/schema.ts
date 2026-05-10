@@ -63,6 +63,11 @@ export const rootRelations = relations(roots, ({ many }) => ({
 export const wordRelations = relations(words, ({ one, many }) => ({
     root: one(roots, { fields: [words.rootId], references: [roots.id] }),
     lists: many(listWords), // Allows querying which lists contain this word
+    userProgress: many(userProgress),
+}));
+
+export const userProgressRelations = relations(userProgress, ({ one }) => ({
+    word: one(words, { fields: [userProgress.wordId], references: [words.id] }),
 }));
 
 // New Relations for the Lists

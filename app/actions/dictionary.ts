@@ -65,6 +65,24 @@ export async function saveWordToVault(wordId: string) {
     return { success: true, message: "Word successfully saved to vault." };
 }
 
+export async function getVaultWords() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: "Unauthorized: You must be logged in to view your vault.", data: [] };
+    }
+
+    const progressEntries = await db.query.userProgress.findMany({
+        where: eq(userProgress.userId, user.id),
+        with: {
+            word: true
+        }
+    });
+
+    return { success: true, data: progressEntries };
+}
+
 export async function searchWords(query: string) {
     if (!query) {
         return db.query.words.findMany({ 
