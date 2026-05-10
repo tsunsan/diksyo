@@ -25,7 +25,13 @@ const navItems = [
   { href: "/home/vault", icon: BookMarked, label: "Vocabulary Vault" },
 ];
 
-export function AppSidebar({ children }: { children: React.ReactNode }) {
+export function AppSidebar({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user?: { username: string; email: string };
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -68,7 +74,40 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Bottom */}
-        <div className="px-4 pb-6 border-t-4 border-black pt-6">
+        <div className="px-4 pb-6 border-t-4 border-black pt-6 flex flex-col gap-4">
+          {user && (
+            <Link
+              href="/home/profile"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 p-2 hover:bg-yellow-100 hover:translate-x-[2px] transition-all border-4 border-transparent hover:border-black group"
+            >
+              <div className="w-10 h-10 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center shrink-0">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-black"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className="flex flex-col overflow-hidden">
+                <span className="font-bold text-sm uppercase tracking-tighter truncate text-black">
+                  {user.username}
+                </span>
+                <span className="text-xs font-semibold text-zinc-500 truncate group-hover:text-black transition-colors">
+                  {user.email}
+                </span>
+              </div>
+            </Link>
+          )}
           <form action={logout}>
             <button
               type="submit"

@@ -87,12 +87,12 @@ export function SignupForm({
                 )}
 
                 <div className="grid gap-2">
-                  <Label htmlFor="name" className="font-bold uppercase text-xs">Full Name</Label>
+                  <Label htmlFor="username" className="font-bold uppercase text-xs">Username</Label>
                   <Input
-                      id="name"
-                      name="name"
+                      id="username"
+                      name="username"
                       type="text"
-                      placeholder="Juan Dela Cruz"
+                      placeholder="juandelacruz"
                       required
                       className="rounded-none border-2 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400"
                   />

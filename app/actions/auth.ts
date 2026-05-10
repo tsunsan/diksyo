@@ -49,7 +49,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
     const password = formData.get('password') as string
 
     const confirmPassword = formData.get('confirm-password') as string
-    const name = formData.get('name') as string
+    const username = formData.get('username') as string
     if (!email || !password) {
         return {
             error: 'Email and password are required.',
@@ -73,7 +73,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
         password,
         options: {
             data: {
-                full_name: name,
+                username: username,
             },
         },
     })

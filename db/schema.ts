@@ -7,7 +7,6 @@ export const roots = pgTable("roots", {
     definition: text("definition"),
 });
 
-// db/schema.ts (additions to words table)
 export const words = pgTable("words", {
     id: uuid("id").primaryKey().defaultRandom(),
     rootId: uuid("root_id").references(() => roots.id),
