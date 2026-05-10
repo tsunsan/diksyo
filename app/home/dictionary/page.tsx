@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
-  Volume2,
   BookOpen,
   ChevronRight,
   Star,
@@ -11,95 +10,10 @@ import {
   ArrowRight,
   Bookmark,
   BookMarked,
+  Loader2
 } from "lucide-react";
-
-const SAMPLE_WORDS = [
-  {
-    id: 1,
-    word: "Pagmamahal",
-    pronunciation: "/pag-ma-ma-HÁL/",
-    partOfSpeech: "PANGNGALAN",
-    posEnglish: "NOUN",
-    definition:
-      "Ang malalim na damdamin ng pagmamahal, pagtanggap, at pagmamalasakit sa isang tao, bagay, o konsepto.",
-    definitionEn: "Deep feeling of love, affection, and care toward a person, thing, or concept.",
-    etymology: "Mula sa salitang-ugat na MAHAL (precious/expensive) + pag- (verbal prefix)",
-    rootWord: "MAHAL",
-    rootWordId: 2,
-    tags: ["DAMDAMIN", "RELASYON"],
-    usageNotes:
-      "Ginagamit upang ilarawan ang malalim na pagmamahal. Mas pormal kaysa sa 'pagmahal'.",
-    examples: [
-      {
-        sentence: "Ang **pagmamahal** ng isang ina sa kanyang anak ay walang hanggan.",
-        translation: "A mother's **love** for her child is eternal.",
-      },
-      {
-        sentence: "Ipinakita niya ang kanyang **pagmamahal** sa pamamagitan ng mga simpleng kilos.",
-        translation: "He showed his **love** through simple gestures.",
-      },
-      {
-        sentence: "Ang **pagmamahal** sa bayan ay dapat na linangin mula sa pagkabata.",
-        translation: "**Love** for the nation must be cultivated from childhood.",
-      },
-    ],
-    related: ["PAGIBIG", "PAGMAHAL", "MALASAKIT", "PAGKALINGA"],
-    level: "INTERMEDIATE",
-    frequency: "COMMON",
-  },
-  {
-    id: 2,
-    word: "Mahal",
-    pronunciation: "/MA-hal/",
-    partOfSpeech: "PANG-URI",
-    posEnglish: "ADJECTIVE",
-    definition:
-      "Ang isang bagay o tao na may mataas na halaga o presyo; mahalaga; pinahahalagahan.",
-    definitionEn: "Something or someone of high value or price; precious; treasured.",
-    etymology: "Mula sa Sanskrit na 'mahā' (great, large)",
-    rootWord: "MAHAL",
-    rootWordId: 2,
-    tags: ["HALAGA", "DAMDAMIN"],
-    usageNotes: "Maaaring tumukoy sa presyo (expensive) o damdamin (beloved/precious).",
-    examples: [
-      {
-        sentence: "**Mahal** ang presyo ng mansyon sa lungsod.",
-        translation: "The price of a mansion in the city is **expensive**.",
-      },
-      {
-        sentence: "**Mahal** kita nang higit sa lahat.",
-        translation: "I love you more than anything — you are **precious** to me.",
-      },
-    ],
-    related: ["BAGO", "MURA", "HALAGA", "PRESYO"],
-    level: "BEGINNER",
-    frequency: "VERY COMMON",
-  },
-  {
-    id: 3,
-    word: "Kaliwanagan",
-    pronunciation: "/ka-li-wa-NA-gan/",
-    partOfSpeech: "PANGNGALAN",
-    posEnglish: "NOUN",
-    definition:
-      "Ang katayuan ng pagkakaroon ng kaalaman, pag-unawa, o linaw tungkol sa isang bagay.",
-    definitionEn: "The state of having knowledge, understanding, or clarity about something; enlightenment.",
-    etymology: "Mula sa LIWANAG (light) + ka- -an (noun circumfix)",
-    rootWord: "LIWANAG",
-    rootWordId: 4,
-    tags: ["KARUNUNGAN", "PILOSOPIYA"],
-    usageNotes: "Kadalasang ginagamit sa pilosopikal o relihiyosong konteksto.",
-    examples: [
-      {
-        sentence: "Hanapin natin ang **kaliwanagan** sa kaalaman at karunungan.",
-        translation: "Let us seek **enlightenment** through knowledge and wisdom.",
-      },
-    ],
-    related: ["LIWANAG", "KAALAMAN", "KARUNUNGAN", "DUNONG"],
-    level: "ADVANCED",
-    frequency: "UNCOMMON",
-  },
-];
+import { toast } from "sonner";
+import { searchWords, saveWordToVault } from "@/app/actions/dictionary";
 
 const POS_COLORS: Record<string, { bg: string; text: string }> = {
   PANGNGALAN: { bg: "#7C3AED", text: "#fff" },
@@ -111,11 +25,12 @@ const POS_COLORS: Record<string, { bg: string; text: string }> = {
 
 const LEVEL_COLORS: Record<string, string> = {
   BEGINNER: "#00C853",
-  INTERMEDIATE: "#FFE500",
+  INTERMEDIATE: "#FDE047",
   ADVANCED: "#FF6D00",
 };
 
 function highlightBold(text: string) {
+  if (!text) return null;
   const parts = text.split(/\*\*(.*?)\*\*/g);
   return parts.map((part, i) =>
     i % 2 === 1 ? (
@@ -129,21 +44,57 @@ function highlightBold(text: string) {
 }
 
 export default function DictionaryPage() {
-  const [selectedId, setSelectedId] = useState(1);
+  const [words, setWords] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [saved, setSaved] = useState<number[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
-  const word = SAMPLE_WORDS.find((w) => w.id === selectedId) || SAMPLE_WORDS[0];
-  const posStyle = POS_COLORS[word.partOfSpeech] || { bg: "#333", text: "#fff" };
+  useEffect(() => {
+    const fetchWords = async () => {
+      setIsLoading(true);
+      try {
+        const results = await searchWords(search);
+        setWords(results);
+        if (results.length > 0 && (!selectedId || !results.find(w => w.id === selectedId))) {
+            setSelectedId(results[0].id);
+        } else if (results.length === 0) {
+            setSelectedId(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch words:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Add a small debounce if search isn't empty to prevent too many DB calls
+    const timeoutId = setTimeout(() => {
+      fetchWords();
+    }, 300);
 
-  const filtered = SAMPLE_WORDS.filter(
-    (w) =>
-      w.word.toLowerCase().includes(search.toLowerCase()) ||
-      w.definitionEn.toLowerCase().includes(search.toLowerCase())
-  );
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
-  const toggleSave = (id: number) => {
-    setSaved((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const word = words.find((w) => w.id === selectedId) || null;
+  const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
+
+  const handleSaveToVault = async (id: string) => {
+    try {
+        setSavingId(id);
+        const result = await saveWordToVault(id);
+        if (result?.error) {
+            toast.error(result.error);
+        } else if (result?.success === false) {
+            toast.info(result.message);
+        } else {
+            toast.success(result?.message || "Saved successfully");
+        }
+    } catch (e) {
+        toast.error("Failed to save word.");
+    } finally {
+        setSavingId(null);
+    }
   };
 
   return (
@@ -184,15 +135,25 @@ export default function DictionaryPage() {
 
           {/* Word list */}
           <div className="flex flex-col gap-2">
-            {filtered.map((w) => {
-              const ps = POS_COLORS[w.partOfSpeech] || { bg: "#333", text: "#fff" };
+            {isLoading ? (
+                <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-black" />
+                    SEARCHING...
+                </div>
+            ) : words.length === 0 ? (
+                <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
+                    NO WORDS FOUND.
+                </div>
+            ) : words.map((w) => {
+              const posText = w.partOfSpeech || 'UNKNOWN';
+              const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
                 <button
                   key={w.id}
                   onClick={() => setSelectedId(w.id)}
                   className={`flex items-start gap-3 p-4 text-left border-[2.5px] transition-all ${
                     selectedId === w.id
-                      ? "bg-[#FFE500] border-black shadow-[4px_4px_0_#000]"
+                      ? "bg-[#FDE047] border-black shadow-[4px_4px_0_#000]"
                       : "bg-white border-black hover:shadow-[3px_3px_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px]"
                   }`}
                 >
@@ -204,34 +165,38 @@ export default function DictionaryPage() {
                       >
                         {w.word}
                       </span>
-                      <span
-                        className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 border-[1.5px] border-black"
-                        style={{
-                          fontWeight: 800,
-                          background: ps.bg,
-                          color: ps.text,
-                        }}
-                      >
-                        {w.posEnglish}
-                      </span>
+                      {w.posEnglish ? (
+                          <span
+                            className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 border-[1.5px] border-black"
+                            style={{
+                              fontWeight: 800,
+                              background: ps.bg,
+                              color: ps.text,
+                            }}
+                          >
+                            {w.posEnglish}
+                          </span>
+                      ) : null}
                     </div>
                     <p
                       className="text-[#555] text-xs uppercase tracking-wider truncate"
                       style={{ fontWeight: 600 }}
                     >
-                      {w.definitionEn.slice(0, 50)}...
+                      {w.translation ? w.translation.slice(0, 50) + "..." : ""}
                     </p>
                   </div>
-                  <div
-                    className="text-[9px] px-1.5 py-0.5 border-[1.5px] border-black mt-0.5 shrink-0"
-                    style={{
-                      fontWeight: 800,
-                      background: LEVEL_COLORS[w.level],
-                      color: w.level === "INTERMEDIATE" ? "#000" : w.level === "BEGINNER" ? "#000" : "#fff",
-                    }}
-                  >
-                    {w.level}
-                  </div>
+                  {w.level ? (
+                      <div
+                        className="text-[9px] px-1.5 py-0.5 border-[1.5px] border-black mt-0.5 shrink-0"
+                        style={{
+                          fontWeight: 800,
+                          background: LEVEL_COLORS[w.level] || "#ccc",
+                          color: w.level === "INTERMEDIATE" ? "#000" : w.level === "BEGINNER" ? "#000" : "#fff",
+                        }}
+                      >
+                        {w.level}
+                      </div>
+                  ) : null}
                 </button>
               );
             })}
@@ -240,215 +205,266 @@ export default function DictionaryPage() {
 
         {/* Main Word Card */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          {/* Main Card */}
-          <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6">
-            {/* Top row */}
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <div className="flex items-center gap-3 flex-wrap mb-2">
-                  {/* POS Badge */}
-                  <span
-                    className="px-3 py-1.5 border-[2px] border-black text-xs uppercase tracking-widest"
-                    style={{
-                      fontWeight: 900,
-                      background: posStyle.bg,
-                      color: posStyle.text,
-                    }}
-                  >
-                    {word.partOfSpeech} · {word.posEnglish}
-                  </span>
-                  {/* Frequency */}
-                  <span
-                    className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#f5f5f5]"
-                    style={{ fontWeight: 700 }}
-                  >
-                    {word.frequency}
-                  </span>
-                </div>
-
-                <h2
-                  className="text-black uppercase"
-                  style={{ fontWeight: 900, fontSize: "2.8rem", lineHeight: 1, letterSpacing: "-0.02em" }}
-                >
-                  {word.word}
-                </h2>
-                <p className="text-[#888] mt-1 text-sm uppercase tracking-widest" style={{ fontWeight: 600 }}>
-                  {word.pronunciation}
-                </p>
-              </div>
-
-              <div className="flex gap-2 shrink-0">
-                <button
-                  className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center hover:bg-[#FFE500] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-                  title="Listen"
-                >
-                  <Volume2 className="w-5 h-5 text-black" />
-                </button>
-                <button
-                  onClick={() => toggleSave(word.id)}
-                  className={`w-10 h-10 border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
-                    saved.includes(word.id) ? "bg-[#7C3AED]" : "bg-[#f0f0f0] hover:bg-[#7C3AED] hover:text-white"
-                  }`}
-                  title="Save to Vault"
-                >
-                  {saved.includes(word.id) ? (
-                    <BookMarked className="w-5 h-5 text-white" />
-                  ) : (
-                    <Bookmark className="w-5 h-5 text-black" />
-                  )}
-                </button>
-              </div>
+          {!word ? (
+            <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-12 text-center flex flex-col items-center justify-center">
+              <Search className="w-12 h-12 text-[#ccc] mb-4" />
+              <h2 className="uppercase font-black text-xl text-[#888]">SELECT A WORD</h2>
+              <p className="uppercase font-bold text-xs text-[#aaa]">SEARCH AND CLICK ON A WORD TO VIEW ITS DETAILS</p>
             </div>
-
-            {/* Divider */}
-            <div className="h-[3px] bg-black mb-4" />
-
-            {/* Definition */}
-            <div className="mb-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1.5 h-6 bg-[#7C3AED]" />
-                <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
-                  KAHULUGAN · DEFINITION
-                </span>
-              </div>
-              <p className="text-black text-sm leading-relaxed mb-2" style={{ fontWeight: 600 }}>
-                <span className="text-[#7C3AED]" style={{ fontWeight: 900 }}>FIL: </span>
-                {word.definition}
-              </p>
-              <p className="text-[#555] text-sm leading-relaxed" style={{ fontWeight: 500 }}>
-                <span className="text-[#0057FF]" style={{ fontWeight: 900 }}>EN: </span>
-                {word.definitionEn}
-              </p>
-            </div>
-
-            {/* Etymology / Root Word */}
-            <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-4 h-4 text-[#FF6D00]" />
-                <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
-                  ETYMOLOGY & ROOT WORD
-                </span>
-              </div>
-              <p className="text-[#555] text-xs uppercase tracking-wider mb-3" style={{ fontWeight: 600 }}>
-                {word.etymology}
-              </p>
-              <button
-                onClick={() => {
-                  const root = SAMPLE_WORDS.find((w) => w.id === word.rootWordId);
-                  if (root) setSelectedId(root.id);
-                }}
-                className="inline-flex items-center gap-2 bg-[#FFE500] border-[2px] border-black px-3 py-1.5 text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-[#f5d800]"
-                style={{ fontWeight: 800 }}
-              >
-                SALITANG-UGAT: {word.rootWord}
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Usage notes */}
-            {word.usageNotes && (
-              <div className="bg-[#E8F0FF] border-[2px] border-black p-4 mb-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Tag className="w-4 h-4 text-[#0057FF]" />
-                  <span className="text-xs uppercase tracking-widest text-[#0057FF]" style={{ fontWeight: 800 }}>
-                    USAGE NOTES
-                  </span>
-                </div>
-                <p className="text-[#333] text-xs leading-relaxed" style={{ fontWeight: 600 }}>
-                  {word.usageNotes}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Example Sentences */}
-          <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-1.5 h-6 bg-[#FFE500] border-l-[2px] border-black" />
-              <span className="text-sm uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
-                HALIMBAWANG PANGUNGUSAP · EXAMPLE SENTENCES
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              {word.examples.map((ex, i) => (
-                <div
-                  key={i}
-                  className="border-[2px] border-black p-4"
-                  style={{ background: i % 2 === 0 ? "#FFFBF0" : "#fff" }}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs shrink-0 mt-0.5"
-                      style={{ fontWeight: 900 }}
-                    >
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="text-black text-sm leading-relaxed mb-1.5" style={{ fontWeight: 600 }}>
-                        🇵🇭 {highlightBold(ex.sentence)}
-                      </p>
-                      <p className="text-[#666] text-sm leading-relaxed" style={{ fontWeight: 500 }}>
-                        🇺🇸 {highlightBold(ex.translation)}
-                      </p>
+          ) : (
+            <>
+              {/* Main Card */}
+              <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6">
+                {/* Top row */}
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 flex-wrap mb-2">
+                      {/* POS Badge */}
+                      <span
+                        className="px-3 py-1.5 border-[2px] border-black text-xs uppercase tracking-widest"
+                        style={{
+                          fontWeight: 900,
+                          background: posStyle.bg,
+                          color: posStyle.text,
+                        }}
+                      >
+                        {word.partOfSpeech} {word.posEnglish ? `· ${word.posEnglish}` : ''}
+                      </span>
+                      {/* Frequency */}
+                      {word.frequency && (
+                          <span
+                            className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#f5f5f5]"
+                            style={{ fontWeight: 700 }}
+                          >
+                            {word.frequency}
+                          </span>
+                      )}
                     </div>
+
+                    <h2
+                      className="text-black uppercase"
+                      style={{ fontWeight: 900, fontSize: "2.8rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+                    >
+                      {word.word}
+                    </h2>
+                    {word.pronunciation && (
+                        <p className="text-[#888] mt-1 text-sm uppercase tracking-widest" style={{ fontWeight: 600 }}>
+                          {word.pronunciation}
+                        </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => handleSaveToVault(word.id)}
+                      disabled={savingId === word.id}
+                      className={`w-10 h-10 border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
+                        savingId === word.id ? "opacity-50 cursor-not-allowed bg-[#7C3AED]" : "bg-[#f0f0f0] hover:bg-[#7C3AED] hover:text-white"
+                      }`}
+                      title="Save to Vault"
+                    >
+                      {savingId === word.id ? (
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                      ) : (
+                        <Bookmark className="w-5 h-5 text-black" />
+                      )}
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Related Words + Tags */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Related */}
-            <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5">
-              <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
-                RELATED WORDS
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {word.related.map((r) => (
-                  <button
-                    key={r}
-                    className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FFE500] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-                    style={{ fontWeight: 800 }}
-                  >
-                    {r}
-                    <ArrowRight className="inline-block w-3 h-3 ml-1" />
-                  </button>
-                ))}
-              </div>
-            </div>
+                {/* Divider */}
+                <div className="h-[3px] bg-black mb-4" />
 
-            {/* Tags */}
-            <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5">
-              <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
-                CATEGORIES
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {word.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1.5 bg-[#7C3AED] text-white border-[2px] border-black text-xs uppercase tracking-wider"
-                    style={{ fontWeight: 800 }}
-                  >
-                    #{tag}
-                  </span>
-                ))}
+                {/* Definition */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1.5 h-6 bg-[#7C3AED]" />
+                    <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
+                      KAHULUGAN · DEFINITION
+                    </span>
+                  </div>
+                  {word.meaningFilipino && (
+                      <p className="text-black text-sm leading-relaxed mb-2" style={{ fontWeight: 600 }}>
+                        <span className="text-[#7C3AED]" style={{ fontWeight: 900 }}>FIL: </span>
+                        {word.meaningFilipino}
+                      </p>
+                  )}
+                  {word.translation && (
+                      <p className="text-[#555] text-sm leading-relaxed" style={{ fontWeight: 500 }}>
+                        <span className="text-[#0057FF]" style={{ fontWeight: 900 }}>EN: </span>
+                        {word.translation}
+                      </p>
+                  )}
+                </div>
+
+                {/* Original Explanation / Witty Take */}
+                {word.originalExplanation && (
+                  <div className="bg-[#FDE047] border-[2px] border-black p-4 mb-5 shadow-[4px_4px_0_#000]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
+                        💡 THE REAL DEAL
+                      </span>
+                    </div>
+                    <p className="text-black text-sm leading-relaxed" style={{ fontWeight: 700 }}>
+                      {word.originalExplanation}
+                    </p>
+                  </div>
+                )}
+
+                {/* Etymology / Root Word */}
+                {(word.etymology || word.rootId) && (
+                  <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Star className="w-4 h-4 text-[#FF6D00]" />
+                      <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
+                        ETYMOLOGY & ROOT WORD
+                      </span>
+                    </div>
+                    {word.etymology && (
+                      <p className="text-[#555] text-xs uppercase tracking-wider mb-3" style={{ fontWeight: 600 }}>
+                        {word.etymology}
+                      </p>
+                    )}
+                    {word.root?.name && (
+                      <button
+                        onClick={() => {
+                          setSearch(word.root?.name || "");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="inline-flex items-center gap-2 bg-[#FDE047] border-[2px] border-black px-3 py-1.5 text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-[#FACC15]"
+                        style={{ fontWeight: 800 }}
+                      >
+                        SALITANG-UGAT: {word.root?.name}
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Usage notes */}
+                {word.usageNotes && (
+                  <div className="bg-[#E8F0FF] border-[2px] border-black p-4 mb-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Tag className="w-4 h-4 text-[#0057FF]" />
+                      <span className="text-xs uppercase tracking-widest text-[#0057FF]" style={{ fontWeight: 800 }}>
+                        USAGE NOTES
+                      </span>
+                    </div>
+                    <p className="text-[#333] text-xs leading-relaxed" style={{ fontWeight: 600 }}>
+                      {word.usageNotes}
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="mt-4 pt-3 border-t-[2px] border-black">
-                <span
-                  className="text-xs uppercase tracking-widest px-2 py-1 border-[2px] border-black"
-                  style={{
-                    fontWeight: 800,
-                    background: LEVEL_COLORS[word.level],
-                    color: word.level === "ADVANCED" ? "#fff" : "#000",
-                  }}
-                >
-                  LEVEL: {word.level}
-                </span>
+
+              {/* Example Sentences */}
+              {word.usageExamples && word.usageExamples.length > 0 && (
+                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6">
+                  <div className="flex items-center gap-2 mb-5">
+                    <div className="w-1.5 h-6 bg-[#FDE047] border-l-[2px] border-black" />
+                    <span className="text-sm uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
+                      HALIMBAWANG PANGUNGUSAP · EXAMPLE SENTENCES
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    {word.usageExamples.map((ex: any, i: number) => (
+                      <div
+                        key={i}
+                        className="border-[2px] border-black p-4"
+                        style={{ background: i % 2 === 0 ? "#FFFBF0" : "#fff" }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs shrink-0 mt-0.5"
+                            style={{ fontWeight: 900 }}
+                          >
+                            {i + 1}
+                          </span>
+                          <div>
+                            {ex.sentence && (
+                                <p className="text-black text-sm leading-relaxed mb-1.5" style={{ fontWeight: 600 }}>
+                                  🇵🇭 {highlightBold(ex.sentence)}
+                                </p>
+                            )}
+                            {ex.translation && (
+                                <p className="text-[#666] text-sm leading-relaxed" style={{ fontWeight: 500 }}>
+                                  🇺🇸 {highlightBold(ex.translation)}
+                                </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Related Words + Tags */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Related */}
+                {word.related && word.related.length > 0 && (
+                  <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5">
+                    <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
+                      RELATED WORDS
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {word.related.map((r: string) => (
+                        <button
+                          key={r}
+                          onClick={() => {
+                            setSearch(r);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                          style={{ fontWeight: 800 }}
+                        >
+                          {r}
+                          <ArrowRight className="inline-block w-3 h-3 ml-1" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags */}
+                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5">
+                  {(word.tags && word.tags.length > 0) && (
+                      <>
+                        <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
+                          CATEGORIES
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {word.tags.map((tag: string) => (
+                            <span
+                              key={tag}
+                              className="px-3 py-1.5 bg-[#7C3AED] text-white border-[2px] border-black text-xs uppercase tracking-wider"
+                              style={{ fontWeight: 800 }}
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                  )}
+                  {word.level && (
+                    <div className={`pt-3 ${word.tags && word.tags.length > 0 ? "mt-4 border-t-[2px] border-black" : ""}`}>
+                      <span
+                        className="text-xs uppercase tracking-widest px-2 py-1 border-[2px] border-black inline-block"
+                        style={{
+                          fontWeight: 800,
+                          background: LEVEL_COLORS[word.level] || "#ccc",
+                          color: word.level === "ADVANCED" ? "#fff" : "#000",
+                        }}
+                      >
+                        LEVEL: {word.level}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

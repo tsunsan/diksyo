@@ -7,16 +7,25 @@ export const roots = pgTable("roots", {
     definition: text("definition"),
 });
 
+// db/schema.ts (additions to words table)
 export const words = pgTable("words", {
     id: uuid("id").primaryKey().defaultRandom(),
     rootId: uuid("root_id").references(() => roots.id),
     word: text("word").notNull(),
     slug: text("slug").unique().notNull(),
+    pronunciation: text("pronunciation"),
     partOfSpeech: text("part_of_speech"),
-    translation: text("translation").notNull(),
-    meaningFilipino: text("meaning_filipino"),
+    posEnglish: text("pos_english"), 
+    translation: text("translation").notNull(), 
+    meaningFilipino: text("meaning_filipino"), 
+    etymology: text("etymology"),
     originalExplanation: text("original_explanation"),
-    usageExamples: jsonb("usage_examples").$type<{ s: string; t: string }[]>(),
+    usageNotes: text("usage_notes"),
+    usageExamples: jsonb("usage_examples").$type<{ sentence: string; translation: string }[]>(),
+    tags: jsonb("tags").$type<string[]>(), 
+    related: jsonb("related").$type<string[]>(),
+    level: text("level"), 
+    frequency: text("frequency"), 
 });
 
 export const userProgress = pgTable("user_progress", {
@@ -30,7 +39,6 @@ export const userProgress = pgTable("user_progress", {
     mastery: integer("mastery").default(0),
 });
 
-// 1. The Lists Table (The "Books" or "Sets")
 export const lists = pgTable("lists", {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull(),
@@ -40,19 +48,14 @@ export const lists = pgTable("lists", {
     createdAt: timestamp("created_at").defaultNow(),
 });
 
-// 2. The Join Table (Links Words to Lists)
 export const listWords = pgTable("list_words", {
     listId: uuid("list_id").references(() => lists.id, { onDelete: "cascade" }).notNull(),
     wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }).notNull(),
     addedAt: timestamp("added_at").defaultNow(),
 }, (t) => ({
-    // Composite Primary Key ensures a word can only be added to a specific list once
     pk: primaryKey({ columns: [t.listId, t.wordId] }),
 }));
 
-// ==============================
-// UPDATED RELATIONS
-// ==============================
 
 export const rootRelations = relations(roots, ({ many }) => ({
     words: many(words),

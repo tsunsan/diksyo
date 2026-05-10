@@ -1,293 +1,197 @@
-import { db } from "@/db"; // Adjust this import based on your setup
-import {lists, listWords, roots, words} from "@/db/schema";
-import {eq} from "drizzle-orm";
+// db/seed.ts
+import { db } from "./index"; 
+import { roots, words } from "./schema";
 
-const seedData = [
+async function seed() {
+  console.log("Clearing existing data...");
+  // Delete child tables first to avoid foreign key constraint errors
+  await db.delete(words);
+  await db.delete(roots);
+
+  // 1. Insert Roots
+  const insertedRoots = await db.insert(roots).values([
+    { name: "MAHAL", definition: "precious/expensive/love" },
+    { name: "LIWANAG", definition: "light" },
+    { name: "LAYA", definition: "freedom" },
+    { name: "SAYA", definition: "joy/happiness" },
+    { name: "BAYAN", definition: "town/country/community" },
+    { name: "BUHAY", definition: "life/alive" },
+  ]).returning();
+
+  // Helper function to easily grab root IDs
+  const getRootId = (rootName: string) => 
+    insertedRoots.find(r => r.name === rootName)?.id;
+
+  // 2. Insert Words mapped to the newly created Root IDs
+  await db.insert(words).values([
     {
-        root: { name: "Kilig", definition: "A romantic thrill or shudder." },
-        word: {
-            word: "Kilig",
-            slug: "kilig",
-            partOfSpeech: "Noun / Verb",
-            translation: "Romantic thrill",
-            meaningFilipino: "Pakiramdam ng tuwa o pananabik dahil sa isang romantikong karanasan.",
-            originalExplanation: "It's that sudden, uncontrollable urge to bite your pillow and kick your feet in the air because your crush just liked your story. It's the Filipino equivalent of butterflies in your stomach, but on heavy caffeine.",
-            usageExamples: [
-                { s: "Kinilig ako nang hawakan niya ang kamay ko.", t: "I felt a romantic thrill when he held my hand." },
-                { s: "Grabe ang kilig ko sa eksena nila sa pelikula!", t: "I swooned so hard at their movie scene!" }
-            ]
-        }
+      word: "Pagmamahal",
+      slug: "pagmamahal",
+      rootId: getRootId("MAHAL"),
+      pronunciation: "/pag-ma-ma-HÁL/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Deep feeling of love, affection, and care toward a person, thing, or concept.",
+      meaningFilipino: "Ang malalim na damdamin ng pagmamahal, pagtanggap, at pagmamalasakit sa isang tao, bagay, o konsepto.",
+      originalExplanation: "Not just your average 'I love you'—this is the heavy-duty, unconditional, 'I'd-take-a-bullet-for-you' kind of love.",
+      etymology: "Mula sa salitang-ugat na MAHAL (precious/expensive) + pag- (verbal prefix).",
+      usageNotes: "Ginagamit upang ilarawan ang malalim na pagmamahal. Mas pormal kaysa sa 'pagmahal'.",
+      level: "INTERMEDIATE",
+      frequency: "Common",
+      tags: ["DAMDAMIN", "RELASYON"],
+      related: ["PAG-IBIG", "PAGMAHAL", "MALASAKIT", "PAGKALINGA", "MAHAL"],
+      usageExamples: [
+        { sentence: "Ang **pagmamahal** ng isang ina sa kanyang anak ay walang hanggan.", translation: "A mother's **love** for her child is eternal." },
+        { sentence: "Ipinakita niya ang kanyang **pagmamahal** sa pamamagitan ng mga simpleng kilos.", translation: "He showed his **love** through simple gestures." },
+        { sentence: "Ang **pagmamahal** sa bayan ay dapat na linangin mula sa pagkabata.", translation: "**Love** for the nation must be cultivated from childhood." }
+      ]
     },
     {
-        root: { name: "Tampo", definition: "Mild resentment or sulking." },
-        word: {
-            word: "Tampo",
-            slug: "tampo",
-            partOfSpeech: "Noun / Verb",
-            translation: "Sulking",
-            meaningFilipino: "Pagtatampo o pagpapakita ng hinanakit sa isang tao.",
-            originalExplanation: "You're not explicitly angry, but you definitely want them to know you're upset. It’s the art of giving the silent treatment while secretly hoping they coax you out of it with food or an apology.",
-            usageExamples: [
-                { s: "Nagtatampo si Maria kasi nakalimutan ko ang birthday niya.", t: "Maria is sulking because I forgot her birthday." },
-                { s: "Huwag ka na magtampo, bibilhan na kita ng milk tea.", t: "Stop sulking, I'll buy you milk tea." }
-            ]
-        }
+      word: "Mahal",
+      slug: "mahal",
+      rootId: getRootId("MAHAL"),
+      pronunciation: "/MA-hal/",
+      partOfSpeech: "PANG-URI",
+      posEnglish: "ADJECTIVE",
+      translation: "Something or someone of high value or price; precious; treasured.",
+      meaningFilipino: "Ang isang bagay o tao na may mataas na halaga o presyo; mahalaga; pinahahalagahan.",
+      originalExplanation: "Can mean either 'expensive' or 'love'. So if your partner calls you 'mahal', you're either beloved or high-maintenance.",
+      etymology: "Mula sa Sanskrit na 'mahā' (great, large).",
+      usageNotes: "Maaaring tumukoy sa presyo (expensive) o damdamin (beloved/precious).",
+      level: "BEGINNER",
+      frequency: "Very Common",
+      tags: ["HALAGA", "DAMDAMIN"],
+      related: ["BAGO", "MURA", "HALAGA", "PRESYO", "PAGMAMAHAL"],
+      usageExamples: [
+        { sentence: "**Mahal** ang presyo ng mansyon sa lungsod.", translation: "The price of a mansion in the city is **expensive**." },
+        { sentence: "**Mahal** kita nang higit sa lahat.", translation: "I love you more than anything — you are **precious** to me." }
+      ]
     },
     {
-        root: { name: "Chika", definition: "Gossip or casual conversation." },
-        word: {
-            word: "Chika",
-            slug: "chika",
-            partOfSpeech: "Noun",
-            translation: "Gossip / Story",
-            meaningFilipino: "Kwento, balita, o tsismis.",
-            originalExplanation: "The lifeblood of Filipino social gatherings. It can range from innocent life updates to highly classified, CIA-level neighborhood gossip. If someone says 'May chika ako,' you drop everything and listen.",
-            usageExamples: [
-                { s: "Ano ang latest na chika?", t: "What's the latest gossip?" },
-                { s: "Nag-chika lang kami sandali sa kanto.", t: "We just had a quick chat at the corner." }
-            ]
-        }
+      word: "Kaliwanagan",
+      slug: "kaliwanagan",
+      rootId: getRootId("LIWANAG"),
+      pronunciation: "/ka-li-wa-NA-gan/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "The state of having knowledge, understanding, or clarity about something; enlightenment.",
+      meaningFilipino: "Ang katayuan ng pagkakaroon ng kaalaman, pag-unawa, o linaw tungkol sa isang bagay.",
+      originalExplanation: "When the lightbulb finally goes off in your head and things make sense.",
+      etymology: "Mula sa LIWANAG (light) + ka- -an (noun circumfix).",
+      usageNotes: "Kadalasang ginagamit sa pilosopikal o relihiyosong konteksto.",
+      level: "ADVANCED",
+      frequency: "Uncommon",
+      tags: ["KARUNUNGAN", "PILOSOPIYA"],
+      related: ["LIWANAG", "KAALAMAN", "KARUNUNGAN", "DUNONG"],
+      usageExamples: [
+        { sentence: "Hanapin natin ang **kaliwanagan** sa kaalaman at karunungan.", translation: "Let us seek **enlightenment** through knowledge and wisdom." }
+      ]
     },
     {
-        root: { name: "Gigil", definition: "Overwhelming urge to squeeze." },
-        word: {
-            word: "Gigil",
-            slug: "gigil",
-            partOfSpeech: "Noun",
-            translation: "Urge to pinch/squeeze",
-            meaningFilipino: "Nanggigigil dahil sa sobrang kyut o sobrang inis.",
-            originalExplanation: "It’s aggressive affection. When a baby is so devastatingly cute that your brain short-circuits and you just want to squish their cheeks until they pop. Can also apply to extreme, teeth-grinding annoyance.",
-            usageExamples: [
-                { s: "Nanggigigil ako sa aso mo, ang taba!", t: "I have the urge to squeeze your dog, it's so fat!" },
-                { s: "Gigil na gigil ako sa boss ko kanina.", t: "I was gritting my teeth in annoyance at my boss earlier." }
-            ]
-        }
+      word: "Maliwanag",
+      slug: "maliwanag",
+      rootId: getRootId("LIWANAG"),
+      pronunciation: "/ma-li-WÁ-nag/",
+      partOfSpeech: "PANG-URI",
+      posEnglish: "ADJECTIVE",
+      translation: "Bright, clear, or luminous.",
+      meaningFilipino: "Puno ng liwanag; madaling makita o maintindihan.",
+      originalExplanation: "Can be used when things are literally blindingly bright, or when someone finally gets your point. Crystal clear, basically.",
+      etymology: "Mula sa salitang-ugat na LIWANAG na kinabitan ng unlaping ma-.",
+      usageNotes: "Maaaring gamitin para sa literal na liwanag (ilaw/araw) o sa pagiging malinaw ng isang paliwanag o sitwasyon.",
+      level: "BEGINNER",
+      frequency: "Very Common",
+      tags: ["PANG-ARAW-ARAW", "PAGLALARAWAN"],
+      related: ["ILAW", "KALIWANAGAN", "SIKAT"],
+      usageExamples: [
+        { sentence: "**Maliwanag** ang sikat ng buwan kagabi.", translation: "The moonlight was **bright** last night." },
+        { sentence: "**Maliwanag** ba ang aking mga panuto?", translation: "Are my instructions **clear**?" }
+      ]
     },
     {
-        root: { name: "Diskarte", definition: "Strategy or street smarts." },
-        word: {
-            word: "Diskarte",
-            slug: "diskarte",
-            partOfSpeech: "Noun",
-            translation: "Strategy / Hustle",
-            meaningFilipino: "Paraan o pamamaraan para makamit ang isang bagay.",
-            originalExplanation: "The ultimate Filipino survival skill. It’s not about being book smart; it’s about knowing how to hustle, smooth-talk, and navigate life’s obstacles with zero budget and pure resourcefulness.",
-            usageExamples: [
-                { s: "Kailangan mo ng diskarte para makapasa sa exam na 'yan.", t: "You need a strategy to pass that exam." },
-                { s: "Ang galing ng diskarte niya sa negosyo.", t: "His business hustle is excellent." }
-            ]
-        }
+      word: "Kalayaan",
+      slug: "kalayaan",
+      rootId: getRootId("LAYA"),
+      pronunciation: "/ka-la-YÁ-an/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Freedom, independence, or liberty.",
+      meaningFilipino: "Ang kalagayan ng pagkakaroon ng karapatang kumilos, magsalita, o mag-isip nang walang hadlang o pumipigil.",
+      originalExplanation: "The ultimate flex of independence. Think Braveheart screaming 'Freedom!' but in tropical weather.",
+      etymology: "Mula sa salitang-ugat na LAYA na kinabitan ng panlaping ka- at hulaping -an.",
+      usageNotes: "Madalas ginagamit tuwing pinag-uusapan ang kasaysayan, pulitika, at mga karapatang pantao.",
+      level: "INTERMEDIATE",
+      frequency: "Common",
+      tags: ["LIPUNAN", "KASAYSAYAN"],
+      related: ["MALAYA", "KASARINLAN"],
+      usageExamples: [
+        { sentence: "Ipinaglaban ng ating mga bayani ang **kalayaan** ng Pilipinas.", translation: "Our heroes fought for the **freedom** of the Philippines." }
+      ]
     },
     {
-        root: { name: "Pikon", definition: "Easily angered or sore loser." },
-        word: {
-            word: "Pikon",
-            slug: "pikon",
-            partOfSpeech: "Adjective",
-            translation: "Easily angered",
-            meaningFilipino: "Madaling magalit pag binibiro o natatalo.",
-            originalExplanation: "That one friend who can dish out insults all day but throws a tantrum the moment someone makes a joke about them. In Filipino culture, there is one universal rule: 'Ang pikon, talo' (The sore loser loses).",
-            usageExamples: [
-                { s: "Huwag mo na siyang asarin, pikon 'yan.", t: "Don't tease him, he gets angry easily." },
-                { s: "Natalo lang sa game, napikon agad.", t: "He just lost the game and immediately got salty." }
-            ]
-        }
+      word: "Bayanihan",
+      slug: "bayanihan",
+      rootId: getRootId("BAYAN"),
+      pronunciation: "/ba-ya-NÍ-han/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "A spirit of communal unity, work, and cooperation.",
+      meaningFilipino: "Kaugalian ng mga Pilipino na nagpapakita ng kusang-loob na pagtutulungan at pagkakaisa upang makamit ang isang layunin.",
+      originalExplanation: "The OG Filipino crowdfunding and crowdsourcing. Literally lifting a house together because why hire movers when you have neighbors?",
+      etymology: "Mula sa salitang-ugat na BAYAN na nangangahulugang komunidad o bansa.",
+      usageNotes: "Isang napakalalim na konseptong kultural sa Pilipinas. Tradisyonal itong isinasalarawan ng mga magkakapitbahay na sabay-sabay nagbubuhat ng isang bahay-kubo upang ilipat ito.",
+      level: "ADVANCED",
+      frequency: "Common",
+      tags: ["KULTURA", "LIPUNAN"],
+      related: ["TULONG", "KAPWA", "PAGKAKAISA"],
+      usageExamples: [
+        { sentence: "Buhay na buhay ang diwa ng **bayanihan** nang tumulong ang lahat pagkatapos ng bagyo.", translation: "The spirit of **bayanihan** was very much alive when everyone helped out after the typhoon." }
+      ]
     },
     {
-        root: { name: "Torpe", definition: "Shy in courtship." },
-        word: {
-            word: "Torpe",
-            slug: "torpe",
-            partOfSpeech: "Adjective",
-            translation: "Cowardly in love",
-            meaningFilipino: "Lalaking nahihiyang manligaw o magtapat ng nararamdaman.",
-            originalExplanation: "A guy who would rather fight a dragon than confess his feelings to his crush. He will like her Instagram posts from 2018 but will physically evaporate if she makes eye contact with him.",
-            usageExamples: [
-                { s: "Ang torpe mo, kaya ka nauunahan eh.", t: "You're so cowardly in love, that's why others beat you to it." },
-                { s: "Torpe siya kaya dinaan na lang sa kanta.", t: "He was too shy, so he just expressed it through a song." }
-            ]
-        }
-    },
-    // --- BAYANIHAN & BAYAN ---
-    {
-        root: { name: "Bayan", definition: "Town or country." },
-        word: {
-            word: "Bayanihan",
-            slug: "bayanihan",
-            partOfSpeech: "Noun",
-            translation: "Communal unity",
-            meaningFilipino: "Pagtutulungan ng magkakapitbahay o komunidad.",
-            originalExplanation: "The ultimate team effort. Historically, it meant carrying a literal house on your shoulders with your neighbors. Today, it’s chipping in for a coworker's medical bill or helping push a stalled jeepney in the rain.",
-            usageExamples: [
-                { s: "Buhay na buhay ang bayanihan sa aming barangay.", t: "Communal unity is very much alive in our neighborhood." }
-            ]
-        }
+      word: "Masaya",
+      slug: "masaya",
+      rootId: getRootId("SAYA"),
+      pronunciation: "/ma-sa-YÁ/",
+      partOfSpeech: "PANG-URI",
+      posEnglish: "ADJECTIVE",
+      translation: "Happy, joyful, or cheerful.",
+      meaningFilipino: "Nakararamdam o nagpapakita ng kagalakan at tuwa.",
+      originalExplanation: "The baseline Filipino default state. Whether there's a massive feast or a literal flood, someone is bound to be 'masaya'.",
+      etymology: "Mula sa salitang-ugat na SAYA na kinabitan ng unlaping ma-.",
+      usageNotes: "Isa sa mga pinakakaraniwang salita upang ilarawan ang positibong emosyon o isang nakakatuwang pangyayari.",
+      level: "BEGINNER",
+      frequency: "Very Common",
+      tags: ["DAMDAMIN", "PANG-ARAW-ARAW"],
+      related: ["TUWA", "LIGAYA", "GALAK"],
+      usageExamples: [
+        { sentence: "**Masaya** ang pamilya dahil kumpleto sila tuwing Pasko.", translation: "The family is **happy** because they are complete every Christmas." }
+      ]
     },
     {
-        root: { name: "Bayan", definition: "Town or country." },
-        word: {
-            word: "Bayan",
-            slug: "bayan",
-            partOfSpeech: "Noun",
-            translation: "Town / Country",
-            meaningFilipino: "Isang pook na may mga naninirahan; bansa o nasyon.",
-            originalExplanation: "It can mean your local town or the entire nation. It's the root of patriotism ('Makabayan') and community action ('Bayanihan').",
-            usageExamples: [
-                { s: "Para sa bayan!", t: "For the country!" }
-            ]
-        }
-    },
-    // --- JAPORMS & PORMA ---
-    {
-        root: { name: "Porma", definition: "Form or style." },
-        word: {
-            word: "Japorms",
-            slug: "japorms",
-            partOfSpeech: "Adjective",
-            translation: "Dressed up",
-            meaningFilipino: "Naka-ayos ng mabuti, madalas astig ang bihis.",
-            originalExplanation: "When you step out of the house smelling like a whole bottle of cologne and wearing your freshest kicks. You aren't just dressed; you are assembled for maximum visual impact.",
-            usageExamples: [
-                { s: "Saan ang lakad natin at ang japorms mo ngayon?", t: "Where are we going that you're so dressed up today?" }
-            ]
-        }
-    },
-    {
-        root: { name: "Porma", definition: "Form or style." },
-        word: {
-            word: "Porma",
-            slug: "porma",
-            partOfSpeech: "Noun",
-            translation: "Form / Style",
-            meaningFilipino: "Ang panlabas na anyo o istilo ng pananamit.",
-            originalExplanation: "It translates directly to 'form', but colloquially refers to someone's fashion sense, swagger, or the way they present themselves.",
-            usageExamples: [
-                { s: "Ang ganda ng porma mo ngayon ah.", t: "Your style looks great today." }
-            ]
-        }
-    },
-    // --- MAARTE & ARTE ---
-    {
-        root: { name: "Arte", definition: "Art or acting." },
-        word: {
-            word: "Maarte",
-            slug: "maarte",
-            partOfSpeech: "Adjective",
-            translation: "High maintenance",
-            meaningFilipino: "Taong mapili, mabusisi, o nag-iinarte.",
-            originalExplanation: "Someone who requires a 12-step skincare routine before camping, or refuses to eat street food because of the 'ambiance.' It means high maintenance, often accompanied by a dramatic flair.",
-            usageExamples: [
-                { s: "Huwag ka na maging maarte, suotin mo na 'yan.", t: "Stop being so fussy, just wear it." }
-            ]
-        }
-    },
-    {
-        root: { name: "Arte", definition: "Art or acting." },
-        word: {
-            word: "Arte",
-            slug: "arte",
-            partOfSpeech: "Noun",
-            translation: "Art / Drama",
-            meaningFilipino: "Sining, o ang pagpapakita ng labis na damdamin.",
-            originalExplanation: "The root of all drama. It can literally mean 'art', but in everyday use, it's the base element of someone being extra, dramatic, or fussy.",
-            usageExamples: [
-                { s: "Puro ka arte, bilisan mo na!", t: "You're all drama, hurry up!" }
-            ]
-        }
+      word: "Mabuhay",
+      slug: "mabuhay",
+      rootId: getRootId("BUHAY"),
+      pronunciation: "/ma-BÚ-hay/",
+      partOfSpeech: "PANDIWA",
+      posEnglish: "VERB",
+      translation: "To live / Welcome! / Long live!",
+      meaningFilipino: "Manatiling buhay; o isang pagbati na nangangahulugang pagpapakita ng suporta o pagtanggap.",
+      originalExplanation: "The Swiss Army knife of Filipino greetings. Means 'welcome', 'long live', or 'cheers', depending on how loud you yell it.",
+      etymology: "Mula sa salitang-ugat na BUHAY na kinabitan ng unlaping ma-.",
+      usageNotes: "Bilang pandiwa, ito ay 'to live'. Bilang interjection, ito ang pambansang pagbati ng Pilipinas upang tanggapin ang mga bisita ('Welcome!') o purihin ang isang tao ('Long live!').",
+      level: "BEGINNER",
+      frequency: "Very Common",
+      tags: ["PAGBATI", "KULTURA"],
+      related: ["BUHAY", "TULOY", "MALIGAYANG PAGDATING"],
+      usageExamples: [
+        { sentence: "**Mabuhay** ang mga bagong kasal!", translation: "**Long live** the newlyweds!" },
+        { sentence: "Kailangan nating kumain upang **mabuhay**.", translation: "We need to eat in order **to live**." }
+      ]
     }
-];
-export async function seed() {
-    console.log("Seeding started...");
+  ]);
 
-    // We need to store the generated Word IDs to link them to lists later
-    const wordIdMap: Record<string, string> = {};
-
-    for (const item of seedData) {
-        // 1. Insert or find the root word
-        const [insertedRoot] = await db.insert(roots)
-            .values({
-                name: item.root.name,
-                definition: item.root.definition,
-            })
-            .onConflictDoUpdate({
-                target: roots.name,
-                set: { definition: item.root.definition },
-            })
-            .returning();
-
-        // 2. Insert the word
-        await db.insert(words)
-            .values({
-                rootId: insertedRoot.id,
-                word: item.word.word,
-                slug: item.word.slug,
-                partOfSpeech: item.word.partOfSpeech,
-                translation: item.word.translation,
-                meaningFilipino: item.word.meaningFilipino,
-                originalExplanation: item.word.originalExplanation,
-                usageExamples: item.word.usageExamples,
-            })
-            .onConflictDoNothing(); // Skip if slug already exists
-
-        // 3. Fetch the word ID (whether it was just inserted or already existed)
-        const savedWord = await db.query.words.findFirst({
-            where: eq(words.slug, item.word.slug)
-        });
-
-        if (savedWord) {
-            wordIdMap[savedWord.slug] = savedWord.id;
-        }
-    }
-
-    console.log("Words seeded. Building Custom Lists...");
-
-    // 4. Create a Dummy User ID for the Seed Lists
-    // (In the real app, this comes from Supabase auth)
-    const dummyUserId = "11111111-1111-1111-1111-111111111111";
-
-    // 5. Create the Lists
-    const [datingList] = await db.insert(lists).values({
-        userId: dummyUserId, // Admin user ID
-        title: "Dating Convo",
-        description: "Words to survive Filipino romance.",
-        isSystem: true, // <-- Mark as an official Diksyo set
-    }).returning();
-
-    const [slangList] = await db.insert(lists).values({
-        userId: dummyUserId,
-        title: "Street Slang",
-        description: "Essential words for the kanto.",
-        isSystem: true, // <-- Mark as an official Diksyo set
-    }).returning();
-
-    // 6. Map slugs to their respective lists
-    const datingSlugs = ["kilig", "tampo", "torpe", "maarte"];
-    const slangSlugs = ["chika", "diskarte", "japorms", "gigil"];
-
-    // 7. Insert the relations into the Join Table
-    for (const slug of datingSlugs) {
-        if (wordIdMap[slug]) {
-            await db.insert(listWords).values({
-                listId: datingList.id,
-                wordId: wordIdMap[slug],
-            }).onConflictDoNothing();
-        }
-    }
-
-    for (const slug of slangSlugs) {
-        if (wordIdMap[slug]) {
-            await db.insert(listWords).values({
-                listId: slangList.id,
-                wordId: wordIdMap[slug],
-            }).onConflictDoNothing();
-        }
-    }
-
-    console.log("Seeding complete! Lists and Words are wired up.");
+  console.log("Seeding complete!");
 }
 
-// Execute the seed function
-seed().catch((e) => {
-    console.error("Seeding failed:", e);
-    process.exit(1);
-});
+seed().catch(console.error);
