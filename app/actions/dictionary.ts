@@ -74,7 +74,7 @@ export async function getUserSavedWordIds() {
         where: eq(userProgress.userId, user.id),
         columns: { wordId: true }
     });
-    return saved.map(s => s.wordId);
+    return saved.map(s => s.wordId).filter((id): id is string => id !== null);
 }
 
 export async function searchWords(query: string) {

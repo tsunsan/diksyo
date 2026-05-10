@@ -10,9 +10,9 @@ import {
   ArrowRight,
   Bookmark,
   BookMarked,
-  Loader2
+  Loader2,
+  Check
 } from "lucide-react";
-import { toast } from "sonner";
 import { searchWords, saveWordToVault } from "@/app/actions/dictionary";
 
 const POS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -43,14 +43,18 @@ function highlightBold(text: string) {
   );
 }
 
-export default function DictionaryPage() {
-  const [words, setWords] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export default function DictionaryClient({ initialWords, initialSavedWordIds }: { initialWords: any[], initialSavedWordIds: string[] }) {
+  const [words, setWords] = useState<any[]>(initialWords);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedWordIds));
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(initialWords.length > 0 ? initialWords[0].id : null);
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip initial fetch on mount if search is empty
+    if (!search && words === initialWords) return;
+
     const fetchWords = async () => {
       setIsLoading(true);
       try {
@@ -77,21 +81,19 @@ export default function DictionaryPage() {
   }, [search]);
 
   const word = words.find((w) => w.id === selectedId) || null;
+  const isSaved = word ? savedIds.has(word.id) : false;
   const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
 
   const handleSaveToVault = async (id: string) => {
+    if (savedIds.has(id)) return; // prevent duplicate clicks just in case
     try {
         setSavingId(id);
         const result = await saveWordToVault(id);
-        if (result?.error) {
-            toast.error(result.error);
-        } else if (result?.success === false) {
-            toast.info(result.message);
-        } else {
-            toast.success(result?.message || "Saved successfully");
+        if (result?.success) {
+            setSavedIds(prev => new Set(prev).add(id));
         }
     } catch (e) {
-        toast.error("Failed to save word.");
+        console.error("Failed to save word.");
     } finally {
         setSavingId(null);
     }
@@ -257,14 +259,18 @@ export default function DictionaryPage() {
                   <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => handleSaveToVault(word.id)}
-                      disabled={savingId === word.id}
-                      className={`w-10 h-10 border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
-                        savingId === word.id ? "opacity-50 cursor-not-allowed bg-[#7C3AED]" : "bg-[#f0f0f0] hover:bg-[#7C3AED] hover:text-white"
+                      disabled={savingId === word.id || isSaved}
+                      className={`w-10 h-10 border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] ${
+                        isSaved ? "bg-[#7C3AED] shadow-none translate-x-[2px] translate-y-[2px]" : 
+                        savingId === word.id ? "opacity-50 cursor-not-allowed bg-[#7C3AED]" : 
+                        "bg-[#f0f0f0] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-[#7C3AED] hover:text-white"
                       }`}
-                      title="Save to Vault"
+                      title={isSaved ? "Saved to Vault" : "Save to Vault"}
                     >
                       {savingId === word.id ? (
                         <Loader2 className="w-5 h-5 text-white animate-spin" />
+                      ) : isSaved ? (
+                        <Check className="w-5 h-5 text-white" />
                       ) : (
                         <Bookmark className="w-5 h-5 text-black" />
                       )}

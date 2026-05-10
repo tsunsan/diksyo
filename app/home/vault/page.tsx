@@ -1,5 +1,5 @@
 import { getVaultWords } from "@/app/actions/vault";
-import VaultClient from "../../../components/vault-client";
+import VaultClient from "../../../components/vault";
 
 export default async function VaultPage() {
   const res = await getVaultWords();
