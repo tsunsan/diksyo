@@ -38,44 +38,15 @@ export const userProgress = pgTable("user_progress", {
     mastery: integer("mastery").default(0),
 });
 
-export const lists = pgTable("lists", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id").notNull(),
-    title: text("title").notNull(),
-    description: text("description"),
-    isSystem: boolean("is_system").default(false).notNull(),
-    createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const listWords = pgTable("list_words", {
-    listId: uuid("list_id").references(() => lists.id, { onDelete: "cascade" }).notNull(),
-    wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }).notNull(),
-    addedAt: timestamp("added_at").defaultNow(),
-}, (t) => ({
-    pk: primaryKey({ columns: [t.listId, t.wordId] }),
-}));
-
-
 export const rootRelations = relations(roots, ({ many }) => ({
     words: many(words),
 }));
 
+export const userProgressRelations = relations(userProgress, ({ one }) => ({
+    word: one(words, { fields: [userProgress.wordId], references: [words.id] })
+}));
+
 export const wordRelations = relations(words, ({ one, many }) => ({
     root: one(roots, { fields: [words.rootId], references: [roots.id] }),
-    lists: many(listWords), // Allows querying which lists contain this word
-    userProgress: many(userProgress),
-}));
-
-export const userProgressRelations = relations(userProgress, ({ one }) => ({
-    word: one(words, { fields: [userProgress.wordId], references: [words.id] }),
-}));
-
-// New Relations for the Lists
-export const listRelations = relations(lists, ({ many }) => ({
-    words: many(listWords),
-}));
-
-export const listWordsRelations = relations(listWords, ({ one }) => ({
-    list: one(lists, { fields: [listWords.listId], references: [lists.id] }),
-    word: one(words, { fields: [listWords.wordId], references: [words.id] }),
+    progress: many(userProgress),
 }));
