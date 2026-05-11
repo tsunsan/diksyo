@@ -16,7 +16,7 @@ export async function getVaultWords() {
 
     try {
         const vaultEntries = await db.query.userProgress.findMany({
-            where: eq(userProgress.userId, user.id),
+            where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)),
             with: {
                 word: true,
             },
@@ -45,6 +45,13 @@ export async function addWordToVault(wordId: string) {
         });
 
         if (existing) {
+            if (existing.isArchived) {
+                await db.update(userProgress)
+                    .set({ isArchived: false, nextReview: new Date() })
+                    .where(eq(userProgress.id, existing.id));
+                revalidatePath("/vault");
+                return { success: true };
+            }
             return { success: false, error: "Word is already in your vault" };
         }
 
