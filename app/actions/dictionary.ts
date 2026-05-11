@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { userProgress, words, roots} from "@/db/schema";
+import { userProgress, words } from "@/db/schema";
 import { and, eq, ilike, sql, or, inArray } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 
@@ -9,7 +9,7 @@ export async function searchWordBySlug(slug: string) {
     const exactMatch = await db.query.words.findFirst({
         where: eq(words.slug, slug),
         with: {
-            root: true,
+            rootWord: true,
         },
     });
     if (exactMatch) {
@@ -111,7 +111,7 @@ export async function getUserSavedWordIds() {
 export async function searchWords(query: string) {
     if (!query) {
         return db.query.words.findMany({ 
-            with: { root: true }, // Include root even on default load
+            with: { rootWord: true },
             limit: 50 
         });
     }
@@ -120,14 +120,13 @@ export async function searchWords(query: string) {
         where: or(
             ilike(words.word, `%${query}%`),
             ilike(words.translation, `%${query}%`),
-            // Magic happens here: Search the roots table and match the IDs
             inArray(
-                words.rootId,
-                db.select({ id: roots.id }).from(roots).where(ilike(roots.name, `%${query}%`))
+                words.rootWordId,
+                db.select({ id: words.id }).from(words).where(ilike(words.word, `%${query}%`))
             )
         ),
         with: {
-            root: true, // Ensure the frontend still receives the root data
+            rootWord: true,
         },
         limit: 50,
     });

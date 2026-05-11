@@ -359,7 +359,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                 )}
 
                 {/* Etymology / Root Word */}
-                {(word.etymology || word.rootId) && (
+                {(word.etymology || word.rootWordId) && (
                   <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-5">
                     <div className="flex items-center gap-2 mb-2">
                       <Star className="w-4 h-4 text-[#FF6D00]" />
@@ -372,18 +372,25 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                         {word.etymology}
                       </p>
                     )}
-                    {word.root?.name && (
-                      <button
-                        onClick={() => {
-                          setSearch(word.root?.name || "");
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className="inline-flex items-center gap-2 bg-[#FDE047] border-[2px] border-black px-3 py-1.5 text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-[#FACC15]"
-                        style={{ fontWeight: 800 }}
-                      >
-                        SALITANG-UGAT: {word.root?.name}
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                    {word.rootWord?.word && (
+                      <div className="flex flex-col items-start gap-2">
+                        <button
+                          onClick={() => {
+                            setSearch(word.rootWord?.word || "");
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="inline-flex items-center gap-2 bg-[#FDE047] border-[2px] border-black px-3 py-1.5 text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-[#FACC15]"
+                          style={{ fontWeight: 800 }}
+                        >
+                          SALITANG-UGAT: {word.rootWord?.word}
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                        {word.rootWord?.translation && (
+                          <p className="text-[#333] text-xs uppercase font-bold tracking-wide pl-1">
+                            ROOT MEANING: <span className="text-[#0057FF]">{word.rootWord.translation}</span>
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

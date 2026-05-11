@@ -1,33 +1,99 @@
 // db/seed.ts
 import { db } from "./index"; 
-import { roots, words } from "./schema";
+import { words, userProgress } from "./schema";
 
 async function seed() {
   console.log("Clearing existing data...");
-  // Delete child tables first to avoid foreign key constraint errors
+  await db.delete(userProgress);
   await db.delete(words);
-  await db.delete(roots);
 
-  // 1. Insert Roots
-  const insertedRoots = await db.insert(roots).values([
-    { name: "MAHAL", definition: "precious/expensive/love" },
-    { name: "LIWANAG", definition: "light" },
-    { name: "LAYA", definition: "freedom" },
-    { name: "SAYA", definition: "joy/happiness" },
-    { name: "BAYAN", definition: "town/country/community" },
-    { name: "BUHAY", definition: "life/alive" },
+  // 1. Insert Root Words
+  const insertedRoots = await db.insert(words).values([
+    {
+      word: "Mahal",
+      slug: "mahal",
+      pronunciation: "/MA-hal/",
+      partOfSpeech: "PANG-URI",
+      posEnglish: "ADJECTIVE",
+      translation: "Something or someone of high value or price; precious; treasured.",
+      meaningFilipino: "Ang isang bagay o tao na may mataas na halaga o presyo; mahalaga; pinahahalagahan.",
+      originalExplanation: "Can mean either 'expensive' or 'love'. So if your partner calls you 'mahal', you're either beloved or high-maintenance.",
+      etymology: "Mula sa Sanskrit na 'mahā' (great, large).",
+      usageNotes: "Maaaring tumukoy sa presyo (expensive) o damdamin (beloved/precious).",
+      level: "BEGINNER",
+      frequency: "Very Common",
+      tags: ["HALAGA", "DAMDAMIN"],
+      related: ["BAGO", "MURA", "HALAGA", "PRESYO", "PAGMAMAHAL"],
+      usageExamples: [
+        { sentence: "**Mahal** ang presyo ng mansyon sa lungsod.", translation: "The price of a mansion in the city is **expensive**." },
+        { sentence: "**Mahal** kita nang higit sa lahat.", translation: "I love you more than anything — you are **precious** to me." }
+      ]
+    },
+    {
+      word: "Liwanag",
+      slug: "liwanag",
+      pronunciation: "/li-WÁ-nag/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Light, brightness, or clarity.",
+      meaningFilipino: "Ang pisikal na liwanag, o ang pag-unawa sa isang bagay.",
+      level: "BEGINNER",
+      frequency: "Very Common"
+    },
+    {
+      word: "Laya",
+      slug: "laya",
+      pronunciation: "/LA-ya/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Freedom, independence.",
+      meaningFilipino: "Ang estado ng pagiging malaya mula sa pumipigil.",
+      level: "INTERMEDIATE",
+      frequency: "Common"
+    },
+    {
+      word: "Saya",
+      slug: "saya",
+      pronunciation: "/SA-ya/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Joy, happiness.",
+      meaningFilipino: "Positibong damdamin o galak.",
+      level: "BEGINNER",
+      frequency: "Very Common"
+    },
+    {
+      word: "Bayan",
+      slug: "bayan",
+      pronunciation: "/BA-yan/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Town, country, or community.",
+      meaningFilipino: "Isang komunidad, bayan, o ang buong bansa.",
+      level: "BEGINNER",
+      frequency: "Very Common"
+    },
+    {
+      word: "Buhay",
+      slug: "buhay",
+      pronunciation: "/BU-hay/",
+      partOfSpeech: "PANGNGALAN",
+      posEnglish: "NOUN",
+      translation: "Life, alive.",
+      meaningFilipino: "Ang kalagayan ng patuloy na pamumuhay.",
+      level: "BEGINNER",
+      frequency: "Very Common"
+    }
   ]).returning();
 
-  // Helper function to easily grab root IDs
-  const getRootId = (rootName: string) => 
-    insertedRoots.find(r => r.name === rootName)?.id;
+  const getRootId = (rootSlug: string) => insertedRoots.find(r => r.slug === rootSlug)?.id;
 
-  // 2. Insert Words mapped to the newly created Root IDs
+  // 2. Insert Derived Words
   await db.insert(words).values([
     {
       word: "Pagmamahal",
       slug: "pagmamahal",
-      rootId: getRootId("MAHAL"),
+      rootWordId: getRootId("mahal"),
       pronunciation: "/pag-ma-ma-HÁL/",
       partOfSpeech: "PANGNGALAN",
       posEnglish: "NOUN",
@@ -47,30 +113,9 @@ async function seed() {
       ]
     },
     {
-      word: "Mahal",
-      slug: "mahal",
-      rootId: getRootId("MAHAL"),
-      pronunciation: "/MA-hal/",
-      partOfSpeech: "PANG-URI",
-      posEnglish: "ADJECTIVE",
-      translation: "Something or someone of high value or price; precious; treasured.",
-      meaningFilipino: "Ang isang bagay o tao na may mataas na halaga o presyo; mahalaga; pinahahalagahan.",
-      originalExplanation: "Can mean either 'expensive' or 'love'. So if your partner calls you 'mahal', you're either beloved or high-maintenance.",
-      etymology: "Mula sa Sanskrit na 'mahā' (great, large).",
-      usageNotes: "Maaaring tumukoy sa presyo (expensive) o damdamin (beloved/precious).",
-      level: "BEGINNER",
-      frequency: "Very Common",
-      tags: ["HALAGA", "DAMDAMIN"],
-      related: ["BAGO", "MURA", "HALAGA", "PRESYO", "PAGMAMAHAL"],
-      usageExamples: [
-        { sentence: "**Mahal** ang presyo ng mansyon sa lungsod.", translation: "The price of a mansion in the city is **expensive**." },
-        { sentence: "**Mahal** kita nang higit sa lahat.", translation: "I love you more than anything — you are **precious** to me." }
-      ]
-    },
-    {
       word: "Kaliwanagan",
       slug: "kaliwanagan",
-      rootId: getRootId("LIWANAG"),
+      rootWordId: getRootId("liwanag"),
       pronunciation: "/ka-li-wa-NA-gan/",
       partOfSpeech: "PANGNGALAN",
       posEnglish: "NOUN",
@@ -90,7 +135,7 @@ async function seed() {
     {
       word: "Maliwanag",
       slug: "maliwanag",
-      rootId: getRootId("LIWANAG"),
+      rootWordId: getRootId("liwanag"),
       pronunciation: "/ma-li-WÁ-nag/",
       partOfSpeech: "PANG-URI",
       posEnglish: "ADJECTIVE",
@@ -111,7 +156,7 @@ async function seed() {
     {
       word: "Kalayaan",
       slug: "kalayaan",
-      rootId: getRootId("LAYA"),
+      rootWordId: getRootId("laya"),
       pronunciation: "/ka-la-YÁ-an/",
       partOfSpeech: "PANGNGALAN",
       posEnglish: "NOUN",
@@ -131,7 +176,7 @@ async function seed() {
     {
       word: "Bayanihan",
       slug: "bayanihan",
-      rootId: getRootId("BAYAN"),
+      rootWordId: getRootId("bayan"),
       pronunciation: "/ba-ya-NÍ-han/",
       partOfSpeech: "PANGNGALAN",
       posEnglish: "NOUN",
@@ -151,7 +196,7 @@ async function seed() {
     {
       word: "Masaya",
       slug: "masaya",
-      rootId: getRootId("SAYA"),
+      rootWordId: getRootId("saya"),
       pronunciation: "/ma-sa-YÁ/",
       partOfSpeech: "PANG-URI",
       posEnglish: "ADJECTIVE",
@@ -171,7 +216,7 @@ async function seed() {
     {
       word: "Mabuhay",
       slug: "mabuhay",
-      rootId: getRootId("BUHAY"),
+      rootWordId: getRootId("buhay"),
       pronunciation: "/ma-BÚ-hay/",
       partOfSpeech: "PANDIWA",
       posEnglish: "VERB",
