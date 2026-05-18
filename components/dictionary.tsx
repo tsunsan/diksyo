@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
   BookOpen,
@@ -12,7 +13,10 @@ import {
   BookMarked,
   Loader2,
   Check,
-  BookmarkMinus
+  BookmarkMinus,
+  Volume2,
+  ExternalLink,
+  X
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
 import { toast } from "sonner";
@@ -52,6 +56,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
   const [selectedId, setSelectedId] = useState<string | null>(initialWords.length > 0 ? initialWords[0].id : null);
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [modalWord, setModalWord] = useState<any | null>(null);
 
   useEffect(() => {
     // Skip initial fetch on mount if search is empty
@@ -138,6 +143,135 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
   return (
     <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
+      {/* Word Detail Modal */}
+      <AnimatePresence>
+        {modalWord && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setModalWord(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-[4px] border-black shadow-[10px_10px_0_#FDE047]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span
+                      className="px-3 py-1 border-[2px] border-black text-xs uppercase tracking-widest text-white"
+                      style={{
+                        background: (POS_COLORS[modalWord.partOfSpeech?.toUpperCase()] || { bg: "#333" }).bg,
+                        fontWeight: 800,
+                      }}
+                    >
+                      {modalWord.partOfSpeech} {modalWord.posEnglish ? `· ${modalWord.posEnglish}` : ''}
+                    </span>
+                    {modalWord.frequency && (
+                        <span
+                          className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white"
+                          style={{ fontWeight: 700 }}
+                        >
+                          {modalWord.frequency}
+                        </span>
+                    )}
+                  </div>
+                  <h2
+                    className="text-black uppercase"
+                    style={{ fontWeight: 900, fontSize: "3rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+                  >
+                    {modalWord.word}
+                  </h2>
+                  {modalWord.pronunciation && (
+                      <p
+                        className="text-[#888] mt-1 text-sm uppercase tracking-widest"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {modalWord.pronunciation}
+                      </p>
+                  )}
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setModalWord(null)}
+                    className="w-10 h-10 bg-black border-[2px] border-black flex items-center justify-center hover:bg-[#333] transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal body */}
+              <div className="p-6 flex flex-col gap-5">
+                {/* Definition */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1.5 h-5 bg-[#7C3AED]" />
+                    <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>KAHULUGAN · DEFINITION</span>
+                  </div>
+                  {modalWord.meaningFilipino && (
+                      <p className="text-black text-sm leading-relaxed mb-1.5" style={{ fontWeight: 600 }}>
+                        <span className="text-[#7C3AED]" style={{ fontWeight: 900 }}>FIL: </span>{modalWord.meaningFilipino}
+                      </p>
+                  )}
+                  {modalWord.translation && (
+                      <p className="text-[#555] text-sm leading-relaxed" style={{ fontWeight: 500 }}>
+                        <span className="text-[#0057FF]" style={{ fontWeight: 900 }}>EN: </span>{modalWord.translation}
+                      </p>
+                  )}
+                </div>
+
+                {/* Etymology */}
+                {modalWord.etymology && (
+                    <div className="bg-[#FFFBF0] border-[2px] border-black p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="w-4 h-4 text-[#FF6D00]" />
+                        <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>ETYMOLOGY</span>
+                      </div>
+                      <p className="text-[#555] text-xs uppercase tracking-wider" style={{ fontWeight: 600 }}>{modalWord.etymology}</p>
+                    </div>
+                )}
+
+                {/* Examples */}
+                {modalWord.usageExamples && modalWord.usageExamples.length > 0 && (
+                    <div>
+                      <span className="text-sm uppercase tracking-widest text-black mb-3 block" style={{ fontWeight: 900 }}>EXAMPLE SENTENCES</span>
+                      {modalWord.usageExamples.map((ex: any, i: number) => (
+                        <div key={i} className="border-[2px] border-black p-3 mb-2" style={{ background: i % 2 === 0 ? "#FFFBF0" : "#fff" }}>
+                          {ex.sentence && <p className="text-black text-sm mb-1" style={{ fontWeight: 600 }}>🇵🇭 {highlightBold(ex.sentence)}</p>}
+                          {ex.translation && <p className="text-[#666] text-sm" style={{ fontWeight: 500 }}>🇺🇸 {highlightBold(ex.translation)}</p>}
+                        </div>
+                      ))}
+                    </div>
+                )}
+
+                {/* Related words */}
+                {modalWord.related && modalWord.related.length > 0 && (
+                    <div>
+                      <span className="text-xs uppercase tracking-widest text-[#888] mb-2 block" style={{ fontWeight: 800 }}>RELATED WORDS</span>
+                      <div className="flex flex-wrap gap-2">
+                        {modalWord.related.map((r: string) => (
+                          <button key={r} onClick={() => { setSearch(r); setModalWord(null); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000]" style={{ fontWeight: 800 }}>
+                            {r} <ArrowRight className="inline-block w-3 h-3 ml-1" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
@@ -183,7 +317,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     NO WORDS FOUND.
                 </div>
-            ) : words.map((w) => {
+            ) : words.slice(0, 5).map((w) => {
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
@@ -224,22 +358,22 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                       {w.translation ? w.translation.slice(0, 50) + "..." : ""}
                     </p>
                   </div>
-                  {w.level ? (
-                      <div
-                        className="text-[9px] px-1.5 py-0.5 border-[1.5px] border-black mt-0.5 shrink-0"
-                        style={{
-                          fontWeight: 800,
-                          background: LEVEL_COLORS[w.level] || "#ccc",
-                          color: w.level === "INTERMEDIATE" ? "#000" : w.level === "BEGINNER" ? "#000" : "#fff",
-                        }}
-                      >
-                        {w.level}
-                      </div>
-                  ) : null}
+                  {/* Open modal button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setModalWord(w);
+                    }}
+                    className="w-7 h-7 border-[1.5px] border-black flex items-center justify-center flex-shrink-0 hover:bg-[#7C3AED] hover:border-[#7C3AED] hover:text-white transition-all mt-0.5"
+                    title="Quick view"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
                 </button>
               );
             })}
           </div>
+          <p className="text-center text-[10px] text-[#aaa] uppercase tracking-widest" style={{ fontWeight: 600 }}>CLICK 🔗 FOR QUICK VIEW</p>
         </div>
 
         {/* Main Word Card */}
@@ -253,9 +387,9 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
           ) : (
             <>
               {/* Main Card */}
-              <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6">
+              <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-4">
                 {/* Top row */}
-                <div className="flex items-start justify-between gap-4 mb-4">
+                <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
                     <div className="flex items-center gap-3 flex-wrap mb-2">
                       {/* POS Badge */}
@@ -295,36 +429,40 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
                   <div className="flex gap-2 shrink-0">
                     <button
+                      className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
+                      aria-label="Listen (Coming Soon)"
+                    >
+                      <Volume2 className="w-5 h-5 text-[#888]" />
+                      <span className="absolute -bottom-10 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                        Coming Soon
+                      </span>
+                    </button>
+                    <button
                       onClick={() => handleSaveToVault(word.id)}
                       disabled={savingId === word.id}
-                      className={`px-4 h-11 border-[2.5px] border-black flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_#000] font-black uppercase text-xs ${
-                        isSaved ? "bg-[#00C853] text-black shadow-none translate-x-[4px] translate-y-[4px] hover:bg-red-400 hover:text-black group" : 
-                        savingId === word.id ? "opacity-75 cursor-wait bg-[#7C3AED] text-white" : 
-                        "bg-[#FDE047] text-black active:translate-x-[4px] active:translate-y-[4px] active:shadow-none hover:bg-[#FACC15]"
+                      className={`px-3 h-10 border-[2px] border-black flex items-center justify-center gap-1.5 transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none text-xs font-black uppercase tracking-widest ${
+                        isSaved ? "bg-[#7C3AED] text-white" : "bg-[#f0f0f0] hover:bg-[#7C3AED] hover:text-white text-black"
                       }`}
                       title={isSaved ? "Remove from Vault" : "Save to Vault"}
                     >
                       {savingId === word.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin text-current" />
                       ) : isSaved ? (
-                        <>
-                          <Check className="w-4 h-4 group-hover:hidden" />
-                          <BookmarkMinus className="w-4 h-4 hidden group-hover:block" />
-                        </>
+                        <BookMarked className="w-4 h-4 text-current" />
                       ) : (
-                        <Bookmark className="w-4 h-4" />
+                        <Bookmark className="w-4 h-4 text-current" />
                       )}
-                      <span>{savingId === word.id ? "UPDATING..." : isSaved ? "SAVED" : "SAVE TO VAULT"}</span>
+                      <span>{savingId === word.id ? "UPDATING" : isSaved ? "SAVED" : "SAVE"}</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="h-[3px] bg-black mb-4" />
+                <div className="h-[3px] bg-black mb-3" />
 
                 {/* Definition */}
-                <div className="mb-5">
-                  <div className="flex items-center gap-2 mb-3">
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
                     <div className="w-1.5 h-6 bg-[#7C3AED]" />
                     <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
                       KAHULUGAN · DEFINITION
@@ -346,7 +484,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
                 {/* Original Explanation / Witty Take */}
                 {word.originalExplanation && (
-                  <div className="bg-[#FDE047] border-[2px] border-black p-4 mb-5 shadow-[4px_4px_0_#000]">
+                  <div className="bg-[#FDE047] border-[2px] border-black p-4 mb-4 shadow-[4px_4px_0_#000]">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
                         💡 THE REAL DEAL
@@ -360,11 +498,11 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
                 {/* Etymology / Root Word */}
                 {(word.etymology || word.rootWordId) && (
-                  <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-5">
+                  <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Star className="w-4 h-4 text-[#FF6D00]" />
                       <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
-                        ETYMOLOGY & ROOT WORD
+                        {word.etymology && word.rootWord?.word ? "ETYMOLOGY & ROOT WORD" : word.etymology ? "ETYMOLOGY" : "ROOT WORD"}
                       </span>
                     </div>
                     {word.etymology && (
@@ -397,7 +535,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
                 {/* Usage notes */}
                 {word.usageNotes && (
-                  <div className="bg-[#E8F0FF] border-[2px] border-black p-4 mb-5">
+                  <div className="bg-[#E8F0FF] border-[2px] border-black p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Tag className="w-4 h-4 text-[#0057FF]" />
                       <span className="text-xs uppercase tracking-widest text-[#0057FF]" style={{ fontWeight: 800 }}>
@@ -413,15 +551,15 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
               {/* Example Sentences */}
               {word.usageExamples && word.usageExamples.length > 0 && (
-                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6">
-                  <div className="flex items-center gap-2 mb-5">
+                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-4">
+                  <div className="flex items-center gap-2 mb-4">
                     <div className="w-1.5 h-6 bg-[#FDE047] border-l-[2px] border-black" />
                     <span className="text-sm uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
                       HALIMBAWANG PANGUNGUSAP · EXAMPLE SENTENCES
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3">
                     {word.usageExamples.map((ex: any, i: number) => (
                       <div
                         key={i}

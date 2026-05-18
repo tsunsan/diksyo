@@ -4,6 +4,7 @@ import { relations } from "drizzle-orm";
 export const words = pgTable("words", {
     id: uuid("id").primaryKey().defaultRandom(),
     rootWordId: uuid("root_word_id").references((): any => words.id),
+    rootWordString: text("root_word_string"),
     word: text("word").notNull(),
     slug: text("slug").unique().notNull(),
     pronunciation: text("pronunciation"),
