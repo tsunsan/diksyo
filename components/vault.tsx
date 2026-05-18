@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { BookMarked, ChevronRight, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { BookMarked, ChevronRight, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +10,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { searchWordBySlug } from "@/app/actions/dictionary";
+import { searchWordBySlug, removeWordFromVault, searchWords } from "@/app/actions/dictionary";
 import { addWordToVault } from "@/app/actions/vault";
 import { toast } from "sonner";
 
-// The shape of our fetched data
+
 type VaultEntry = {
   id: string;
+  createdAt: Date | string;
   nextReview: Date | string | null;
   lastReview: Date | string | null;
   mastery: number | null;
@@ -23,6 +25,7 @@ type VaultEntry = {
   word: {
     id: string;
     word: string;
+    pronunciation: string | null;
     translation: string;
     partOfSpeech: string | null;
     tags: string[] | null;
@@ -49,12 +52,45 @@ function getMasteryStatus(entry: VaultEntry) {
 
 const ALL_TAGS = ["ALL", "DAMDAMIN", "RELASYON", "BANSA", "KASAYSAYAN", "KATANGIAN", "KAPALIGIRAN", "KARAKTER", "KILOS"];
 
+const POS_COLORS: Record<string, { bg: string; text: string }> = {
+  PANGNGALAN: { bg: "#7C3AED", text: "#fff" },
+  "PANG-URI": { bg: "#0057FF", text: "#fff" },
+  PANDIWA: { bg: "#FF6D00", text: "#fff" },
+  "PANG-ABAY": { bg: "#00C853", text: "#000" },
+  PANGHALIP: { bg: "#FF1744", text: "#fff" },
+};
+
+function highlightBold(text: string) {
+  if (!text) return null;
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="text-[#7C3AED]" style={{ fontWeight: 900 }}>
+        {part}
+      </strong>
+    ) : (
+      part
+    )
+  );
+}
+
 export default function VaultClient({ initialWords }: { initialWords: VaultEntry[] }) {
+  const masteredCount = initialWords.filter(w => w.stability && w.stability > 50).length;
+
   const [activeTag, setActiveTag] = useState("ALL");
   const [vaultSearch, setVaultSearch] = useState("");
   const [sortBy, setSortBy] = useState("DATE");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
+
+  // Edit Mode & Deletion
+  const [editMode, setEditMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Quick View / Modal
+  const [modalWord, setModalWord] = useState<any | null>(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -104,6 +140,54 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
     fetchSuggestions();
   }, [debouncedDialogQuery]);
 
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setIsDeleting(true);
+    try {
+      const ids = Array.from(selectedIds);
+      for (const id of ids) {
+        await removeWordFromVault(id);
+      }
+      toast.success(`${ids.length} WORDS REMOVED`);
+      setSelectedIds(new Set());
+      setEditMode(false);
+      // Optional: Refresh page to get updated words
+      window.location.reload();
+    } catch (e) {
+      toast.error("An error occurred during deletion");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCardClick = async (entry: VaultEntry) => {
+    if (editMode) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(entry.word.id)) next.delete(entry.word.id);
+        else next.add(entry.word.id);
+        return next;
+      });
+      return;
+    }
+
+    // Normal Click - Open Modal
+    setIsModalLoading(true);
+    try {
+      const results = await searchWords(entry.word.word);
+      const match = results.find(w => w.id === entry.word.id);
+      if (match) {
+        setModalWord(match);
+      } else {
+        toast.error("Could not fetch full details.");
+      }
+    } catch (e) {
+       toast.error("Failed to open word details.");
+    } finally {
+      setIsModalLoading(false);
+    }
+  };
+
   const handleAddWord = async (wordId: string, word: string) => {
     setAddingWordId(wordId);
     try {
@@ -138,15 +222,130 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
       } else if (sortBy === "MASTERY") {
         return (b.mastery ?? 0) - (a.mastery ?? 0);
       } else {
-        // DATE (Next Review)
-        const dateA = a.nextReview ? new Date(a.nextReview).getTime() : 0;
-        const dateB = b.nextReview ? new Date(b.nextReview).getTime() : 0;
-        return dateB - dateA; // Most recently due/added first
+        // DATE (Recently Added)
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; // Most recently added first
       }
     });
 
   return (
     <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
+
+      <AnimatePresence>
+        {modalWord && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setModalWord(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-[4px] border-black shadow-[10px_10px_0_#FDE047]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span
+                      className="px-3 py-1 border-[2px] border-black text-xs uppercase tracking-widest text-white"
+                      style={{
+                        background: (POS_COLORS[modalWord.partOfSpeech?.toUpperCase()] || { bg: "#333" }).bg,
+                        fontWeight: 800,
+                      }}
+                    >
+                      {modalWord.partOfSpeech} {modalWord.posEnglish ? `· ${modalWord.posEnglish}` : ''}
+                    </span>
+                    {modalWord.frequency && (
+                        <span
+                          className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white"
+                          style={{ fontWeight: 700 }}
+                        >
+                          {modalWord.frequency}
+                        </span>
+                    )}
+                  </div>
+                  <h2
+                    className="text-black uppercase"
+                    style={{ fontWeight: 900, fontSize: "3rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+                  >
+                    {modalWord.word}
+                  </h2>
+                  {modalWord.pronunciation && (
+                      <p
+                        className="text-[#888] mt-1 text-sm uppercase tracking-widest"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {modalWord.pronunciation}
+                      </p>
+                  )}
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setModalWord(null)}
+                    className="w-10 h-10 bg-black border-[2px] border-black flex items-center justify-center hover:bg-[#333] transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal body */}
+              <div className="p-6 flex flex-col gap-5">
+                {/* Definition */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1.5 h-5 bg-[#7C3AED]" />
+                    <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>KAHULUGAN · DEFINITION</span>
+                  </div>
+                  {modalWord.meaningFilipino && (
+                      <p className="text-black text-sm leading-relaxed mb-1.5" style={{ fontWeight: 600 }}>
+                        <span className="text-[#7C3AED]" style={{ fontWeight: 900 }}>FIL: </span>{modalWord.meaningFilipino}
+                      </p>
+                  )}
+                  {modalWord.translation && (
+                      <p className="text-[#555] text-sm leading-relaxed" style={{ fontWeight: 500 }}>
+                        <span className="text-[#0057FF]" style={{ fontWeight: 900 }}>EN: </span>{modalWord.translation}
+                      </p>
+                  )}
+                </div>
+
+                {/* Etymology */}
+                {modalWord.etymology && (
+                    <div className="bg-[#FFFBF0] border-[2px] border-black p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="w-4 h-4 text-[#FF6D00]" />
+                        <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>ETYMOLOGY</span>
+                      </div>
+                      <p className="text-[#555] text-xs uppercase tracking-wider" style={{ fontWeight: 600 }}>{modalWord.etymology}</p>
+                    </div>
+                )}
+
+                {/* Examples */}
+                {modalWord.usageExamples && modalWord.usageExamples.length > 0 && (
+                    <div>
+                      <span className="text-sm uppercase tracking-widest text-black mb-3 block" style={{ fontWeight: 900 }}>EXAMPLE SENTENCES</span>
+                      {modalWord.usageExamples.map((ex: any, i: number) => (
+                        <div key={i} className="border-[2px] border-black p-3 mb-2" style={{ background: i % 2 === 0 ? "#FFFBF0" : "#fff" }}>
+                          {ex.sentence && <p className="text-black text-sm mb-1" style={{ fontWeight: 600 }}>🇵🇭 {highlightBold(ex.sentence)}</p>}
+                          {ex.translation && <p className="text-[#666] text-sm" style={{ fontWeight: 500 }}>🇺🇸 {highlightBold(ex.translation)}</p>}
+                        </div>
+                      ))}
+                    </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col gap-5">
         {/* Vault Header */}
         <div className="flex items-start justify-between flex-wrap gap-4">
@@ -157,15 +356,38 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 PERSONAL VOCABULARY VAULT
               </h2>
             </div>
-            <p className="text-[#888] text-xs uppercase tracking-widest" style={{ fontWeight: 600 }}>
-              {initialWords.length} WORDS SAVED
+            <p className="text-[#888] text-xs uppercase tracking-widest mt-1" style={{ fontWeight: 800 }}>
+              {initialWords.length} WORDS SAVED • <span className="text-[#10B981]">{masteredCount} MASTERED</span>
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger render={<button className="flex items-center gap-2 px-5 py-3 bg-[#7C3AED] text-white border-[2.5px] border-black shadow-[4px_4px_0_#000] uppercase tracking-widest text-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all hover:bg-[#6d28d9]" style={{ fontWeight: 900 }} />}>
-              <Plus className="w-4 h-4" />
-              ADD WORD
-            </DialogTrigger>
+          <div className="flex items-center gap-2 flex-wrap">
+            {editMode && selectedIds.size > 0 && (
+              <button
+                onClick={handleBatchDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-2 px-5 py-3 bg-[#EF4444] text-white border-[2.5px] border-black shadow-[4px_4px_0_#000] uppercase tracking-widest text-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all hover:bg-[#DC2626]" style={{ fontWeight: 900 }}
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                DELETE ({selectedIds.size})
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setEditMode(!editMode);
+                if (editMode) setSelectedIds(new Set());
+              }}
+              className={`flex items-center gap-2 px-5 py-3 text-black border-[2.5px] border-black uppercase tracking-widest text-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all font-black
+                ${editMode ? "bg-yellow-400 shadow-none translate-x-[4px] translate-y-[4px]" : "bg-white shadow-[4px_4px_0_#000] hover:bg-[#FFFBF0]"}`}
+            >
+              <Edit className="w-4 h-4" />
+              {editMode ? "CANCEL" : "MANAGE"}
+            </button>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger className="flex items-center gap-2 px-5 py-3 bg-[#7C3AED] text-white border-[2.5px] border-black shadow-[4px_4px_0_#000] uppercase tracking-widest text-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all hover:bg-[#6d28d9]" style={{ fontWeight: 900 }}>
+                <Plus className="w-4 h-4" />
+                ADD WORD
+              </DialogTrigger>
             <DialogContent className="border-[3px] border-black rounded-none shadow-[8px_8px_0_#000] p-6 max-w-md w-full">
               <DialogHeader>
                 <DialogTitle className="uppercase font-black text-xl tracking-tighter italic">
@@ -215,6 +437,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Search & Sort */}
@@ -285,16 +508,32 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
         </div>
 
         {/* Word grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence mode="popLayout">
           {sortedAndFilteredVault.map((entry) => {
             const w = entry.word;
+            const isSelected = selectedIds.has(w.id);
             return (
-              <div
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3 }}
                 key={entry.id}
-                className="bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] p-5 flex flex-col gap-3 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#000] transition-all cursor-pointer"
+                onClick={() => handleCardClick(entry)}
+                className={`group relative bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] p-5 flex flex-col gap-3 transition-all cursor-pointer 
+                  ${editMode ? "hover:-translate-y-0.5" : "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#000]"}
+                  ${isSelected && editMode ? "border-[#EF4444] bg-[#FEF2F2] ring-4 ring-[#EF4444] ring-opacity-20" : ""}
+                `}
               >
+                {editMode && (
+                  <div className={`absolute top-4 right-4 w-6 h-6 border-2 border-black flex items-center justify-center transition-colors ${isSelected ? 'bg-[#EF4444]' : 'bg-white'}`}>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
+                  </div>
+                )}
                 {/* Top */}
-                <div className="flex items-start justify-between gap-2">
+                <div className={`flex items-start justify-between gap-2 ${editMode ? 'pr-8' : ''}`}>
                   <div>
                     <span
                       className="text-black uppercase"
@@ -302,26 +541,31 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                     >
                       {w.word}
                     </span>
+                    {w.pronunciation && (
+                      <p
+                        className="text-[#888] text-xs mt-0.5 mb-1"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {w.pronunciation.startsWith("/") ? w.pronunciation : `/${w.pronunciation}/`}
+                      </p>
+                    )}
                     <p
-                      className="text-[#666] text-xs uppercase tracking-wider mt-1"
+                      className="text-[#333] text-xs uppercase tracking-wider mt-1"
                       style={{ fontWeight: 600 }}
                     >
                       {w.translation}
                     </p>
                   </div>
                   <span
-                    className="text-white text-[9px] uppercase tracking-wider px-2 py-1 border-[1.5px] border-black shrink-0 bg-[#7C3AED]"
-                    style={{ fontWeight: 800 }}
+                    className="text-white text-[9px] uppercase tracking-wider px-2 py-1 border-[1.5px] border-black shrink-0"
+                    style={{ background: (POS_COLORS[w.partOfSpeech?.toUpperCase() || ""] || { bg: "#7C3AED" }).bg, fontWeight: 800 }}
                   >
                     {w.partOfSpeech?.slice(0, 4) || "WORD"}
                   </span>
                 </div>
 
-                {/* Divider */}
-                <div className="h-[2px] bg-black" />
-
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5 mt-auto mb-2">
                   {(w.tags || []).map((tag) => (
                     <span
                       key={tag}
@@ -340,7 +584,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 </div>
 
                 {/* Footer with Mastery Pill */}
-                <div className="flex items-center justify-between mt-auto pt-4 border-t-[2px] border-black">
+                <div className="flex items-end justify-between mt-auto pt-4 border-t-[2px] border-black">
                   {(() => {
                     const status = getMasteryStatus(entry);
                     const StatusIcon = status.icon;
@@ -353,23 +597,38 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                       </div>
                     );
                   })()}
-                  <button className="flex items-center gap-1 text-[11px] text-black uppercase tracking-wider hover:text-[#7C3AED] transition-colors border-b-[2px] border-transparent hover:border-[#7C3AED] pb-0.5" style={{ fontWeight: 800 }}>
-                    STUDY <ChevronRight className="w-3 h-3" />
-                  </button>
+                  
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="text-[#aaa] text-[9px] uppercase tracking-wider font-bold">
+                      {entry.lastReview ? `LEARNED ${new Date(entry.lastReview).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : `SAVED ${entry.createdAt ? new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "RECENTLY"}`}
+                    </span>
+                    <div className="flex items-center gap-1 text-[10px] text-[#888] uppercase tracking-wider font-bold shrink-0">
+                      {editMode ? "CLICK TO SELECT" : (
+                        <span className="flex items-center gap-1 group-hover:text-black transition-colors">
+                          VIEW DETAILS <ExternalLink className="w-3 h-3" />
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
 
           {/* Add new card */}
           {sortedAndFilteredVault.length === 0 && (
-            <div className="border-[2.5px] border-dashed border-[#ccc] p-5 flex flex-col items-center justify-center gap-3 text-[#ccc] col-span-full min-h-[160px]">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="border-[2.5px] border-dashed border-[#ccc] p-5 flex flex-col items-center justify-center gap-3 text-[#ccc] col-span-full min-h-[160px]"
+            >
               <span className="text-xs uppercase tracking-widest" style={{ fontWeight: 800 }}>
                 NO WORDS FOUND
               </span>
-            </div>
+            </motion.div>
           )}
-        </div>
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );

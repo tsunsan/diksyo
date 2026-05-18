@@ -321,10 +321,18 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
-                <button
+                <div
                   key={w.id}
                   onClick={() => setSelectedId(w.id)}
-                  className={`flex items-start gap-3 p-4 text-left border-[2.5px] transition-all ${
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedId(w.id);
+                    }
+                  }}
+                  className={`flex items-start gap-3 p-4 text-left border-[2.5px] transition-all cursor-pointer ${
                     selectedId === w.id
                       ? "bg-[#FDE047] border-black shadow-[4px_4px_0_#000]"
                       : "bg-white border-black hover:shadow-[3px_3px_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px]"
@@ -369,7 +377,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
-                </button>
+                </div>
               );
             })}
           </div>

@@ -39,7 +39,7 @@ export async function addWordToVault(wordId: string) {
     }
 
     try {
-        // Check if it already exists
+        
         const existing = await db.query.userProgress.findFirst({
             where: and(eq(userProgress.userId, user.id), eq(userProgress.wordId, wordId)),
         });

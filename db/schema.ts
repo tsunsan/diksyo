@@ -31,6 +31,7 @@ export const userProgress = pgTable("user_progress", {
     lastReview: timestamp("last_review"),
     nextReview: timestamp("next_review").defaultNow(),
     mastery: integer("mastery").default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
     isArchived: boolean("is_archived").default(false),
 });
 
