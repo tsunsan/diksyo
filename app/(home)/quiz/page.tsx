@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Volume2,
   Timer as TimerIcon,
+  ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 
@@ -81,6 +82,19 @@ const QUIZ_WORDS = [
     difficulty: "EASY",
     xp: 10,
   },
+  {
+    id: 6,
+    word: "Nakakapagpabagabag damdamin",
+    partOfSpeech: "PARIRALA",
+    answer: "worrisome feeling",
+    acceptedAnswers: ["worrisome feeling", "troubling emotion", "disturbing feeling", "unsettling emotion"],
+    rootWord: "Bagabag",
+    rootDefinition: "Worry; restlessness; anxiety",
+    example: "Nakakapagpabagabag damdamin ang mga nangyayari.",
+    hint: "A feeling of being troubled or restless",
+    difficulty: "HARD",
+    xp: 40,
+  },
 ];
 
 const POS_COLORS: Record<string, string> = {
@@ -138,6 +152,8 @@ export default function QuizPage2() {
   const [results, setResults] = useState<{ id: number; correct: boolean; timeBonus: boolean }[]>([]);
   const [quizDone, setQuizDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
+  const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
@@ -183,9 +199,35 @@ export default function QuizPage2() {
     }
   }, [feedback, currentIndex]);
 
+  const handleNext = () => {
+    if (currentIndex < QUIZ_WORDS.length - 1) {
+      setCurrentIndex((i) => i + 1);
+      setAnswer("");
+      setFeedback("idle");
+      setFlipped(false);
+      setTimeLeft(15);
+    } else {
+      setQuizDone(true);
+    }
+  };
+
+  // --- Enter to Next Challenge ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && feedback !== "idle" && !quizDone) {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [feedback, quizDone, currentIndex]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!answer.trim() || feedback !== "idle") return;
+
+    if (!hasSubmittedOnce) setHasSubmittedOnce(true);
 
     const isCorrect = current.acceptedAnswers.some(
       (a) => a.toLowerCase() === answer.trim().toLowerCase()
@@ -210,18 +252,6 @@ export default function QuizPage2() {
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex < QUIZ_WORDS.length - 1) {
-      setCurrentIndex((i) => i + 1);
-      setAnswer("");
-      setFeedback("idle");
-      setFlipped(false);
-      setTimeLeft(15);
-    } else {
-      setQuizDone(true);
-    }
-  };
-
   const handleRestart = () => {
     setCurrentIndex(0);
     setAnswer("");
@@ -232,6 +262,7 @@ export default function QuizPage2() {
     setResults([]);
     setQuizDone(false);
     setTimeLeft(15);
+    setShowDetails(false);
   };
 
   const correctCount = results.filter((r) => r.correct).length;
@@ -282,6 +313,65 @@ export default function QuizPage2() {
               ))}
             </div>
           </motion.div>
+
+          <div className="mb-8">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="w-full py-4 bg-white border-[4px] border-black shadow-[8px_8px_0_#000] uppercase font-black tracking-widest flex items-center justify-between px-6 transition-all hover:bg-gray-50 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+            >
+              <span className="text-black">VIEW DETAILED RESULTS</span>
+              <motion.div animate={{ rotate: showDetails ? 180 : 0 }}>
+                <ChevronDown className="w-6 h-6 text-black" />
+              </motion.div>
+            </button>
+
+            <AnimatePresence>
+              {showDetails && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-4 mt-6">
+                    {results.map((r, i) => {
+                      const w = QUIZ_WORDS.find((q) => q.id === r.id)!;
+                      return (
+                        <motion.div
+                          key={r.id}
+                          initial={{ x: -20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                          className={`flex items-center gap-4 p-4 border-[3px] border-black shadow-[4px_4px_0_#000] ${r.correct ? "bg-white" : "bg-[#FF1744]/10"}`}
+                        >
+                          <div
+                            className={`w-12 h-12 border-[3px] border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0_#000] ${r.correct ? "bg-[#00C853]" : "bg-[#FF1744]"}`}
+                          >
+                            {r.correct ? <Check className="w-8 h-8 text-white" /> : <X className="w-8 h-8 text-white" />}
+                          </div>
+                          <div className="flex-1 text-left">
+                            <span className="text-black uppercase font-black text-xl block leading-none mb-1">
+                              {w.word}
+                            </span>
+                            <span className="text-[#666] text-xs uppercase tracking-wider font-bold">
+                              EXPECTED: {w.acceptedAnswers[0]}
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className={`text-sm uppercase tracking-wider px-3 py-1 border-[2.5px] border-black font-black shadow-[2px_2px_0_#000] ${r.correct ? "bg-[#FFE500] text-black" : "bg-black text-white"}`}>
+                              {r.correct ? `+${w.xp + (r.timeBonus ? 5 : 0)} XP` : "MISS"}
+                            </span>
+                            {r.timeBonus && <span className="text-[10px] font-black text-[#FF6D00] mt-1 tracking-wider uppercase">SPEED BONUS!</span>}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleRestart} className="w-full py-6 bg-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#000] uppercase font-black tracking-widest text-xl transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
             <RefreshCw className="w-6 h-6 inline mr-2" /> TRY AGAIN
           </motion.button>
@@ -350,10 +440,14 @@ export default function QuizPage2() {
             {!flipped ? (
               <div className="text-center mt-8">
                 <p className="uppercase tracking-[0.3em] text-[10px] mb-6 font-black" style={{ color: cardTextColor + "cc" }}>TRANSLATE THIS WORD</p>
-                <div className="relative inline-block mb-8">
-                  <motion.div className="uppercase tracking-tighter font-black text-[5.5rem] leading-[0.8]" style={{ color: cardTextColor }}>
-                    {current.word.split("").map((char, i) => (
-                      <motion.span key={i} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 + i * 0.05, type: "spring" }} className="inline-block">{char}</motion.span>
+                <div className="relative w-full max-w-full mx-auto mb-8">
+                  <motion.div className="uppercase tracking-tighter font-black text-4xl sm:text-5xl md:text-[4.5rem] leading-[1.1] md:leading-[0.9] flex flex-wrap justify-center items-center break-words" style={{ color: cardTextColor }}>
+                    {current.word.split(" ").map((wordStr, wordIdx) => (
+                      <span key={wordIdx} className="inline-flex flex-wrap justify-center mr-3 last:mr-0 md:mr-6">
+                        {wordStr.split("").map((char, i) => (
+                          <motion.span key={i} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 + (wordIdx * 5 + i) * 0.05, type: "spring" }} className="inline-block break-all">{char}</motion.span>
+                        ))}
+                      </span>
                     ))}
                   </motion.div>
                 </div>
@@ -384,11 +478,11 @@ export default function QuizPage2() {
               </div>
             ) : (
               <motion.div initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} className="text-center mt-8">
-                <div className="relative inline-block mb-10">
+                <div className="relative inline-block mb-10 w-[90%] sm:w-auto max-w-full">
                   <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 4, repeat: Infinity }} className="absolute -inset-4 bg-[#FFE500] border-[4px] border-black -z-10 shadow-[8px_8px_0_#000]" />
-                  <div className="px-10 py-6">
+                  <div className="px-6 py-6 sm:px-10 break-words">
                     <p className="text-[10px] uppercase font-black text-black/40 mb-2">ROOT WORD</p>
-                    <h2 className="uppercase tracking-tighter text-black font-black text-[4rem] leading-[0.9]">{current.rootWord}</h2>
+                    <h2 className="uppercase tracking-tighter text-black font-black text-4xl sm:text-5xl md:text-[4rem] leading-[0.9] break-words">{current.rootWord}</h2>
                   </div>
                 </div>
                 <p className="text-xl text-black/70 uppercase tracking-widest px-10 mb-8 font-black">{current.rootDefinition}</p>
@@ -404,13 +498,24 @@ export default function QuizPage2() {
       <form onSubmit={handleSubmit} className="mb-8">
         <div className="flex gap-4">
           <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle"} placeholder={feedback !== "idle" ? "" : "TYPE IN ENGLISH..."} className="flex-1 px-8 py-6 bg-white border-[4px] border-black outline-none shadow-[8px_8px_0_#000] focus:shadow-[12px_12px_0_#000] transition-all uppercase text-xl placeholder:text-[#ccc] disabled:bg-[#eee] font-black" />
-          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim()} className="px-10 py-6 bg-black text-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">CHECK</motion.button>
+          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim()} className="px-10 py-6 bg-black text-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+            <span>CHECK</span>
+            <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none">
+              ENTER ↵
+            </kbd>
+          </motion.button>
         </div>
       </form>
 
       <div className="flex gap-4 flex-wrap items-center">
         <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} onClick={() => setFlipped(!flipped)} className="flex items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><RotateCcw className={`w-5 h-5 transition-transform duration-500 ${flipped ? "rotate-180" : ""}`} />{flipped ? "HIDE ROOT" : "VIEW ROOT"}</motion.button>
-        <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} className="flex items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><Volume2 className="w-5 h-5" />PRONOUNCE</motion.button>
+        <button className="flex items-center gap-3 px-6 py-4 bg-[#f0f0f0] border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all cursor-not-allowed group relative">
+          <Volume2 className="w-5 h-5 text-[#888]" />
+          <span className="text-[#888]">PRONOUNCE</span>
+          <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+            Coming Soon
+          </span>
+        </button>
         <AnimatePresence>
           {feedback !== "idle" && (
             <motion.button initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 50, opacity: 0 }} whileHover={{ x: 10, backgroundColor: "#000", color: "#fff" }} onClick={handleNext} className="ml-auto flex items-center gap-4 px-10 py-4 bg-[#FFE500] text-black border-[4px] border-black shadow-[6px_6px_0_#000] uppercase font-black transition-all">
