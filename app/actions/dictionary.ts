@@ -41,7 +41,6 @@ export async function saveWordToVault(wordId: string) {
         return { error: "Unauthorized: You must be logged in to save words." };
     }
 
-    // Check if the word is already saved in the user's progress
     const existingEntry = await db.query.userProgress.findFirst({
         where: and(
             eq(userProgress.userId, user.id),
@@ -60,7 +59,6 @@ export async function saveWordToVault(wordId: string) {
         return { success: false, message: "Word is already saved in your vault." };
     }
 
-    // Insert user progress entry starting as 'unseen' or 'saved'
     await db.insert(userProgress).values({
         userId: user.id,
         wordId: wordId,
@@ -129,5 +127,31 @@ export async function searchWords(query: string) {
             rootWord: true,
         },
         limit: 50,
+    });
+}
+
+export async function getRandomDiscoverWords() {
+    return db.query.words.findMany({
+        orderBy: sql`RANDOM()`,
+        with: { rootWord: true },
+        limit: 5
+    });
+}
+
+export async function getWordOfTheDay() {
+    const allWords = await db.query.words.findMany({
+        columns: { id: true, word: true },
+        orderBy: (words, { asc }) => [asc(words.word)]
+    });
+    
+    if (allWords.length === 0) return null;
+
+    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const stableIndex = daysSinceEpoch % allWords.length;
+    
+    const wordId = allWords[stableIndex].id;
+    return db.query.words.findFirst({
+        where: eq(words.id, wordId),
+        with: { rootWord: true }
     });
 }

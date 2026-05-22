@@ -49,30 +49,50 @@ function highlightBold(text: string) {
   );
 }
 
-export default function DictionaryClient({ initialWords, initialSavedWordIds }: { initialWords: any[], initialSavedWordIds: string[] }) {
+export default function DictionaryClient({ 
+  initialWords, 
+  initialSavedWordIds,
+  initialDiscoverWords,
+  initialWordOfTheDay
+}: { 
+  initialWords: any[], 
+  initialSavedWordIds: string[],
+  initialDiscoverWords?: any[],
+  initialWordOfTheDay?: any
+}) {
   const [words, setWords] = useState<any[]>(initialWords);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedWordIds));
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(initialWords.length > 0 ? initialWords[0].id : null);
+  
+  const defaultSelectedId = (initialDiscoverWords && initialDiscoverWords.length > 0) 
+    ? initialDiscoverWords[0].id 
+    : (initialWords.length > 0 ? initialWords[0].id : null);
+    
+  const [selectedId, setSelectedId] = useState<string | null>(defaultSelectedId);
+  
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
-  const [discoverWords, setDiscoverWords] = useState<any[]>([]);
-  const [wordOfTheDay, setWordOfTheDay] = useState<any | null>(null);
+  const [discoverWords, setDiscoverWords] = useState<any[]>(initialDiscoverWords || []);
+  const [wordOfTheDay, setWordOfTheDay] = useState<any | null>(initialWordOfTheDay || null);
 
   useEffect(() => {
-    // Randomize discover words
-    const shuffled = [...initialWords].sort(() => 0.5 - Math.random());
-    setDiscoverWords(shuffled.slice(0, 5));
+    // Fallback if the server-provided Discover Words are missing
+    if (!initialDiscoverWords || initialDiscoverWords.length === 0) {
+      if (initialWords.length > 0) {
+        const shuffled = [...initialWords].sort(() => 0.5 - Math.random());
+        setDiscoverWords(shuffled.slice(0, 5));
+      }
+    }
     
-    // Stable Word of the Day based on the current date
-    if (initialWords.length > 0) {
+    // Fallback if the server-provided Word of the Day is missing
+    if (!initialWordOfTheDay && initialWords.length > 0) {
       const sortedWords = [...initialWords].sort((a, b) => a.word.localeCompare(b.word));
       const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
       const stableIndex = daysSinceEpoch % sortedWords.length;
       setWordOfTheDay(sortedWords[stableIndex]);
     }
-  }, [initialWords]);
+  }, [initialWords, initialDiscoverWords, initialWordOfTheDay]);
 
   useEffect(() => {
     // Skip initial fetch on mount if search is empty
@@ -84,7 +104,12 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
         const results = await searchWords(search);
         setWords(results);
         
-        if (results.length > 0) {
+        if (search === "" && discoverWords.length > 0) {
+            const hasSelected = selectedId && discoverWords.find(w => w.id === selectedId);
+            if (!hasSelected) {
+                setSelectedId(discoverWords[0].id);
+            }
+        } else if (results.length > 0) {
             const exactMatch = results.find(w => w.word.toLowerCase() === search.toLowerCase());
             const hasSelected = selectedId && results.find(w => w.id === selectedId);
             
@@ -111,7 +136,10 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
     return () => clearTimeout(timeoutId);
   }, [search]);
 
-  const word = words.find((w) => w.id === selectedId) || null;
+  const word = words.find((w) => w.id === selectedId) || 
+               discoverWords.find((w) => w.id === selectedId) || 
+               (wordOfTheDay && wordOfTheDay.id === selectedId ? wordOfTheDay : null) || 
+               null;
   const isSaved = word ? savedIds.has(word.id) : false;
   const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
 
