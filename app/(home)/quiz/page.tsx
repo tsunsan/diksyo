@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { POS_COLORS } from "@/lib/utils";
 
 const QUIZ_WORDS = [
   {
@@ -96,12 +97,6 @@ const QUIZ_WORDS = [
     xp: 40,
   },
 ];
-
-const POS_COLORS: Record<string, string> = {
-  "PANGNGALAN": "#7C3AED",
-  "PANG-URI": "#0057FF",
-  "PANDIWA": "#FF6D00",
-};
 
 const DIFF_COLORS: Record<string, string> = {
   EASY: "#00C853",
@@ -433,7 +428,7 @@ export default function QuizPage2() {
             {timeLeft <= 3 && feedback === "idle" && <motion.div animate={{ opacity: [0, 0.2, 0] }} transition={{ repeat: Infinity, duration: 0.5 }} className="absolute inset-0 bg-red-600 pointer-events-none" />}
             
             <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
-              <span className="px-4 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] font-black" style={{ background: POS_COLORS[current.partOfSpeech] || "#333", color: "#fff" }}>{current.partOfSpeech}</span>
+              <span className="px-4 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] font-black" style={{ background: POS_COLORS[current.partOfSpeech]?.bg || "#333", color: POS_COLORS[current.partOfSpeech]?.text || "#fff" }}>{current.partOfSpeech}</span>
               <span className="px-4 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] font-black" style={{ background: DIFF_COLORS[current.difficulty], color: current.difficulty === "MEDIUM" || current.difficulty === "EASY" ? "#000" : "#fff" }}>+{current.xp} XP</span>
             </div>
 

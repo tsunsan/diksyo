@@ -12,6 +12,8 @@ import {
   Bookmark,
   BookMarked,
   Loader2,
+  Flame,
+  History,
   Check,
   BookmarkMinus,
   Volume2,
@@ -20,20 +22,7 @@ import {
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
 import { toast } from "sonner";
-
-const POS_COLORS: Record<string, { bg: string; text: string }> = {
-  PANGNGALAN: { bg: "#7C3AED", text: "#fff" },
-  "PANG-URI": { bg: "#0057FF", text: "#fff" },
-  PANDIWA: { bg: "#FF6D00", text: "#fff" },
-  "PANG-ABAY": { bg: "#00C853", text: "#000" },
-  PANGHALIP: { bg: "#FF1744", text: "#fff" },
-};
-
-const LEVEL_COLORS: Record<string, string> = {
-  BEGINNER: "#00C853",
-  INTERMEDIATE: "#FDE047",
-  ADVANCED: "#FF6D00",
-};
+import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
 
 function highlightBold(text: string) {
   if (!text) return null;
@@ -237,7 +226,7 @@ export default function DictionaryClient({
                     )}
                     {(!modalWord.rootWordId && !modalWord.rootWordString) && (
                         <span
-                          className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF6D00] text-white shadow-[2px_2px_0_#000]"
+                          className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF007F] text-white shadow-[2px_2px_0_#000]"
                           style={{ fontWeight: 900 }}
                         >
                           ⭐ ROOT WORD
@@ -293,7 +282,7 @@ export default function DictionaryClient({
                 {modalWord.etymology && (
                     <div className="bg-[#FFFBF0] border-[2px] border-black p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-4 h-4 text-[#FF6D00]" />
+                       <History className="w-4 h-4 text-[#FF6D00]" />
                         <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>ETYMOLOGY</span>
                       </div>
                       <p className="text-[#555] text-xs uppercase tracking-wider" style={{ fontWeight: 600 }}>{modalWord.etymology}</p>
@@ -369,10 +358,11 @@ export default function DictionaryClient({
           {/* Word list */}
           <div className="flex flex-col gap-2">
             {!search && (
-              <div className="mb-1 text-center">
-                <p className="text-[10px] text-black uppercase tracking-widest font-black bg-[#FDE047] border-[2px] border-black py-1.5 px-2 mb-1 shadow-[2px_2px_0_#000]">
+              <div className="mb-1 pb-1 border-b-[2px] border-black/10 flex items-center justify-center gap-1">
+                <span className="text-[12px]">🎲</span>
+                <span className="text-[11px] uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
                   DISCOVER THESE WORDS
-                </p>
+                </span>
               </div>
             )}
             
@@ -406,42 +396,47 @@ export default function DictionaryClient({
                       : "bg-white border-black hover:shadow-[3px_3px_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px]"
                   }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className="text-black uppercase"
-                        style={{ fontWeight: 900, fontSize: "1rem" }}
-                      >
-                        {w.word}
-                      </span>
-                      {w.posEnglish ? (
-                          <span
-                            className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 border-[1.5px] border-black"
-                            style={{
-                              fontWeight: 800,
-                              background: ps.bg,
-                              color: ps.text,
-                            }}
-                          >
-                            {w.posEnglish}
-                          </span>
-                      ) : null}
-                      {(!w.rootWordId && !w.rootWordString) && (
-                          <span
-                            className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 border-[1.5px] border-black bg-[#FF6D00] text-white"
-                            style={{ fontWeight: 800 }}
-                          >
-                            ROOT
-                          </span>
-                      )}
-                    </div>
-                    <p
-                      className="text-[#555] text-xs uppercase tracking-wider truncate"
-                      style={{ fontWeight: 600 }}
-                    >
-                      {w.translation ? w.translation.slice(0, 50) + "..." : ""}
-                    </p>
-                  </div>
+<div className="flex-1 min-w-0">
+  <div className="flex items-center gap-1 mb-1">
+    <span
+      className="text-black uppercase"
+      style={{ fontWeight: 900, fontSize: "1rem" }}
+    >
+      {w.word}
+    </span>
+    
+    {/* POS Badge */}
+    {w.posEnglish ? (
+      <span
+        className="inline-flex items-center justify-center h-[20px] px-1.5 border-[1.5px] border-black text-[9px] uppercase tracking-wider"
+        style={{
+          fontWeight: 800,
+          background: ps.bg,
+          color: ps.text,
+        }}
+      >
+        {w.posEnglish}
+      </span>
+    ) : null}
+
+    {/* Root Word Emoji Badge */}
+    {(!w.rootWordId && !w.rootWordString) && (
+      <span
+        className="inline-flex items-center justify-center h-[20px] w-[20px] border-[1.5px] border-black bg-[#FF007F] text-[10px]"
+        title="Root Word"
+      >
+        ⭐
+      </span>
+    )}
+  </div>
+  
+  <p
+    className="text-[#555] text-xs uppercase tracking-wider truncate"
+    style={{ fontWeight: 600 }}
+  >
+    {w.translation ? w.translation.slice(0, 50) + "..." : ""}
+  </p>
+</div>
                   {/* Open modal button */}
                   <button
                     onClick={(e) => {
@@ -458,9 +453,16 @@ export default function DictionaryClient({
             })}
           </div>
           
-          {!search && (
-            <p className="text-center text-[10px] text-[#aaa] uppercase tracking-widest mt-2" style={{ fontWeight: 600 }}>CLICK 🔗 FOR QUICK VIEW</p>
-          )}
+        {!search && (
+  <div className="text-center mt-2">
+    <span 
+      className="inline-flex items-center justify-center gap-1 text-[10px] text-[#aaa] uppercase tracking-widest" 
+      style={{ fontWeight: 600 }}
+    >
+      CLICK <ExternalLink className="w-3.5 h-3.5" /> FOR QUICK VIEW
+    </span>
+  </div>
+)}
 
           {/* Word of the Day Gradient Card */}
           {wordOfTheDay && !search && (
@@ -471,7 +473,7 @@ export default function DictionaryClient({
               
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-4 h-4 text-black" style={{ fill: "#FF6D00" }} />
+                  <Flame className="w-4 h-4 text-black" style={{ fill: "#FF6D00" }} />
                   <span className="text-xs font-black uppercase tracking-widest text-black">WORD OF THE DAY</span>
                 </div>
                 
@@ -485,10 +487,33 @@ export default function DictionaryClient({
                 
                 <div className="h-[2px] bg-black w-full mb-3 opacity-20"></div>
                 
-                <p className="text-[#555] text-sm leading-snug line-clamp-2" style={{ fontWeight: 500 }}>
+                <p className="text-[#555] text-sm leading-relaxed overflow-hidden break-words hyphens-auto" style={{ fontWeight: 500 }}>
                   {wordOfTheDay.meaningFilipino || wordOfTheDay.translation || "Tuklasin ang kahulugan ng salitang ito."}
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Suggest a Word Card */}
+          {(!search || (!isLoading && search && words.length === 0)) && (
+            <div className="mt-4 bg-[#E8F0FF] border-[3px] border-black shadow-[6px_6px_0_#000] p-5 flex flex-col items-center text-center group transition-all">
+              <div className="w-10 h-10 bg-[#FF007F] border-[2px] border-black flex items-center justify-center rounded-full mb-3 shadow-[2px_2px_0_#000] group-hover:bg-[#7C3AED] transition-colors">
+                <span className="text-white font-black text-lg">?</span>
+              </div>
+              <h3 className="text-black uppercase mb-2" style={{ fontWeight: 900, fontSize: "1.2rem", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+                MISSING A WORD?
+              </h3>
+              <p className="text-[#555] text-xs uppercase mb-4 leading-relaxed" style={{ fontWeight: 700 }}>
+                Can't find what you're looking for? Help us grow our dictionary!
+              </p>
+              <button 
+                className="w-full bg-[#0057FF] border-[2px] border-black py-3 text-white text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] relative group/btn transition-all hover:bg-black cursor-not-allowed" style={{ fontWeight: 900 }}
+              >
+                SUGGEST A WORD
+                <span className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover/btn:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                  Coming Soon
+                </span>
+              </button>
             </div>
           )}
         </div>
@@ -504,9 +529,11 @@ export default function DictionaryClient({
                 </>
               ) : (
                 <>
-                  <Search className="w-12 h-12 text-[#ccc] mb-4" />
-                  <h2 className="uppercase font-black text-xl text-[#888]">SELECT A WORD</h2>
-                  <p className="uppercase font-bold text-xs text-[#aaa]">SEARCH AND CLICK ON A WORD TO VIEW ITS DETAILS</p>
+                  <div className="w-16 h-16 bg-[#FDE047] border-[3px] border-black rounded-full flex items-center justify-center shadow-[4px_4px_0_#000] mb-6">
+                    <Search className="w-8 h-8 text-black" />
+                  </div>
+                  <h2 className="uppercase font-black text-xl text-black">SELECT A WORD</h2>
+                  <p className="uppercase font-bold text-xs text-[#555]">SEARCH AND CLICK ON A WORD TO VIEW ITS DETAILS</p>
                 </>
               )}
             </div>
@@ -540,7 +567,7 @@ export default function DictionaryClient({
                       )}
                       {(!word.rootWordId && !word.rootWordString) && (
                           <span
-                            className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF6D00] text-white shadow-[2px_2px_0_#000]"
+                            className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF007F] text-white shadow-[2px_2px_0_#000]"
                             style={{ fontWeight: 900 }}
                           >
                             ⭐ ROOT WORD
@@ -634,7 +661,7 @@ export default function DictionaryClient({
                 {(word.etymology || word.rootWordId || word.rootWordString) && (
                   <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Star className="w-4 h-4 text-[#FF6D00]" />
+                      <History className="w-4 h-4 text-[#FF6D00]" />
                       <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
                         {word.etymology && (word.rootWord?.word || word.rootWordString) ? "ETYMOLOGY & ROOT WORD" : word.etymology ? "ETYMOLOGY" : "ROOT WORD"}
                       </span>
@@ -729,69 +756,73 @@ export default function DictionaryClient({
               )}
 
               {/* Related Words + Tags */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Related */}
-                {word.related && word.related.length > 0 && (
-                  <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5">
-                    <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
-                      RELATED WORDS
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {word.related.map((r: string) => (
-                        <button
-                          key={r}
-                          onClick={() => {
-                            setSearch(r);
-                            setIsLoading(true);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                          className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-                          style={{ fontWeight: 800 }}
-                        >
-                          {r}
-                          <ArrowRight className="inline-block w-3 h-3 ml-1" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Tags */}
-                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5">
-                  {(word.tags && word.tags.length > 0) && (
-                      <>
-                        <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
-                          CATEGORIES
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {word.tags.map((tag: string) => (
-                            <span
-                              key={tag}
-                              className="px-3 py-1.5 bg-[#7C3AED] text-white border-[2px] border-black text-xs uppercase tracking-wider"
-                              style={{ fontWeight: 800 }}
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                  )}
-                  {word.level && (
-                    <div className={`pt-3 ${word.tags && word.tags.length > 0 ? "mt-4 border-t-[2px] border-black" : ""}`}>
-                      <span
-                        className="text-xs uppercase tracking-widest px-2 py-1 border-[2px] border-black inline-block"
-                        style={{
-                          fontWeight: 800,
-                          background: LEVEL_COLORS[word.level] || "#ccc",
-                          color: word.level === "ADVANCED" ? "#fff" : "#000",
-                        }}
-                      >
-                        LEVEL: {word.level}
+              {((word.related && word.related.length > 0) || (word.tags && word.tags.length > 0) || word.level) && (
+                <div className={`grid grid-cols-1 gap-4 ${((word.related && word.related.length > 0) && ((word.tags && word.tags.length > 0) || word.level)) ? 'sm:grid-cols-2' : ''}`}>
+                  {/* Related */}
+                  {word.related && word.related.length > 0 && (
+                    <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 h-full">
+                      <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
+                        RELATED WORDS
                       </span>
+                      <div className="flex flex-wrap gap-2">
+                        {word.related.map((r: string) => (
+                          <button
+                            key={r}
+                            onClick={() => {
+                              setSearch(r);
+                              setIsLoading(true);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                            style={{ fontWeight: 800 }}
+                          >
+                            {r}
+                            <ArrowRight className="inline-block w-3 h-3 ml-1" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {((word.tags && word.tags.length > 0) || word.level) && (
+                    <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 h-full">
+                      {(word.tags && word.tags.length > 0) && (
+                          <>
+                            <span className="text-xs uppercase tracking-widest text-black mb-4 block" style={{ fontWeight: 900 }}>
+                              CATEGORIES
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {word.tags.map((tag: string) => (
+                                <span
+                                  key={tag}
+                                  className="px-3 py-1.5 bg-[#7C3AED] text-white border-[2px] border-black text-xs uppercase tracking-wider"
+                                  style={{ fontWeight: 800 }}
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          </>
+                      )}
+                      {word.level && (
+                        <div className={`pt-3 ${word.tags && word.tags.length > 0 ? "mt-4 border-t-[2px] border-black" : ""}`}>
+                          <span
+                            className="text-xs uppercase tracking-widest px-2 py-1 border-[2px] border-black inline-block"
+                            style={{
+                              fontWeight: 800,
+                              background: LEVEL_COLORS[word.level] || "#ccc",
+                              color: word.level === "ADVANCED" ? "#fff" : "#000",
+                            }}
+                          >
+                            LEVEL: {word.level}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>

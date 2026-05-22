@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { BookMarked, ChevronRight, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star } from "lucide-react";
+import { BookMarked, History, ChevronRight, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import {
 import { searchWordBySlug, removeWordFromVault, searchWords } from "@/app/actions/dictionary";
 import { addWordToVault } from "@/app/actions/vault";
 import { toast } from "sonner";
+import { POS_COLORS } from "@/lib/utils";
 
 
 type VaultEntry = {
@@ -29,6 +30,8 @@ type VaultEntry = {
     translation: string;
     partOfSpeech: string | null;
     tags: string[] | null;
+    rootWordId?: string | null;
+    rootWordString?: string | null;
   };
 };
 
@@ -51,14 +54,6 @@ function getMasteryStatus(entry: VaultEntry) {
 }
 
 const ALL_TAGS = ["ALL", "DAMDAMIN", "RELASYON", "BANSA", "KASAYSAYAN", "KATANGIAN", "KAPALIGIRAN", "KARAKTER", "KILOS"];
-
-const POS_COLORS: Record<string, { bg: string; text: string }> = {
-  PANGNGALAN: { bg: "#7C3AED", text: "#fff" },
-  "PANG-URI": { bg: "#0057FF", text: "#fff" },
-  PANDIWA: { bg: "#FF6D00", text: "#fff" },
-  "PANG-ABAY": { bg: "#00C853", text: "#000" },
-  PANGHALIP: { bg: "#FF1744", text: "#fff" },
-};
 
 function highlightBold(text: string) {
   if (!text) return null;
@@ -253,22 +248,30 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
               {/* Modal header */}
               <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
                 <div>
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span
-                      className="px-3 py-1 border-[2px] border-black text-xs uppercase tracking-widest text-white"
+                      className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest text-white shadow-[2px_2px_0_#000]"
                       style={{
                         background: (POS_COLORS[modalWord.partOfSpeech?.toUpperCase()] || { bg: "#333" }).bg,
-                        fontWeight: 800,
+                        fontWeight: 900,
                       }}
                     >
                       {modalWord.partOfSpeech} {modalWord.posEnglish ? `· ${modalWord.posEnglish}` : ''}
                     </span>
                     {modalWord.frequency && (
                         <span
-                          className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white"
-                          style={{ fontWeight: 700 }}
+                          className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white shadow-[2px_2px_0_#000]"
+                          style={{ fontWeight: 900, color: "#000" }}
                         >
                           {modalWord.frequency}
+                        </span>
+                    )}
+                    {(!modalWord.rootWordId && !modalWord.rootWordString) && (
+                        <span
+                          className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF007F] text-white shadow-[2px_2px_0_#000]"
+                          style={{ fontWeight: 900 }}
+                        >
+                          ⭐ ROOT WORD
                         </span>
                     )}
                   </div>
@@ -321,7 +324,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 {modalWord.etymology && (
                     <div className="bg-[#FFFBF0] border-[2px] border-black p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-4 h-4 text-[#FF6D00]" />
+                        <History className="w-4 h-4 text-[#FF6D00]" />
                         <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>ETYMOLOGY</span>
                       </div>
                       <p className="text-[#555] text-xs uppercase tracking-wider" style={{ fontWeight: 600 }}>{modalWord.etymology}</p>
@@ -535,12 +538,22 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 {/* Top */}
                 <div className={`flex items-start justify-between gap-2 ${editMode ? 'pr-8' : ''}`}>
                   <div>
-                    <span
-                      className="text-black uppercase"
-                      style={{ fontWeight: 900, fontSize: "1.3rem", lineHeight: 1.2 }}
-                    >
-                      {w.word}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-black uppercase"
+                        style={{ fontWeight: 900, fontSize: "1.3rem", lineHeight: 1.2 }}
+                      >
+                        {w.word}
+                      </span>
+                      {(!w.rootWordId && !w.rootWordString) && (
+                         <span
+        className="inline-flex items-center justify-center h-[20px] w-[20px] border-[1.5px] border-black bg-[#FF007F] text-[10px]"
+        title="Root Word"
+      >
+        ⭐
+      </span>
+                      )}
+                    </div>
                     {w.pronunciation && (
                       <p
                         className="text-[#888] text-xs mt-0.5 mb-1"
