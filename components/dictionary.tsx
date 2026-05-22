@@ -57,6 +57,22 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
+  const [discoverWords, setDiscoverWords] = useState<any[]>([]);
+  const [wordOfTheDay, setWordOfTheDay] = useState<any | null>(null);
+
+  useEffect(() => {
+    // Randomize discover words
+    const shuffled = [...initialWords].sort(() => 0.5 - Math.random());
+    setDiscoverWords(shuffled.slice(0, 5));
+    
+    // Stable Word of the Day based on the current date
+    if (initialWords.length > 0) {
+      const sortedWords = [...initialWords].sort((a, b) => a.word.localeCompare(b.word));
+      const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+      const stableIndex = daysSinceEpoch % sortedWords.length;
+      setWordOfTheDay(sortedWords[stableIndex]);
+    }
+  }, [initialWords]);
 
   useEffect(() => {
     // Skip initial fetch on mount if search is empty
@@ -67,8 +83,16 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
       try {
         const results = await searchWords(search);
         setWords(results);
-        if (results.length > 0 && (!selectedId || !results.find(w => w.id === selectedId))) {
-            setSelectedId(results[0].id);
+        
+        if (results.length > 0) {
+            const exactMatch = results.find(w => w.word.toLowerCase() === search.toLowerCase());
+            const hasSelected = selectedId && results.find(w => w.id === selectedId);
+            
+            if (exactMatch && exactMatch.id !== selectedId) {
+                setSelectedId(exactMatch.id);
+            } else if (!hasSelected) {
+                setSelectedId(results[0].id);
+            }
         } else if (results.length === 0) {
             setSelectedId(null);
         }
@@ -165,22 +189,30 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
               {/* Modal header */}
               <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
                 <div>
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span
-                      className="px-3 py-1 border-[2px] border-black text-xs uppercase tracking-widest text-white"
+                      className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest text-white shadow-[2px_2px_0_#000]"
                       style={{
                         background: (POS_COLORS[modalWord.partOfSpeech?.toUpperCase()] || { bg: "#333" }).bg,
-                        fontWeight: 800,
+                        fontWeight: 900,
                       }}
                     >
                       {modalWord.partOfSpeech} {modalWord.posEnglish ? `· ${modalWord.posEnglish}` : ''}
                     </span>
                     {modalWord.frequency && (
                         <span
-                          className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white"
-                          style={{ fontWeight: 700 }}
+                          className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white shadow-[2px_2px_0_#000]"
+                          style={{ fontWeight: 900, color: "#000" }}
                         >
                           {modalWord.frequency}
+                        </span>
+                    )}
+                    {(!modalWord.rootWordId && !modalWord.rootWordString) && (
+                        <span
+                          className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF6D00] text-white shadow-[2px_2px_0_#000]"
+                          style={{ fontWeight: 900 }}
+                        >
+                          ⭐ ROOT WORD
                         </span>
                     )}
                   </div>
@@ -259,7 +291,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                       <span className="text-xs uppercase tracking-widest text-[#888] mb-2 block" style={{ fontWeight: 800 }}>RELATED WORDS</span>
                       <div className="flex flex-wrap gap-2">
                         {modalWord.related.map((r: string) => (
-                          <button key={r} onClick={() => { setSearch(r); setModalWord(null); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000]" style={{ fontWeight: 800 }}>
+                          <button key={r} onClick={() => { setSearch(r); setIsLoading(true); setModalWord(null); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000]" style={{ fontWeight: 800 }}>
                             {r} <ArrowRight className="inline-block w-3 h-3 ml-1" />
                           </button>
                         ))}
@@ -308,16 +340,24 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
 
           {/* Word list */}
           <div className="flex flex-col gap-2">
+            {!search && (
+              <div className="mb-1 text-center">
+                <p className="text-[10px] text-black uppercase tracking-widest font-black bg-[#FDE047] border-[2px] border-black py-1.5 px-2 mb-1 shadow-[2px_2px_0_#000]">
+                  DISCOVER THESE WORDS
+                </p>
+              </div>
+            )}
+            
             {isLoading ? (
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-black" />
                     SEARCHING...
                 </div>
-            ) : words.length === 0 ? (
+            ) : (!search ? discoverWords : words).length === 0 ? (
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     NO WORDS FOUND.
                 </div>
-            ) : words.slice(0, 5).map((w) => {
+            ) : (!search ? discoverWords : words.slice(0, 5)).map((w) => {
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
@@ -358,6 +398,14 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                             {w.posEnglish}
                           </span>
                       ) : null}
+                      {(!w.rootWordId && !w.rootWordString) && (
+                          <span
+                            className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 border-[1.5px] border-black bg-[#FF6D00] text-white"
+                            style={{ fontWeight: 800 }}
+                          >
+                            ROOT
+                          </span>
+                      )}
                     </div>
                     <p
                       className="text-[#555] text-xs uppercase tracking-wider truncate"
@@ -381,16 +429,58 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
               );
             })}
           </div>
-          <p className="text-center text-[10px] text-[#aaa] uppercase tracking-widest" style={{ fontWeight: 600 }}>CLICK 🔗 FOR QUICK VIEW</p>
+          
+          {!search && (
+            <p className="text-center text-[10px] text-[#aaa] uppercase tracking-widest mt-2" style={{ fontWeight: 600 }}>CLICK 🔗 FOR QUICK VIEW</p>
+          )}
+
+          {/* Word of the Day Gradient Card */}
+          {wordOfTheDay && !search && (
+            <div className="mt-4 bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 relative overflow-hidden flex flex-col justify-between cursor-pointer group active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all" onClick={() => setSelectedId(wordOfTheDay.id)}>
+              {/* Decorative background shape */}
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#7C3AED] rounded-full opacity-30 blur-2xl group-hover:bg-[#FF6D00] transition-colors duration-700"></div>
+              <div className="absolute -left-8 -bottom-8 w-24 h-24 bg-[#FDE047] rounded-full opacity-40 blur-xl group-hover:bg-[#0057FF] transition-colors duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="w-4 h-4 text-black" style={{ fill: "#FF6D00" }} />
+                  <span className="text-xs font-black uppercase tracking-widest text-black">WORD OF THE DAY</span>
+                </div>
+                
+                <h3 className="text-black uppercase mb-1" style={{ fontWeight: 900, fontSize: "2rem", lineHeight: 1, letterSpacing: "-0.02em" }}>
+                  {wordOfTheDay.word}
+                </h3>
+                
+                <p className="text-[#333] text-xs uppercase tracking-wider mb-4" style={{ fontWeight: 600 }}>
+                  {wordOfTheDay.partOfSpeech}
+                </p>
+                
+                <div className="h-[2px] bg-black w-full mb-3 opacity-20"></div>
+                
+                <p className="text-[#555] text-sm leading-snug line-clamp-2" style={{ fontWeight: 500 }}>
+                  {wordOfTheDay.meaningFilipino || wordOfTheDay.translation || "Tuklasin ang kahulugan ng salitang ito."}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Word Card */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           {!word ? (
-            <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-12 text-center flex flex-col items-center justify-center">
-              <Search className="w-12 h-12 text-[#ccc] mb-4" />
-              <h2 className="uppercase font-black text-xl text-[#888]">SELECT A WORD</h2>
-              <p className="uppercase font-bold text-xs text-[#aaa]">SEARCH AND CLICK ON A WORD TO VIEW ITS DETAILS</p>
+            <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-12 h-12 text-black animate-spin mb-4" />
+                  <h2 className="uppercase font-black text-xl text-[#888]">LOADING WORD...</h2>
+                </>
+              ) : (
+                <>
+                  <Search className="w-12 h-12 text-[#ccc] mb-4" />
+                  <h2 className="uppercase font-black text-xl text-[#888]">SELECT A WORD</h2>
+                  <p className="uppercase font-bold text-xs text-[#aaa]">SEARCH AND CLICK ON A WORD TO VIEW ITS DETAILS</p>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -399,10 +489,10 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <div className="flex items-center gap-3 flex-wrap mb-2">
+                    <div className="flex items-center gap-2 flex-wrap mb-3">
                       {/* POS Badge */}
                       <span
-                        className="px-3 py-1.5 border-[2px] border-black text-xs uppercase tracking-widest"
+                        className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest shadow-[2px_2px_0_#000]"
                         style={{
                           fontWeight: 900,
                           background: posStyle.bg,
@@ -414,10 +504,18 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                       {/* Frequency */}
                       {word.frequency && (
                           <span
-                            className="px-2 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#f5f5f5]"
-                            style={{ fontWeight: 700 }}
+                            className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-white shadow-[2px_2px_0_#000]"
+                            style={{ fontWeight: 900, color: "#000" }}
                           >
                             {word.frequency}
+                          </span>
+                      )}
+                      {(!word.rootWordId && !word.rootWordString) && (
+                          <span
+                            className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest bg-[#FF6D00] text-white shadow-[2px_2px_0_#000]"
+                            style={{ fontWeight: 900 }}
+                          >
+                            ⭐ ROOT WORD
                           </span>
                       )}
                     </div>
@@ -505,12 +603,12 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                 )}
 
                 {/* Etymology / Root Word */}
-                {(word.etymology || word.rootWordId) && (
+                {(word.etymology || word.rootWordId || word.rootWordString) && (
                   <div className="bg-[#FFFBF0] border-[2px] border-black p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Star className="w-4 h-4 text-[#FF6D00]" />
                       <span className="text-xs uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
-                        {word.etymology && word.rootWord?.word ? "ETYMOLOGY & ROOT WORD" : word.etymology ? "ETYMOLOGY" : "ROOT WORD"}
+                        {word.etymology && (word.rootWord?.word || word.rootWordString) ? "ETYMOLOGY & ROOT WORD" : word.etymology ? "ETYMOLOGY" : "ROOT WORD"}
                       </span>
                     </div>
                     {word.etymology && (
@@ -518,17 +616,19 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                         {word.etymology}
                       </p>
                     )}
-                    {word.rootWord?.word && (
+                    {(word.rootWord?.word || word.rootWordString) && (
                       <div className="flex flex-col items-start gap-2">
                         <button
                           onClick={() => {
-                            setSearch(word.rootWord?.word || "");
+                            if (word.rootWordId) setSelectedId(word.rootWordId);
+                            setSearch(word.rootWord?.word || word.rootWordString || "");
+                            setIsLoading(true);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
                           className="inline-flex items-center gap-2 bg-[#FDE047] border-[2px] border-black px-3 py-1.5 text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-[#FACC15]"
                           style={{ fontWeight: 800 }}
                         >
-                          SALITANG-UGAT: {word.rootWord?.word}
+                          SALITANG-UGAT: {word.rootWord?.word || word.rootWordString}
                           <ChevronRight className="w-4 h-4" />
                         </button>
                         {word.rootWord?.translation && (
@@ -614,6 +714,7 @@ export default function DictionaryClient({ initialWords, initialSavedWordIds }: 
                           key={r}
                           onClick={() => {
                             setSearch(r);
+                            setIsLoading(true);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
                           className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
