@@ -21,33 +21,25 @@ import {
 } from "lucide-react";
 
 const LEARNING_MODES = [
-  { id: "classic", title: "Classic Recognition", desc: "Translate Tagalog to English.", icon: Eye },
-  { id: "production", title: "Production", desc: "Type the Tagalog translation.", icon: Keyboard },
-  { id: "cloze", title: "Cloze Deletion", desc: "Fill in the missing words.", icon: Puzzle },
-  { id: "advanced", title: "Advanced Definition", desc: "Match definitions entirely in Tagalog.", icon: BookOpen },
-  { id: "multiple", title: "Multiple Choice", desc: "Select from four options.", icon: List },
-  { id: "affix", title: "Affix Builder", desc: "Construct words from roots.", icon: Blocks },
+  { id: "affix", title: "Affix Builder", desc: "Construct words from roots.", icon: Blocks, available: true },
+  { id: "classic", title: "Classic Recognition", desc: "Translate Tagalog to English.", icon: Eye, available: false },
+  { id: "production", title: "Production", desc: "Type the Tagalog translation.", icon: Keyboard, available: false },
+  { id: "advanced", title: "Advanced Definition", desc: "Match definitions entirely in Tagalog.", icon: BookOpen, available: false },
+  { id: "multiple", title: "Multiple Choice", desc: "Select from four options.", icon: List, available: false },
 ];
 
-const ARCADE_MODES = [
-  { id: "time", title: "Time Attack", desc: "Race against the clock.", icon: Timer, customBg: "#0057FF", customText: "#fff" },
-  { id: "streak", title: "Streak Survivor", desc: "One mistake and you're out.", icon: Flame, customBg: "#FF6D00", customText: "#fff" },
+const MASTERY_MODES = [
+  { id: "time", title: "Time Attack", desc: "Race against the clock in this high-speed typing challenge.", icon: Timer, customBg: "#0057FF", customText: "#fff" },
+  { id: "cloze", title: "Cloze Deletion", desc: "Test your comprehension by filling in the missing words.", icon: Puzzle, customBg: "#FF6D00", customText: "#fff" },
 ];
 
 export function QuizModeClient() {
-  const [selectedMode, setSelectedMode] = useState<string>("production");
+  const [selectedMode, setSelectedMode] = useState<string | null>(null);
 
   return (
     <>
       {/* ── Header Section ── */}
       <div className="mb-12">
-        <Link
-          href="/app/dashboard"
-          className="inline-flex items-center gap-2 text-[#666] hover:text-black transition-colors uppercase tracking-widest text-xs mb-4"
-          style={{ fontWeight: 800 }}
-        >
-          <ArrowLeft className="w-4 h-4" /> Dashboard / Quick Quiz
-        </Link>
         <motion.h1
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -63,53 +55,19 @@ export function QuizModeClient() {
         
         {/* ── Left Column: Modes Selection (65%) ── */}
         <div className="w-full md:w-[65%] flex flex-col gap-12">
-          
-          {/* Learning Modes */}
-          <section>
-            <div className="flex items-center gap-3 mb-5">
-              <GraduationCap className="w-6 h-6 text-[#7C3AED]" />
-              <h2 className="text-black uppercase tracking-widest text-lg" style={{ fontWeight: 900 }}>Learning Modes</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {LEARNING_MODES.map((mode, i) => {
-                const isSelected = selectedMode === mode.id;
-                const Icon = mode.icon;
-                return (
-                  <motion.div
-                    key={mode.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: i * 0.05 }}
-                    onClick={() => setSelectedMode(mode.id)}
-                    className={`relative border-[3px] border-black p-5 flex flex-col gap-4 cursor-pointer transition-all group ${
-                      isSelected ? "translate-x-1 translate-y-1 shadow-none" : "shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
-                    }`}
-                    style={{ background: isSelected ? "#FFE500" : "#fff" }}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-3 right-3">
-                        <CheckCircle2 className="w-6 h-6 text-black" fill="#fff" />
-                      </div>
-                    )}
-                    <Icon className={`w-7 h-7 text-black ${!isSelected && 'group-hover:scale-110 transition-transform'}`} />
-                    <div>
-                      <h3 className="text-black uppercase mb-1" style={{ fontWeight: 900, fontSize: "0.9rem" }}>{mode.title}</h3>
-                      <p className="text-xs" style={{ fontWeight: 600, color: isSelected ? "#333" : "#666" }}>{mode.desc}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </section>
 
-          {/* Arcade Modes */}
+          {/* Mastery Modes */}
           <section>
-            <div className="flex items-center gap-3 mb-5">
-              <Gamepad2 className="w-6 h-6 text-[#FF6D00]" />
-              <h2 className="text-black uppercase tracking-widest text-lg" style={{ fontWeight: 900 }}>Arcade Modes</h2>
+                        <div className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl">🎓</span>
+                <h2 className="text-black uppercase tracking-widest text-lg" style={{ fontWeight: 900 }}>Mastery Modes</h2>
+              </div>
+              <hr className="border-black border-t-[3px] mb-3" />
+              <p className="text-[#555] text-sm uppercase tracking-widest" style={{ fontWeight: 800 }}>Focused training based on the words saved in your vault.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {ARCADE_MODES.map((mode, i) => {
+              {MASTERY_MODES.map((mode, i) => {
                 const isSelected = selectedMode === mode.id;
                 const Icon = mode.icon;
                 // If selected, it turns Yellow. If not, it uses its custom brutalist color.
@@ -124,8 +82,8 @@ export function QuizModeClient() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: (LEARNING_MODES.length * 0.05) + (i * 0.05) }}
                     onClick={() => setSelectedMode(mode.id)}
-                    className={`relative border-[3px] border-black p-5 flex flex-col gap-4 cursor-pointer transition-all overflow-hidden group ${
-                      isSelected ? "translate-x-1 translate-y-1 shadow-none" : "shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                    className={`relative border-[3px] border-black p-5 flex flex-col gap-4 transition-all overflow-hidden group ${
+                      isSelected ? "cursor-pointer translate-x-1 translate-y-1 shadow-none" : "cursor-pointer shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                     }`}
                     style={{ background: bg }}
                   >
@@ -147,6 +105,56 @@ export function QuizModeClient() {
               })}
             </div>
           </section>
+
+          {/* Arcade/Learning Modes */}
+          <section>
+             <div className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl">🎮</span>
+                <h2 className="text-black uppercase tracking-widest text-lg" style={{ fontWeight: 900 }}>Arcade Modes</h2>
+              </div>
+              <hr className="border-black border-t-[3px] mb-3" />
+              <p className="text-[#555] text-sm uppercase tracking-widest" style={{ fontWeight: 800 }}>Random fun games to test your speed and reflexes.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {LEARNING_MODES.map((mode, i) => {
+                const isSelected = selectedMode === mode.id;
+                const Icon = mode.icon;
+                const isAvailable = mode.available !== false;
+                
+                return (
+                  <motion.div
+                    key={mode.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.05 }}
+                    onClick={() => { if (isAvailable) setSelectedMode(mode.id); }}
+                    className={`relative border-[3px] border-black p-5 flex flex-col gap-4 transition-all group ${
+                      !isAvailable ? "cursor-not-allowed bg-[#f0f0f0] opacity-80 shadow-[2px_2px_0_#000]" :
+                      isSelected ? "cursor-pointer translate-x-1 translate-y-1 shadow-none bg-[#FFE500]" : "cursor-pointer bg-white shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                    }`}
+                  >
+                    {!isAvailable && (
+                      <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[12px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                        Coming Soon
+                      </span>
+                    )}
+                    {isSelected && isAvailable && (
+                      <div className="absolute top-3 right-3">
+                        <CheckCircle2 className="w-6 h-6 text-black" fill="#fff" />
+                      </div>
+                    )}
+                    <Icon className={`w-7 h-7 ${!isAvailable ? 'text-[#888]' : 'text-black'} ${!isSelected && isAvailable && 'group-hover:scale-110 transition-transform'}`} />
+                    <div>
+                      <h3 className={`uppercase mb-1 ${!isAvailable ? 'text-[#888]' : 'text-black'}`} style={{ fontWeight: 900, fontSize: "0.9rem" }}>{mode.title}</h3>
+                      <p className="text-xs" style={{ fontWeight: 600, color: !isAvailable ? '#aaa' : isSelected ? "#333" : "#666" }}>{mode.desc}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+
         </div>
 
         {/* ── Right Column: Preview & Action (35%) ── */}
@@ -176,9 +184,13 @@ export function QuizModeClient() {
           </motion.div>
 
           {/* Start Button */}
-          <button className="group w-full flex items-center justify-center gap-3 py-5 bg-black text-[#FFE500] border-[4px] border-black uppercase tracking-widest transition-all active:translate-x-1.5 active:translate-y-1.5 active:shadow-none hover:bg-[#111]" style={{ fontWeight: 900, fontSize: "1.05rem", boxShadow: "6px 6px 0 #FFE500" }}>
+          <button 
+            disabled={!selectedMode}
+            className={`group w-full flex items-center justify-center gap-3 py-5 border-[4px] border-black uppercase tracking-widest transition-all ${!selectedMode ? 'bg-[#999] text-[#555] cursor-not-allowed shadow-none translate-x-1.5 translate-y-1.5' : 'bg-black text-[#FFE500] hover:bg-[#111] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none shadow-[6px_6px_0_#FFE500]'}`} 
+            style={{ fontWeight: 900, fontSize: "1.05rem" }}
+          >
             START TRAINING
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className={`w-5 h-5 ${selectedMode && 'group-hover:translate-x-1'} transition-transform`} />
           </button>
 
         </div>
