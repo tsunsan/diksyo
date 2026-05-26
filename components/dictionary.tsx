@@ -241,7 +241,7 @@ export default function DictionaryClient({
                   </h2>
                   {modalWord.pronunciation && (
                       <p
-                        className="text-[#888] mt-1 text-sm uppercase tracking-widest"
+                        className="text-[#888] mt-1 text-sm tracking-widest"
                         style={{ fontWeight: 600 }}
                       >
                         {modalWord.pronunciation}
@@ -582,7 +582,7 @@ export default function DictionaryClient({
                       {word.word}
                     </h2>
                     {word.pronunciation && (
-                        <p className="text-[#888] mt-1 text-sm uppercase tracking-widest" style={{ fontWeight: 600 }}>
+                        <p className="text-[#888] mt-1 text-sm tracking-widest" style={{ fontWeight: 600 }}>
                           {word.pronunciation}
                         </p>
                     )}

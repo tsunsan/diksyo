@@ -283,7 +283,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                   </h2>
                   {modalWord.pronunciation && (
                       <p
-                        className="text-[#888] mt-1 text-sm uppercase tracking-widest"
+                        className="text-[#888] mt-1 text-sm tracking-widest"
                         style={{ fontWeight: 600 }}
                       >
                         {modalWord.pronunciation}
@@ -547,7 +547,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                       </span>
                       {(!w.rootWordId && !w.rootWordString) && (
                          <span
-        className="inline-flex items-center justify-center h-[20px] w-[20px] border-[1.5px] border-black bg-[#FF007F] text-[10px]"
+        className="inline-flex items-center justify-center h-[16px] w-[16px] border-[1.5px] border-black bg-[#FF007F] text-[8px]"
         title="Root Word"
       >
         ⭐
