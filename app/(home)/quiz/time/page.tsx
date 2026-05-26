@@ -507,7 +507,7 @@ export default function QuizPage2() {
         <button className="flex items-center gap-3 px-6 py-4 bg-[#f0f0f0] border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all cursor-not-allowed group relative">
           <Volume2 className="w-5 h-5 text-[#888]" />
           <span className="text-[#888]">PRONOUNCE</span>
-          <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+          <span className="absolute -center-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
             Coming Soon
           </span>
         </button>

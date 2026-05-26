@@ -8,6 +8,7 @@ export type QuizWord = {
     rootWord?: string;
     partOfSpeech: string;
     fsrsData?: any;
+    usageExamples?: { sentence: string; translation: string }[];
 };
 
 interface QuizState {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import Link from "next/link";
 import {
@@ -34,6 +35,7 @@ const MASTERY_MODES = [
 ];
 
 export function QuizModeClient() {
+  const router = useRouter();
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
 
   return (
@@ -186,6 +188,7 @@ export function QuizModeClient() {
           {/* Start Button */}
           <button 
             disabled={!selectedMode}
+            onClick={() => router.push(`/quiz/${selectedMode}`)}
             className={`group w-full flex items-center justify-center gap-3 py-5 border-[4px] border-black uppercase tracking-widest transition-all ${!selectedMode ? 'bg-[#999] text-[#555] cursor-not-allowed shadow-none translate-x-1.5 translate-y-1.5' : 'bg-black text-[#FFE500] hover:bg-[#111] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none shadow-[6px_6px_0_#FFE500]'}`} 
             style={{ fontWeight: 900, fontSize: "1.05rem" }}
           >

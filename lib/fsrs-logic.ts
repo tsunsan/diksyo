@@ -25,7 +25,26 @@ export const calculateNextReview = (
     grade: FSRSGrade,
     previousCard: any = null
 ) => {
-    const cardToGrade = previousCard ? previousCard : createEmptyCard();
+    let cardToGrade = createEmptyCard();
+    if (previousCard) {
+        // Map database fields to literal FSRS Card properties securely
+        cardToGrade = {
+            ...cardToGrade,
+            due: previousCard.due ? new Date(previousCard.due) : (previousCard.nextReview ? new Date(previousCard.nextReview) : cardToGrade.due),
+            stability: previousCard.stability ?? cardToGrade.stability,
+            difficulty: previousCard.difficulty ?? cardToGrade.difficulty,
+            reps: previousCard.reps ?? cardToGrade.reps,
+            lapses: previousCard.lapses ?? cardToGrade.lapses,
+            state: previousCard.state ?? cardToGrade.state,
+            elapsed_days: previousCard.elapsed_days ?? cardToGrade.elapsed_days,
+            scheduled_days: previousCard.scheduled_days ?? cardToGrade.scheduled_days,
+        };
+        const lastReview = previousCard.last_review || previousCard.lastReview;
+        if (lastReview) {
+            cardToGrade.last_review = new Date(lastReview);
+        }
+    }
+    
     const rating = mapGradeToRating(grade);
     const now = new Date();
 
