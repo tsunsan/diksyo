@@ -315,7 +315,7 @@ export default function ClozeQuizPage() {
            className={`${cardBg} border-[4px] border-black shadow-[12px_12px_0_#000] p-6 md:p-12 mb-10 relative transition-colors duration-300`}
         >
            <div className="absolute -top-4 -right-4 bg-black text-white px-4 py-1 border-[3px] border-white font-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#FFE500]">
-              Intercept
+              {currentWord.partOfSpeech}
            </div>
 
            {/* The Sentence */}
@@ -407,24 +407,24 @@ export default function ClozeQuizPage() {
             initial={{ y: 100, opacity: 0 }} 
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none"
+            className="fixed bottom-0 left-0 lg:left-64 right-0 z-50 p-4 pointer-events-none"
           >
-            <div className="max-w-4xl mx-auto pointer-events-auto flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between bg-black p-5 border-[4px] border-black shadow-[0_-8px_0_0_rgba(0,0,0,0.1)]">
-               <div className="flex items-center gap-5 text-white">
+            <div className="max-w-4xl mx-auto pointer-events-auto flex flex-col sm:flex-row gap-6 items-center justify-between bg-black p-6 border-[4px] border-black shadow-[0_-8px_0_0_rgba(0,0,0,0.1)] w-full">
+               <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-4 text-white w-full sm:w-auto justify-center sm:justify-start">
                   {isCorrect ? (
-                     <div className="bg-[#00C853] p-2 border-[3px] border-white">
+                     <div className="bg-[#00C853] p-2 border-[3px] border-white flex-shrink-0">
                        <CheckCircle2 className="w-8 h-8 text-black" strokeWidth={3} />
                      </div>
                   ) : (
-                     <div className="bg-[#FF1744] p-2 border-[3px] border-white">
+                     <div className="bg-[#FF1744] p-2 border-[3px] border-white flex-shrink-0">
                        <AlertOctagon className="w-8 h-8 text-white" strokeWidth={3} />
                      </div>
                   )}
-                  <div>
-                     <p className="font-black italic uppercase text-3xl tracking-tighter leading-none mb-1">
+                  <div className="flex flex-col items-center sm:items-start w-full mt-2 sm:mt-0">
+                     <p className="font-black italic uppercase text-3xl md:text-4xl tracking-tighter leading-none mb-2 mt-1 sm:mt-0">
                        {isCorrect ? 'Flawless!' : 'Not Quite.'}
                      </p>
-                     <p className="font-bold text-sm uppercase tracking-widest text-gray-400">
+                     <p className="font-bold text-xs md:text-sm uppercase tracking-widest text-gray-400">
                        {isCorrect ? `FSRS Grade: ${autoGradeResult?.toUpperCase()}` : `Target: ${currentWord.word}`}
                      </p>
                   </div>
@@ -432,7 +432,7 @@ export default function ClozeQuizPage() {
                
                <button 
                  onClick={handleNext} 
-                 className="bg-white text-black border-[4px] border-black font-black uppercase text-xl px-8 py-4 flex items-center justify-center gap-3 hover:bg-[#FFE500] hover:-translate-y-1 transition-transform active:translate-y-2"
+                 className="w-full sm:w-auto bg-white text-black border-[4px] border-black font-black uppercase text-xl px-10 py-5 flex items-center justify-center gap-3 hover:bg-[#FFE500] hover:-translate-y-1 transition-transform active:translate-y-2 flex-shrink-0"
                >
                   Continue <ArrowRight className="w-6 h-6" strokeWidth={3} />
                </button>
