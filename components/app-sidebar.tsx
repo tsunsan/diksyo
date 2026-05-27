@@ -17,10 +17,10 @@ import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dictionary", icon: BookOpen, label: "Dictionary" },
   { href: "/quiz", icon: Zap, label: "Quick Quiz" },
   { href: "/vault", icon: BookMarked, label: "Vocabulary Vault" },
+  { href: "/stats", icon: LayoutDashboard, label: "Statistics" },
 ];
 
 export function AppSidebar({
