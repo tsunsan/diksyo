@@ -18,8 +18,8 @@ import { logout } from "@/app/actions/auth";
 
 const navItems = [
   { href: "/dictionary", icon: BookOpen, label: "Dictionary" },
-  { href: "/quiz", icon: Zap, label: "Quick Quiz" },
   { href: "/vault", icon: BookMarked, label: "Vocabulary Vault" },
+  { href: "/quiz", icon: Zap, label: "Quick Quiz" },
   { href: "/stats", icon: LayoutDashboard, label: "Statistics" },
 ];
 

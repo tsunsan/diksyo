@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { POS_COLORS } from "@/lib/utils";
+import Link from "next/link";
+import { useTimeQuizStore } from "@/store/time-quiz-store";
 
 const QUIZ_WORDS = [
   {
@@ -138,16 +140,29 @@ const AnimatedNumber = ({ value }: { value: number | string }) => (
 );
 
 export default function QuizPage2() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const {
+    currentIndex,
+    setCurrentIndex,
+    feedback,
+    setFeedback,
+    totalXP,
+    setTotalXP,
+    streak,
+    setStreak,
+    maxStreak,
+    setMaxStreak,
+    results,
+    setResults,
+    quizDone,
+    setQuizDone,
+    hasSubmittedOnce,
+    setHasSubmittedOnce,
+    resetQuiz
+  } = useTimeQuizStore();
+
   const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState<FeedbackState>("idle");
   const [flipped, setFlipped] = useState(false);
-  const [totalXP, setTotalXP] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [results, setResults] = useState<{ id: number; correct: boolean; timeBonus: boolean }[]>([]);
-  const [quizDone, setQuizDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
-  const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -241,21 +256,20 @@ export default function QuizPage2() {
 
     if (isCorrect) {
       setTotalXP((prev) => prev + current.xp + (timeBonus ? 5 : 0));
-      setStreak((prev) => prev + 1);
+      setStreak((prev) => {
+        const newStreak = prev + 1;
+        setMaxStreak(max => (newStreak > max ? newStreak : max));
+        return newStreak;
+      });
     } else {
       setStreak(0);
     }
   };
 
   const handleRestart = () => {
-    setCurrentIndex(0);
+    resetQuiz();
     setAnswer("");
-    setFeedback("idle");
     setFlipped(false);
-    setTotalXP(0);
-    setStreak(0);
-    setResults([]);
-    setQuizDone(false);
     setTimeLeft(15);
     setShowDetails(false);
   };
@@ -298,7 +312,7 @@ export default function QuizPage2() {
             <div className="grid grid-cols-3 gap-6">
               {[
                 { label: "CORRECT", value: correctCount, color: "#00C853" },
-                { label: "STREAK", value: streak, color: "#FF6D00" },
+                { label: "STREAK", value: maxStreak, color: "#FF6D00" },
                 { label: "XP", value: totalXP, color: "#FFE500" },
               ].map((stat, i) => (
                 <motion.div key={stat.label} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.8 + i * 0.1, type: "spring" }} className="bg-[#111] border-[2px] border-[#333] p-4 relative">
@@ -328,12 +342,12 @@ export default function QuizPage2() {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="flex flex-col gap-4 mt-6">
+                  <div className="flex flex-col gap-4 mt-6 max-h-[250px] overflow-y-auto">
                     {results.map((r, i) => {
                       const w = QUIZ_WORDS.find((q) => q.id === r.id)!;
                       return (
                         <motion.div
-                          key={r.id}
+                          key={r.id + "-" + i}
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: i * 0.05 }}
@@ -352,7 +366,7 @@ export default function QuizPage2() {
                               EXPECTED: {w.acceptedAnswers[0]}
                             </span>
                           </div>
-                          <div className="flex flex-col items-end">
+                          <div className="flex flex-col items-end shrink-0">
                             <span className={`text-sm uppercase tracking-wider px-3 py-1 border-[2.5px] border-black font-black shadow-[2px_2px_0_#000] ${r.correct ? "bg-[#FFE500] text-black" : "bg-black text-white"}`}>
                               {r.correct ? `+${w.xp + (r.timeBonus ? 5 : 0)} XP` : "MISS"}
                             </span>
@@ -367,9 +381,17 @@ export default function QuizPage2() {
             </AnimatePresence>
           </div>
 
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleRestart} className="w-full py-6 bg-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#000] uppercase font-black tracking-widest text-xl transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
-            <RefreshCw className="w-6 h-6 inline mr-2" /> TRY AGAIN
-          </motion.button>
+          <div className="flex flex-col sm:flex-row gap-6 w-full mb-12">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleRestart} className="flex-1 py-6 bg-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#000] uppercase font-black tracking-widest text-xl transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none flex items-center justify-center">
+              <RefreshCw className="w-6 h-6 inline mr-2" /> TRY AGAIN
+            </motion.button>
+            <Link 
+              href="/dashboard" 
+              className="flex-1 bg-white text-black border-[4px] border-black py-6 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
+            >
+              Exit
+            </Link>
+          </div>
         </div>
       </motion.div>
     );
@@ -384,7 +406,7 @@ export default function QuizPage2() {
             <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="w-10 h-10 bg-[#FFE500] border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_#000]">
               <Zap className="w-6 h-6 text-black" />
             </motion.div>
-            <h1 className="uppercase tracking-tighter text-black font-black text-[2rem]">DIKSYO <span className="text-[#666]">QUIZ</span></h1>
+            <h1 className="uppercase tracking-tighter text-black font-black text-[2rem]">TIME ATTACK </h1>
           </div>
           <div className="flex gap-2 ml-14">
              {QUIZ_WORDS.map((_, i) => (
@@ -423,7 +445,7 @@ export default function QuizPage2() {
       <div className="relative">
         <motion.div animate={controls}>
           <AnimatePresence mode="wait">
-            <motion.div key={currentIndex + (flipped ? "-flipped" : "")} initial={{ y: 100, opacity: 0, rotateX: 45, scale: 0.8 }} animate={{ y: 0, opacity: 1, rotateX: 0, scale: 1 }} exit={{ y: -100, opacity: 0, rotateX: -45, scale: 0.8 }} transition={{ type: "spring", stiffness: 200, damping: 20 }} className="border-[4px] border-black shadow-[15px_15px_0_#000] p-12 mb-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center" style={{ background: cardBg, perspective: "1000px", transformStyle: "preserve-3d" }}>
+            <motion.div key={currentIndex + (flipped ? "-flipped" : "")} initial={{ y: 50, opacity: 0, rotateX: 20, scale: 0.9 }} animate={{ y: 0, opacity: 1, rotateX: 0, scale: 1 }} exit={{ y: -50, opacity: 0, rotateX: -20, scale: 0.9 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} className="border-[4px] border-black shadow-[15px_15px_0_#000] p-12 mb-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center" style={{ background: cardBg, perspective: "1000px", transformStyle: "preserve-3d" }}>
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "20px 20px" }} />
             {timeLeft <= 3 && feedback === "idle" && <motion.div animate={{ opacity: [0, 0.2, 0] }} transition={{ repeat: Infinity, duration: 0.5 }} className="absolute inset-0 bg-red-600 pointer-events-none" />}
             
@@ -440,7 +462,7 @@ export default function QuizPage2() {
                     {current.word.split(" ").map((wordStr, wordIdx) => (
                       <span key={wordIdx} className="inline-flex flex-wrap justify-center mr-3 last:mr-0 md:mr-6">
                         {wordStr.split("").map((char, i) => (
-                          <motion.span key={i} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 + (wordIdx * 5 + i) * 0.05, type: "spring" }} className="inline-block break-all">{char}</motion.span>
+                          <motion.span key={i} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.05 + (wordIdx * 5 + i) * 0.02, type: "spring", stiffness: 400, damping: 25 }} className="inline-block break-all">{char}</motion.span>
                         ))}
                       </span>
                     ))}

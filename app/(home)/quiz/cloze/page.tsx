@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useQuizStore, QuizWord } from "@/store/quiz-store";
 import { getVaultWords } from "@/app/actions/vault";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,9 +11,19 @@ import {
   CheckCircle2, 
   AlertOctagon, 
   ArrowRight, 
-  Keyboard 
+  Keyboard,
+  Star,
+  Flame,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
+
+// Animated Number Component
+const AnimatedNumber = ({ value }: { value: number | string }) => (
+  <motion.span key={value} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-block">
+    {value}
+  </motion.span>
+);
 
 // --- Types & Constants ---
 const LETTERS = ['A', 'B', 'C', 'D'];
@@ -36,6 +46,12 @@ export default function ClozeQuizPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState("");
   const [options, setOptions] = useState<string[]>([]);
+  
+  const [totalXP, setTotalXP] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [results, setResults] = useState<{ id: string; correct: boolean; word: string; translationPrompt: string }[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
 
   // --- Initializer ---
   const loadQuiz = useCallback(async () => {
@@ -62,7 +78,6 @@ export default function ClozeQuizPage() {
               rootWord: w.originalExplanation || undefined,
               usageExamples: examples,
               fsrsData: {
-                // FIXED: Included missing FSRS strict state fields with safe defaults (0 = New)
                 state: item.state ?? 0, 
                 reps: item.reps ?? 0,
                 lapses: item.lapses ?? 0,
@@ -126,8 +141,26 @@ export default function ClozeQuizPage() {
   const handleOptionClick = useCallback((option: string) => {
     if (status !== 'typing') return;
     setSelectedOption(option);
-    submitAnswer(option);
-  }, [status, submitAnswer]);
+    const isCorrect = submitAnswer(option);
+
+    if (isCorrect) {
+      setTotalXP(prev => prev + 10);
+      setStreak(prev => {
+        const newStreak = prev + 1;
+        setMaxStreak(max => (newStreak > max ? newStreak : max));
+        return newStreak;
+      });
+    } else {
+      setStreak(0);
+    }
+    
+    setResults(prev => [...prev, {
+      id: deck[currentIndex].id,
+      word: deck[currentIndex].word,
+      translationPrompt: deck[currentIndex].englishPrompt,
+      correct: isCorrect,
+    }]);
+  }, [status, submitAnswer, currentIndex, deck]);
 
   const handleNext = useCallback(() => {
     if (status !== 'revealed') return;
@@ -197,49 +230,103 @@ export default function ClozeQuizPage() {
   if (status === 'completed') {
     const accuracy = Math.round((correctCount / deck.length) * 100);
     return (
-      <div className="min-h-[600px] flex items-center justify-center p-4">
+      <div className="min-h-[600px] flex flex-col items-center justify-center py-12 px-4">
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="max-w-xl w-full mx-auto flex flex-col items-center text-center"
         >
            <div className="relative">
-             <Zap className="w-24 h-24 text-[#FFE500] drop-shadow-[6px_6px_0_rgba(0,0,0,1)] mb-6 relative z-10" fill="#FFE500" />
+             <Zap className="w-20 h-20 text-[#FFE500] drop-shadow-[6px_6px_0_rgba(0,0,0,1)] mb-4 relative z-10" fill="#FFE500" />
            </div>
            
-           <h1 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter text-black leading-none mb-8 drop-shadow-[4px_4px_0_rgba(255,229,0,1)]">
+           <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter text-black leading-none mb-6 drop-shadow-[4px_4px_0_rgba(255,229,0,1)]">
               MISSION<br/>CLEARED
            </h1>
            
-           <div className="bg-black text-white p-8 md:p-12 border-[4px] border-black shadow-[16px_16px_0_#FFE500] w-full transform -rotate-1 hover:rotate-0 transition-transform">
-              <div className="text-8xl md:text-9xl font-black mb-0 italic tracking-tighter text-[#FFE500]">
-                {accuracy}<span className="text-5xl">%</span>
+           <div className="bg-black text-white p-6 md:p-10 border-[4px] border-black shadow-[12px_12px_0_#FFE500] w-full transform -rotate-1 hover:rotate-0 transition-transform mb-6">
+              <div className="text-7xl md:text-8xl font-black mb-0 italic tracking-tighter text-[#FFE500]">
+                {accuracy}<span className="text-4xl md:text-5xl">%</span>
               </div>
-              <p className="font-bold uppercase tracking-[0.3em] text-sm text-gray-400 mb-8">Overall Accuracy</p>
+              <p className="font-bold uppercase tracking-[0.3em] text-sm text-gray-400 mb-6">Overall Accuracy</p>
               
-              <div className="flex justify-around items-center border-t-[4px] border-dashed border-gray-700 pt-8">
+              <div className="flex justify-around items-center border-t-[4px] border-dashed border-gray-700 pt-6">
                 <div className="flex flex-col items-center">
-                   <p className="text-4xl md:text-5xl font-black text-[#00C853]">{correctCount}</p>
-                   <p className="text-xs uppercase font-bold text-gray-400 tracking-widest mt-2">Correct</p>
+                   <p className="text-3xl md:text-4xl font-black text-[#00C853]">{correctCount}</p>
+                   <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">Correct</p>
                 </div>
-                <div className="h-12 w-[4px] bg-gray-700"></div>
+                <div className="h-10 w-[4px] bg-gray-700"></div>
                 <div className="flex flex-col items-center">
-                   <p className="text-4xl md:text-5xl font-black">{deck.length}</p>
-                   <p className="text-xs uppercase font-bold text-gray-400 tracking-widest mt-2">Total</p>
+                   <p className="text-3xl md:text-4xl font-black text-[#FF6D00]">{maxStreak}</p>
+                   <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">Streak</p>
+                </div>
+                <div className="h-10 w-[4px] bg-gray-700"></div>
+                <div className="flex flex-col items-center">
+                   <p className="text-3xl md:text-4xl font-black text-[#FFE500]">{totalXP}</p>
+                   <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">XP</p>
                 </div>
               </div>
            </div>
+
+           <div className="w-full mb-6">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="w-full py-4 bg-white border-[4px] border-black shadow-[8px_8px_0_#000] uppercase font-black tracking-widest flex items-center justify-between px-6 transition-all hover:bg-gray-50 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+            >
+              <span className="text-black">VIEW DETAILED RESULTS</span>
+              <motion.div animate={{ rotate: showDetails ? 180 : 0 }}>
+                <ChevronDown className="w-6 h-6 text-black" />
+              </motion.div>
+            </button>
+
+            <AnimatePresence>
+              {showDetails && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden mt-4"
+                >
+                  <div className="bg-white border-[4px] border-black shadow-[8px_8px_0_#000] text-left max-h-[250px] overflow-y-auto">
+                    {results.map((res, index) => (
+                      <div key={index} className={`flex items-start justify-between p-4 border-b-[2px] border-black ${res.correct ? "bg-[#f0fdf4]" : "bg-[#fff1f2]"} last:border-b-0`}>
+                        <div>
+                          <p className="font-black uppercase text-lg text-black">{res.word}</p>
+                          <p className="text-xs uppercase font-bold text-gray-500 italic mt-1">&quot;{res.translationPrompt}&quot;</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {res.correct ? (
+                            <span className="bg-[#00C853] text-black border-2 border-black px-2 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000]">+10 XP</span>
+                          ) : (
+                            <span className="bg-[#FF1744] text-white border-2 border-black px-2 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000]">MISSED</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
            
-           <div className="mt-12 flex flex-col sm:flex-row gap-6 w-full">
+           <div className="flex flex-col sm:flex-row gap-4 w-full mb-12">
               <button 
-                onClick={() => { resetQuiz(); loadQuiz(); }} 
-                className="flex-1 bg-[#FFE500] text-black border-[4px] border-black py-5 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-3 active:scale-95"
+                onClick={() => { 
+                  resetQuiz(); 
+                  setTotalXP(0);
+                  setStreak(0);
+                  setMaxStreak(0);
+                  setResults([]);
+                  setShowDetails(false);
+                  loadQuiz(); 
+                }} 
+                className="flex-1 bg-[#FFE500] text-black border-[4px] border-black py-4 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-3 active:scale-95"
               >
                 <RefreshCw className="w-6 h-6" strokeWidth={3}/> Replay
               </button>
               <Link 
                 href="/dashboard" 
-                className="flex-1 bg-white text-black border-[4px] border-black py-5 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
+                className="flex-1 bg-white text-black border-[4px] border-black py-4 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
               >
                 Exit
               </Link>
@@ -275,13 +362,13 @@ export default function ClozeQuizPage() {
     <div className="max-w-4xl mx-auto p-4 md:p-8 pt-4">
       
       {/* Header Info */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-6">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-[#4361EE] border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_#000] transform -rotate-6">
             <Puzzle className="w-7 h-7 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <h2 className="uppercase font-black text-2xl md:text-3xl italic tracking-tighter leading-none text-black">Context</h2>
+            <h2 className="uppercase font-black text-2xl md:text-3xl italic tracking-tighter leading-none text-black">Cloze Deletion</h2>
             <div className="flex items-center gap-2 mt-1">
               <Keyboard className="w-4 h-4 text-gray-500" />
               <p className="text-[10px] md:text-xs uppercase font-bold tracking-widest text-gray-500">Press 1-4 to select</p>
@@ -289,8 +376,18 @@ export default function ClozeQuizPage() {
           </div>
         </div>
         
-        <div className="bg-[#FFE500] text-black border-[3px] border-black px-4 py-2 shadow-[4px_4px_0_#000] font-black italic text-xl">
-          {currentIndex + 1} / {deck.length}
+        <div className="flex gap-4">
+          <div className="bg-[#FFE500] text-black border-[3px] border-black px-5 py-3 shadow-[4px_4px_0_#000] flex items-center justify-center font-black italic text-xl">
+            {currentIndex + 1} / {deck.length}
+          </div>
+          <div className="bg-black border-[3px] border-black px-5 py-3 flex items-center gap-3 shadow-[4px_4px_0_#FFE500] hidden sm:flex">
+            <Star className="w-5 h-5 text-[#FFE500]" />
+            <span className="text-[#FFE500] uppercase text-lg font-black"><AnimatedNumber value={totalXP} /></span>
+          </div>
+          <div className="bg-[#FF6D00] border-[3px] border-black px-5 py-3 flex items-center gap-3 shadow-[4px_4px_0_#000] hidden sm:flex">
+            <Flame className="w-5 h-5 text-white" />
+            <span className="text-white uppercase text-lg font-black"><AnimatedNumber value={streak} /></span>
+          </div>
         </div>
       </div>
 

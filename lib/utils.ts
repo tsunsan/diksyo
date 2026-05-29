@@ -33,8 +33,7 @@ export const POS_COLORS: Record<string, { bg: string; text: string }> = {
   "ARTICLE": { bg: "#14B8A6", text: "#fff" },
   "PHRASE / IDIOM": { bg: "#F43F5E", text: "#fff" },
   "PARTICLE": { bg: "#64748B", text: "#fff" },
-  "NEEDS REVIEW": { bg: "#000000", text: "#fff" },
-
+ 
   // Combinations (Filipino)
   "DAGLAT / PANG-ABAY": { bg: "#57534E", text: "#fff" },
   "DAGLAT / PANG-URI": { bg: "#57534E", text: "#fff" },
