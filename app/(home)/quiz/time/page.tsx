@@ -386,7 +386,7 @@ export default function QuizPage2() {
               <RefreshCw className="w-6 h-6 inline mr-2" /> TRY AGAIN
             </motion.button>
             <Link 
-              href="/dashboard" 
+              href="/dictionary" 
               className="flex-1 bg-white text-black border-[4px] border-black py-6 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
             >
               Exit

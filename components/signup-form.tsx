@@ -48,7 +48,7 @@ export function SignupForm({
       })
 
       const timer = setTimeout(() => {
-        router.push('/dashboard')
+        router.push('/dictionary')
       }, 2000)
 
       return () => clearTimeout(timer)

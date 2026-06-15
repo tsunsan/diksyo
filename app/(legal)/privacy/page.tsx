@@ -50,7 +50,7 @@ const SECTIONS = [
     title: "6. YOUR RIGHTS",
     icon: "✊",
     content:
-      "Under applicable law, you have the right to access the personal data we hold about you, request correction of inaccurate data, request deletion of your account and associated data, and opt out of non-essential communications. To exercise these rights, contact us at miltonjunsel@gmail.com.",
+      "Under applicable law, you have the right to access the personal data we hold about you, request correction of inaccurate data, request deletion of your account and associated data, and opt out of non-essential communications. To exercise these rights, contact us at support@diksyo.app .",
   },
   {
     title: "7. CHILDREN'S PRIVACY",
@@ -74,7 +74,7 @@ const SECTIONS = [
     title: "10. CONTACT US",
     icon: "📬",
     content:
-      "For privacy-related concerns, requests, or inquiries, please contact our Data Protection Officer at miltonjunsel@gmail.com. We aim to respond to all legitimate requests within 30 days. For urgent matters, please include 'URGENT' in your subject line.",
+      "For privacy-related concerns, requests, or inquiries, please contact our Data Protection Officer at support@diksyo.app . We aim to respond to all legitimate requests within 30 days. For urgent matters, please include 'URGENT' in your subject line.",
   },
 ];
 

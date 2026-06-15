@@ -34,7 +34,7 @@ export function UpdatePasswordForm() {
                     icon: "text-black w-6 h-6",
                 },
             })
-            const timer = setTimeout(() => router.push('/dashboard'), 2000)
+            const timer = setTimeout(() => router.push('/dictionary'), 2000)
             return () => clearTimeout(timer)
         }
     }, [state?.success, router])

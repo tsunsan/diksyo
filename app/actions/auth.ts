@@ -40,7 +40,7 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
         }
     }
 
-    redirect('/dashboard')
+    redirect('/dictionary')
 }
 
 export async function signup(prevState: AuthState, formData: FormData): Promise<AuthState> {
@@ -91,7 +91,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
         }
     }
 
-    return { success: 'Welcome to Diksyo. Rerouting to dashboard...' }
+    return { success: 'Welcome to Diksyo. Rerouting to dictionary...' }
 }
 
 export async function requestPasswordReset(prevState: AuthState, formData: FormData): Promise<AuthState> {
@@ -153,7 +153,7 @@ export async function updateUserPassword(prevState: AuthState, formData: FormDat
         }
     }
 
-    return { success: 'Password reinforced. Rerouting to dashboard...' }
+    return { success: 'Password reinforced. Rerouting to dictionary...' }
 }
 
 export async function logout() {

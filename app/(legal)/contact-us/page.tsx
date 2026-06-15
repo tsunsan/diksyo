@@ -88,8 +88,8 @@ export default function ContactUsPage() {
                 For general inquiries, account issues, or just to say hi, reach out to us at:
               </p>
               <div className="mt-4 bg-yellow-100 border-2 border-black p-4 font-mono font-bold text-center">
-                <a href="mailto:miltonjunsel@gmail.com" className="hover:underline text-black">
-                  miltonjunsel@gmail.com
+                <a href="mailto:support@diksyo.app" className="hover:underline text-black">
+                 support@diksyo.app 
                 </a>
               </div>
             </div>

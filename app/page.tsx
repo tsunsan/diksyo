@@ -114,10 +114,10 @@ export default function LandingPage() {
                     {!isLoading && (
                         isLoggedIn ? (
                             <Link
-                                href="/dashboard"
+                                href="/dictionary"
                                 className="border-4 border-black bg-green-400 px-4 py-2 uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none md:px-6 md:py-3 flex items-center gap-2"
                             >
-                                BACK TO DASHBOARD <ArrowRight className="h-5 w-5" />
+                                BACK TO DICTIONARY <ArrowRight className="h-5 w-5" />
                             </Link>
                         ) : (
                             <>

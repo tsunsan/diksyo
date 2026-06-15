@@ -30,7 +30,7 @@ export default function NotFound() {
         </p>
 
         <Link
-          href="dashboard"
+          href="/"
           className="inline-flex items-center justify-center gap-2 px-6 py-4 w-full bg-yellow-400 border-4 border-black text-black font-bold uppercase tracking-tighter text-lg hover:translate-x-[4px] hover:translate-y-[4px] shadow-[4px_4px_0_0_#000] hover:shadow-none transition-all"
         >
           Go Back Home

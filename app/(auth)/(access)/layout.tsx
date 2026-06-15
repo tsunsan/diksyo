@@ -9,9 +9,9 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     // 2. Check if a valid session currently exists
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 3. If they are already logged in, instantly bounce them to the dashboard
+    // 3. If they are already logged in, instantly bounce them to the dictionary
     if (user) {
-        redirect('/dashboard')
+        redirect('/dictionary')
     }
 
     return (

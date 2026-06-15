@@ -64,7 +64,7 @@ const SECTIONS = [
   {
     title: "10. CONTACT",
     content:
-      "If you have any questions about these Terms of Service, please contact us at miltonjunsel@gmail.com. We aim to respond to all legitimate requests within 30 days.",
+      "If you have any questions about these Terms of Service, please contact us at support@diksyo.app . We aim to respond to all legitimate requests within 30 days.",
   },
 ];
 
