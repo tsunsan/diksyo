@@ -28,7 +28,7 @@ export function AppSidebar({
   user,
 }: {
   children: React.ReactNode;
-  user?: { username: string; email: string };
+  user?: { username: string; email: string; avatar_url?: string | null };
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -79,22 +79,32 @@ export function AppSidebar({
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-3 p-2 hover:bg-yellow-100 hover:translate-x-[2px] transition-all border-4 border-transparent hover:border-black group"
             >
-              <div className="w-10 h-10 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center shrink-0">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-black"
-                >
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
+              <div className="w-10 h-10 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center shrink-0 overflow-hidden">
+                {user.avatar_url ? (
+                  <Image 
+                    src={user.avatar_url} 
+                    alt={user.username} 
+                    width={40} 
+                    height={40} 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-black"
+                  >
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                )}
               </div>
               <div className="flex flex-col overflow-hidden">
                 <span className="font-bold text-sm uppercase tracking-tighter truncate text-black">
