@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { createClient } from "@/utils/supabase/client"
 import {
   Card,
   CardContent,
@@ -32,6 +33,16 @@ export function SignupForm({
 
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(signup, initialState)
+
+  const handleGoogleLogin = async () => {
+    const supabase = createClient()
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+  }
 
   useEffect(() => {
     if (state?.success) {
@@ -168,6 +179,7 @@ export function SignupForm({
           <Button
               variant="outline"
               type="button"
+              onClick={handleGoogleLogin}
               className="w-full rounded-none border-2 border-black bg-white font-bold shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all uppercase"
           >
             <svg className="mr-2 size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

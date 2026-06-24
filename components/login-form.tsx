@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, ShieldAlert } from "lucide-react"
 import { useActionState } from "react"
+import { createClient } from "@/utils/supabase/client"
 
 const initialState: AuthState = {
     error: undefined,
@@ -20,6 +21,16 @@ export function LoginForm({
                           }: React.ComponentProps<"form">) {
 
     const [state, formAction, isPending] = useActionState(login, initialState)
+
+    const handleGoogleLogin = async () => {
+        const supabase = createClient()
+        await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        })
+    }
 
     return (
         <form action={formAction} className={cn("flex flex-col gap-6", className)} {...props}>
@@ -95,6 +106,7 @@ export function LoginForm({
                 <Button
                     variant="outline"
                     type="button"
+                    onClick={handleGoogleLogin}
                     className="rounded-none border-2 border-black bg-white font-bold shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all uppercase"
                 >
                     <svg className="mr-2 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
