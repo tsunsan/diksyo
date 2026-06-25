@@ -16,10 +16,10 @@ type BaseWordDisambiguationProps = {
 const POS_ACCENTS: Record<string, string> = {
   PANGNGALAN: "bg-cyan-300",
   PANDIWA: "bg-green-300",
-  PANG-URI: "bg-pink-300",
+  "PANG-URI": "bg-pink-300",
   PANGHALIP: "bg-orange-300",
   PANGATNIG: "bg-lime-300",
-  PANG-ABAY: "bg-blue-300",
+  "PANG-ABAY": "bg-blue-300",
 };
 
 function getPosAccent(partOfSpeech: string | null) {
