@@ -113,6 +113,8 @@ export async function searchWords(query: string) {
             limit: 50 
         });
     }
+
+    const normalizedQuery = query.trim().toLowerCase();
     
     return db.query.words.findMany({
         where: or(
@@ -126,6 +128,16 @@ export async function searchWords(query: string) {
         with: {
             rootWord: true,
         },
+        orderBy: [
+            sql`case
+                when lower(${words.word}) = ${normalizedQuery} then 0
+                when lower(${words.slug}) like ${`${normalizedQuery}-%`} then 1
+                when lower(${words.word}) like ${`${normalizedQuery}%`} then 2
+                else 3
+            end`,
+            sql`lower(${words.word}) asc`,
+            sql`lower(${words.slug}) asc`,
+        ],
         limit: 50,
     });
 }
@@ -154,4 +166,77 @@ export async function getWordOfTheDay() {
         where: eq(words.id, wordId),
         with: { rootWord: true }
     });
+}
+
+export async function getWordByExactSlug(slug: string) {
+    return db.query.words.findFirst({
+        where: eq(words.slug, slug),
+        with: {
+            rootWord: true,
+        },
+    });
+}
+
+export async function searchWordsByBaseWord(baseWord: string) {
+    const normalizedWord = baseWord.trim().toLowerCase();
+
+    if (!normalizedWord) {
+        return [];
+    }
+
+    return db.query.words.findMany({
+        where: sql`lower(${words.word}) = ${normalizedWord}`,
+        with: {
+            rootWord: true,
+        },
+        orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
+    });
+}
+
+export async function getAllDictionaryEntriesForSitemap() {
+    return db.query.words.findMany({
+        columns: {
+            slug: true,
+            word: true,
+        },
+        orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
+    });
+}
+
+export async function searchWordSuggestions(term: string, limit = 8) {
+    const normalizedTerm = term.trim().toLowerCase();
+
+    if (!normalizedTerm) {
+        return [];
+    }
+
+    const exactBaseWordMatches = await db.query.words.findMany({
+        where: sql`lower(${words.word}) = ${normalizedTerm}`,
+        with: { rootWord: true },
+        orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
+        limit,
+    });
+
+    const slugPrefixMatches = await db.query.words.findMany({
+        where: ilike(words.slug, `${normalizedTerm}%`),
+        with: { rootWord: true },
+        orderBy: (word, { asc }) => [asc(word.slug)],
+        limit,
+    });
+
+    const fuzzyMatches = await db.query.words.findMany({
+        where: or(
+            ilike(words.slug, `%${normalizedTerm}%`),
+            ilike(words.word, `%${normalizedTerm}%`),
+            ilike(words.translation, `%${normalizedTerm}%`)
+        ),
+        with: { rootWord: true },
+        orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
+        limit,
+    });
+
+    const merged = [...exactBaseWordMatches, ...slugPrefixMatches, ...fuzzyMatches];
+    const deduped = merged.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
+
+    return deduped.slice(0, limit);
 }

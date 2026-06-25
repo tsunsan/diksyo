@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { searchWordBySlug } from "@/app/actions/dictionary";
+import { searchWordSuggestions } from "@/app/actions/dictionary";
 
 export default function SearchBar() {
     const router = useRouter();
@@ -35,19 +35,9 @@ export default function SearchBar() {
 
             setIsSearching(true);
             try {
-                const res = await searchWordBySlug(debouncedQuery.toLowerCase());
-
-                // FIX: Check for "FOUND" instead of "SUCCESS" to satisfy your Discriminated Union
-                if (res.status === "FOUND") {
-                    setResults([res.data]);
-                    setIsOpen(true);
-                } else if (res.status === "SIMILAR" && res.data) {
-                    setResults(res.data);
-                    setIsOpen(true);
-                } else {
-                    setResults([]);
-                    setIsOpen(false);
-                }
+                const suggestions = await searchWordSuggestions(debouncedQuery.toLowerCase(), 8);
+                setResults(suggestions);
+                setIsOpen(suggestions.length > 0);
             } catch (error) {
                 console.error("Search failed:", error);
             } finally {

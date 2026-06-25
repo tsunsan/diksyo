@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, jsonb, primaryKey, boolean } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, jsonb, primaryKey, boolean, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const words = pgTable("words", {
@@ -20,7 +20,9 @@ export const words = pgTable("words", {
     related: jsonb("related").$type<string[]>(),
     level: text("level"),
     frequency: text("frequency"),
-});
+}, (table) => ({
+    wordIdx: index("words_word_idx").on(table.word),
+}));
 
 export const userProgress = pgTable("user_progress", {
     id: uuid("id").primaryKey().defaultRandom(),

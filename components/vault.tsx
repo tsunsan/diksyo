@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { searchWordBySlug, removeWordFromVault, searchWords } from "@/app/actions/dictionary";
+import { searchWordSuggestions, removeWordFromVault, searchWords } from "@/app/actions/dictionary";
 import { addWordToVault } from "@/app/actions/vault";
 import { toast } from "sonner";
 import { POS_COLORS } from "@/lib/utils";
@@ -118,14 +118,8 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
       }
       setIsSearching(true);
       try {
-        const res = await searchWordBySlug(debouncedDialogQuery.toLowerCase());
-        if (res.status === "FOUND") {
-          setDialogResults([res.data]);
-        } else if (res.status === "SIMILAR" && res.data) {
-          setDialogResults(res.data);
-        } else {
-          setDialogResults([]);
-        }
+        const suggestions = await searchWordSuggestions(debouncedDialogQuery.toLowerCase(), 8);
+        setDialogResults(suggestions);
       } catch (error) {
         console.error("Search failed:", error);
       } finally {

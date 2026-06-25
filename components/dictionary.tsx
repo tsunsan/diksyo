@@ -375,7 +375,7 @@ export default function DictionaryClient({
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     NO WORDS FOUND.
                 </div>
-            ) : (!search ? discoverWords : words.slice(0, 5)).map((w) => {
+            ) : (!search ? discoverWords : words.slice(0, 12)).map((w) => {
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
