@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Diksyo"
-  // TODO: "Add a description for the Diksyo app",
+  title: "Diksyo",
+  description: "Diksyo is your personal engine for mastering the Filipino language through active recall and spaced repetition.",
 };
 
 export default function RootLayout({

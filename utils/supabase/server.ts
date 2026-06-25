@@ -15,8 +15,15 @@ export async function createClient() {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, options)
                         )
-                    } catch {
-                        // TODO: "Handle cookie setting errors gracefully, possibly by logging them or providing feedback to the user"
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : String(error)
+                        const isReadonlyCookieError =
+                            message.includes("Cookies can only be modified") ||
+                            message.includes("read only")
+
+                        if (!isReadonlyCookieError) {
+                            console.error("[supabase] Failed to set auth cookies:", error)
+                        }
                     }
                 },
             },
