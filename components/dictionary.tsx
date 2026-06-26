@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useActionState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
@@ -18,13 +18,23 @@ import {
   BookmarkMinus,
   Volume2,
   ExternalLink,
-  X
+  X,
+  AlertCircle,
+  Lock,
+  Mail,
+  User
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
+import { login, signup, type AuthState } from "@/app/actions/auth";
+import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
-import { SignupForm } from "@/components/signup-form";
-import { LoginForm } from "@/components/login-form";
+
+const authInitialState: AuthState = {
+  error: undefined,
+  errorTitle: undefined,
+  success: undefined,
+};
 
 function highlightBold(text: string) {
   if (!text) return null;
@@ -37,6 +47,32 @@ function highlightBold(text: string) {
     ) : (
       part
     )
+  );
+}
+
+/* ─── Shared inline input component ─── */
+function AuthInput({ id, name, type, placeholder, label, icon: Icon, required = true }: {
+  id: string; name: string; type: string; placeholder?: string; label: string;
+  icon: React.ElementType; required?: boolean;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <label htmlFor={id} className="text-[10px] font-black uppercase tracking-widest text-black">
+        {label}
+      </label>
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <input
+          id={id}
+          name={name}
+          type={type}
+          placeholder={placeholder}
+          required={required}
+          className="w-full pl-10 pr-4 py-2.5 bg-white border-[2px] border-black text-sm outline-none focus:bg-yellow-50 focus:shadow-[3px_3px_0_#000] transition-all placeholder:text-zinc-400 placeholder:uppercase placeholder:text-xs"
+          style={{ fontWeight: 600 }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -70,6 +106,37 @@ export default function DictionaryClient({
   const [modalWord, setModalWord] = useState<any | null>(null);
   const [discoverWords, setDiscoverWords] = useState<any[]>(initialDiscoverWords || []);
   const [wordOfTheDay, setWordOfTheDay] = useState<any | null>(initialWordOfTheDay || null);
+
+  // Auth form states
+  const [loginState, loginAction, loginPending] = useActionState(login, authInitialState);
+  const [signupState, signupAction, signupPending] = useActionState(signup, authInitialState);
+
+  useEffect(() => {
+    if (signupState?.success) {
+      toast.success("ACCOUNT CREATED", {
+        description: signupState.success,
+        duration: 3000,
+        unstyled: true,
+        classNames: {
+          toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-green-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
+          title: "text-lg font-black uppercase tracking-tighter",
+          description: "font-bold text-xs text-black/90 uppercase",
+          icon: "text-black w-6 h-6",
+        },
+      });
+      setShowAuthOverlay(false);
+    }
+  }, [signupState?.success]);
+
+  const handleGoogleLogin = async () => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
 
   useEffect(() => {
     // Fallback if the server-provided Discover Words are missing
@@ -193,39 +260,199 @@ export default function DictionaryClient({
     }
   };
 
+  // Current auth error state
+  const currentAuthState = authMode === "login" ? loginState : signupState;
+  const currentPending = authMode === "login" ? loginPending : signupPending;
+
   return (
     <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative">
       
+      <AnimatePresence>
       {showAuthOverlay && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowAuthOverlay(false)}>
-          <div className="w-full max-w-md relative bg-white border-[4px] border-black shadow-[10px_10px_0_#FDE047] p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setShowAuthOverlay(false)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white border-2 border-black hover:bg-zinc-100 transition-colors z-10"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex w-full mb-6 mt-2 border-[2px] border-black">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowAuthOverlay(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.92, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.92, y: 20 }}
+            transition={{ type: "spring", stiffness: 280, damping: 24 }}
+            className="w-full max-w-[420px] relative bg-white border-[4px] border-black shadow-[10px_10px_0_#000] max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#FDE047] border-b-[3px] border-black px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-[#FDE047]" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-tight text-black leading-none">
+                    {authMode === "signup" ? "JOIN DIKSYO" : "WELCOME BACK"}
+                  </h2>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-black/60 mt-0.5">
+                    {authMode === "signup" ? "Create your account" : "Log in to continue"}
+                  </p>
+                </div>
+              </div>
               <button
-                onClick={() => setAuthMode("signup")}
-                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest transition-colors ${authMode === "signup" ? "bg-yellow-400 text-black" : "bg-white text-zinc-500 hover:bg-zinc-100"}`}
+                onClick={() => setShowAuthOverlay(false)}
+                className="w-8 h-8 flex items-center justify-center bg-black hover:bg-zinc-800 transition-colors"
               >
-                Sign Up
-              </button>
-              <div className="w-[2px] bg-black" />
-              <button
-                onClick={() => setAuthMode("login")}
-                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest transition-colors ${authMode === "login" ? "bg-yellow-400 text-black" : "bg-white text-zinc-500 hover:bg-zinc-100"}`}
-              >
-                Log In
+                <X className="w-4 h-4 text-white" />
               </button>
             </div>
 
-            {authMode === "signup" ? <SignupForm /> : <LoginForm />}
-          </div>
-        </div>
+            {/* Tab Switcher */}
+            <div className="flex border-b-[3px] border-black">
+              <button
+                onClick={() => setAuthMode("signup")}
+                className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest transition-all relative ${
+                  authMode === "signup"
+                    ? "bg-white text-black"
+                    : "bg-zinc-100 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50"
+                }`}
+              >
+                Sign Up
+                {authMode === "signup" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#7C3AED]" />
+                )}
+              </button>
+              <div className="w-[3px] bg-black" />
+              <button
+                onClick={() => setAuthMode("login")}
+                className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest transition-all relative ${
+                  authMode === "login"
+                    ? "bg-white text-black"
+                    : "bg-zinc-100 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50"
+                }`}
+              >
+                Log In
+                {authMode === "login" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#7C3AED]" />
+                )}
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <div className="p-6">
+              {/* Error Alert */}
+              {currentAuthState?.error && (
+                <div className="flex items-start gap-3 bg-red-400 border-[2px] border-black p-3 mb-5 shadow-[3px_3px_0_#000]">
+                  <AlertCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-tight text-black">
+                      {currentAuthState.errorTitle || "ERROR"}
+                    </p>
+                    <p className="text-[10px] font-bold uppercase text-white/90 mt-0.5">
+                      {currentAuthState.error}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <AnimatePresence mode="wait">
+                {authMode === "signup" ? (
+                  <motion.form
+                    key="signup"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.15 }}
+                    action={signupAction}
+                    className="flex flex-col gap-4"
+                  >
+                    <AuthInput id="modal-username" name="username" type="text" label="Username" placeholder="juandelacruz" icon={User} />
+                    <AuthInput id="modal-signup-email" name="email" type="email" label="Email Address" placeholder="lakan@diksyo.ph" icon={Mail} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <AuthInput id="modal-password" name="password" type="password" label="Password" icon={Lock} />
+                      <AuthInput id="modal-confirm-password" name="confirm-password" type="password" label="Confirm" icon={Lock} />
+                    </div>
+                    <p className="text-zinc-400 text-[10px] font-bold uppercase italic -mt-2">
+                      Min. 8 characters
+                    </p>
+
+                    <button
+                      type="submit"
+                      disabled={signupPending}
+                      className="w-full py-3 bg-[#7C3AED] border-[2px] border-black text-white text-xs font-black uppercase tracking-widest shadow-[4px_4px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {signupPending ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
+                    </button>
+                  </motion.form>
+                ) : (
+                  <motion.form
+                    key="login"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.15 }}
+                    action={loginAction}
+                    className="flex flex-col gap-4"
+                  >
+                    <AuthInput id="modal-login-email" name="email" type="email" label="Email Address" placeholder="lakan@diksyo.ph" icon={Mail} />
+                    <AuthInput id="modal-login-password" name="password" type="password" label="Password" icon={Lock} />
+
+                    <button
+                      type="submit"
+                      disabled={loginPending}
+                      className="w-full py-3 bg-[#7C3AED] border-[2px] border-black text-white text-xs font-black uppercase tracking-widest shadow-[4px_4px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loginPending ? "LOGGING IN..." : "LOG IN"}
+                    </button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+
+              {/* Divider */}
+              <div className="relative text-center my-5 after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t-[2px] after:border-black/20">
+                <span className="relative z-10 bg-white px-3 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                  or
+                </span>
+              </div>
+
+              {/* Google Button */}
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full py-2.5 bg-white border-[2px] border-black text-xs font-bold uppercase tracking-wider shadow-[4px_4px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center justify-center gap-2"
+              >
+                <svg className="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335" />
+                </svg>
+                Continue with Google
+              </button>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t-[2px] border-black/10 px-6 py-3 text-center">
+              <p className="text-[10px] font-bold uppercase text-zinc-400">
+                {authMode === "signup" ? (
+                  <>Already have an account?{" "}
+                    <button onClick={() => setAuthMode("login")} className="text-black underline decoration-[#7C3AED] decoration-2 underline-offset-4 hover:bg-[#7C3AED] hover:text-white transition-all px-1">
+                      Log in
+                    </button>
+                  </>
+                ) : (
+                  <>Don&apos;t have an account?{" "}
+                    <button onClick={() => setAuthMode("signup")} className="text-black underline decoration-[#7C3AED] decoration-2 underline-offset-4 hover:bg-[#7C3AED] hover:text-white transition-all px-1">
+                      Sign up
+                    </button>
+                  </>
+                )}
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Main search and header */}
       <AnimatePresence>
