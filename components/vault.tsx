@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { BookMarked, History, ChevronRight, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star } from "lucide-react";
+import { BookMarked, History, ChevronRight, ChevronDown, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star, Filter, ArrowUp, ArrowDown, Layers, Zap, Type, Gem } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,8 @@ type VaultEntry = {
     translation: string;
     partOfSpeech: string | null;
     tags: string[] | null;
+    level: string | null;
+    frequency: string | null;
     rootWordId?: string | null;
     rootWordString?: string | null;
   };
@@ -53,7 +55,73 @@ function getMasteryStatus(entry: VaultEntry) {
   return { label: "LEARNING" + suffix, bg: "bg-[#F59E0B]", icon: PlayCircle };
 }
 
-const ALL_TAGS = ["ALL", "DAMDAMIN", "RELASYON", "BANSA", "KASAYSAYAN", "KATANGIAN", "KAPALIGIRAN", "KARAKTER", "KILOS"];
+const LEVEL_ORDER: Record<string, number> = { "BEGINNER": 1, "INTERMEDIATE": 2, "ADVANCED": 3 };
+const FREQUENCY_ORDER: Record<string, number> = { "EVERYDAY": 1, "COMMON": 2, "OCCASIONAL": 3, "SLANG": 4, "RARE": 5, "OBSOLETE": 6 };
+
+type FilterDropdownProps = {
+  label: string;
+  icon: React.ReactNode;
+  options: string[];
+  value: string;
+  onChange: (val: string) => void;
+  accentColor: string;
+};
+
+function FilterDropdown({ label, icon, options, value, onChange, accentColor }: FilterDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const isActive = value !== "ALL";
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 pl-3 pr-2.5 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest transition-all ${
+          isActive
+            ? `text-white shadow-[3px_3px_0_#000]`
+            : "bg-white text-black shadow-[2px_2px_0_transparent] hover:shadow-[3px_3px_0_#000]"
+        } hover:-translate-y-0.5`}
+        style={isActive ? { background: accentColor, fontWeight: 900 } : { fontWeight: 700 }}
+      >
+        {icon}
+        <span className="hidden sm:inline">{label}:</span>
+        <span style={{ fontWeight: 900 }}>{value}</span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 min-w-[180px] bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] z-50 flex flex-col max-h-[280px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+          {options.map((option) => (
+            <button
+              key={option}
+              onClick={() => {
+                onChange(option);
+                setIsOpen(false);
+              }}
+              className={`text-left px-4 py-2.5 uppercase text-xs tracking-wider hover:bg-[#FFFBF0] transition-colors border-b-[2px] border-black last:border-b-0 ${
+                value === option ? "text-white hover:opacity-90" : "text-black"
+              }`}
+              style={value === option ? { background: accentColor, fontWeight: 900 } : { fontWeight: 700 }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function highlightBold(text: string) {
   if (!text) return null;
@@ -72,11 +140,44 @@ function highlightBold(text: string) {
 export default function VaultClient({ initialWords }: { initialWords: VaultEntry[] }) {
   const masteredCount = initialWords.filter(w => w.stability && w.stability > 50).length;
 
-  const [activeTag, setActiveTag] = useState("ALL");
+  const [activeRoot, setActiveRoot] = useState("ALL");
+  const [activeLevel, setActiveLevel] = useState("ALL");
+  const [activeFrequency, setActiveFrequency] = useState("ALL");
+  const [activePOS, setActivePOS] = useState("ALL");
   const [vaultSearch, setVaultSearch] = useState("");
   const [sortBy, setSortBy] = useState("DATE");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
+
+  // Root word filter options
+  const rootOptions = ["ALL", "ROOT WORDS", "DERIVED"];
+
+  const uniqueLevels = useMemo(() => {
+    const levels = new Set<string>();
+    initialWords.forEach(e => {
+      if (e.word.level) levels.add(e.word.level.toUpperCase());
+    });
+    return ["ALL", ...Array.from(levels).sort((a, b) => (LEVEL_ORDER[a] ?? 99) - (LEVEL_ORDER[b] ?? 99))];
+  }, [initialWords]);
+
+  const uniqueFrequencies = useMemo(() => {
+    const freqs = new Set<string>();
+    initialWords.forEach(e => {
+      if (e.word.frequency) freqs.add(e.word.frequency.toUpperCase());
+    });
+    return ["ALL", ...Array.from(freqs).sort((a, b) => (FREQUENCY_ORDER[a] ?? 99) - (FREQUENCY_ORDER[b] ?? 99))];
+  }, [initialWords]);
+
+  const uniquePOS = useMemo(() => {
+    const pos = new Set<string>();
+    initialWords.forEach(e => {
+      if (e.word.partOfSpeech) pos.add(e.word.partOfSpeech.toUpperCase());
+    });
+    return ["ALL", ...Array.from(pos).sort()];
+  }, [initialWords]);
+
+  const activeFilterCount = [activeRoot, activeLevel, activeFrequency, activePOS].filter(v => v !== "ALL").length;
 
   // Edit Mode & Deletion
   const [editMode, setEditMode] = useState(false);
@@ -198,23 +299,27 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
   const sortedAndFilteredVault = initialWords
     .filter((entry) => {
       const w = entry.word;
-      const wordTags = w.tags || [];
-      const matchTag = activeTag === "ALL" || wordTags.includes(activeTag);
+      const isRoot = !w.rootWordId && !w.rootWordString;
+      const matchRoot = activeRoot === "ALL" || (activeRoot === "ROOT WORDS" ? isRoot : !isRoot);
+      const matchLevel = activeLevel === "ALL" || (w.level && w.level.toUpperCase() === activeLevel);
+      const matchFrequency = activeFrequency === "ALL" || (w.frequency && w.frequency.toUpperCase() === activeFrequency);
+      const matchPOS = activePOS === "ALL" || (w.partOfSpeech && w.partOfSpeech.toUpperCase() === activePOS);
       const matchSearch =
         w.word.toLowerCase().includes(vaultSearch.toLowerCase()) ||
         w.translation.toLowerCase().includes(vaultSearch.toLowerCase());
-      return matchTag && matchSearch;
+      return matchRoot && matchLevel && matchFrequency && matchPOS && matchSearch;
     })
     .sort((a, b) => {
+      const dir = sortDirection === "asc" ? 1 : -1;
       if (sortBy === "ALPHA") {
-        return a.word.word.localeCompare(b.word.word);
+        return dir * a.word.word.localeCompare(b.word.word);
       } else if (sortBy === "MASTERY") {
-        return (b.mastery ?? 0) - (a.mastery ?? 0);
+        return dir * ((b.mastery ?? 0) - (a.mastery ?? 0));
       } else {
         // DATE (Recently Added)
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA; // Most recently added first
+        return dir * (dateB - dateA);
       }
     });
 
@@ -449,59 +554,117 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
               className="w-full h-full pl-11 pr-4 py-0 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow uppercase text-sm font-bold"
             />
           </div>
-          <div className="relative shrink-0 h-12 sm:h-full w-full sm:w-[220px]" ref={sortRef}>
-            <button
-              onClick={() => setIsSortOpen(!isSortOpen)}
-              className="flex items-center justify-between w-full h-full pl-11 pr-4 py-0 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow cursor-pointer"
-            >
-              <ArrowDownUp className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
-              <span className="uppercase text-sm font-bold truncate">
-                {sortBy === "DATE" ? "RECENTLY ADDED" : sortBy === "ALPHA" ? "A-Z" : "MASTERY LEVEL"}
-              </span>
-              <ChevronRight className={`w-4 h-4 text-[#888] transition-transform ${isSortOpen ? "-rotate-90" : "rotate-90"}`} />
-            </button>
+          <div className="flex shrink-0 h-12 sm:h-full w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial sm:w-[220px] h-full" ref={sortRef}>
+              <button
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center justify-between w-full h-full pl-11 pr-4 py-0 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow cursor-pointer"
+              >
+                <ArrowDownUp className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
+                <span className="uppercase text-sm font-bold truncate">
+                  {sortBy === "DATE" ? "RECENTLY ADDED" : sortBy === "ALPHA" ? "A-Z" : "MASTERY LEVEL"}
+                </span>
+                <ChevronRight className={`w-4 h-4 text-[#888] transition-transform ${isSortOpen ? "-rotate-90" : "rotate-90"}`} />
+              </button>
 
-            {isSortOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] z-50 flex flex-col">
-                {[
-                  { id: "DATE", label: "RECENTLY ADDED" },
-                  { id: "ALPHA", label: "A-Z" },
-                  { id: "MASTERY", label: "MASTERY LEVEL" },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => {
-                      setSortBy(option.id);
-                      setIsSortOpen(false);
-                    }}
-                    className={`text-left px-4 py-3 uppercase text-sm font-bold hover:bg-[#FFFBF0] transition-colors border-b-[2px] border-black last:border-b-0 ${
-                      sortBy === option.id ? "bg-[#7C3AED] text-white hover:bg-[#6d28d9]" : "text-black"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
+              {isSortOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] z-50 flex flex-col">
+                  {[
+                    { id: "DATE", label: "RECENTLY ADDED" },
+                    { id: "ALPHA", label: "A-Z" },
+                    { id: "MASTERY", label: "MASTERY LEVEL" },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        setSortBy(option.id);
+                        setIsSortOpen(false);
+                      }}
+                      className={`text-left px-4 py-3 uppercase text-sm font-bold hover:bg-[#FFFBF0] transition-colors border-b-[2px] border-black last:border-b-0 ${
+                        sortBy === option.id ? "bg-[#7C3AED] text-white hover:bg-[#6d28d9]" : "text-black"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setSortDirection(d => d === "asc" ? "desc" : "asc")}
+              className="flex items-center justify-center w-12 h-full border-[2.5px] border-l-0 border-black bg-white hover:bg-[#FFFBF0] transition-all active:bg-[#7C3AED] active:text-white"
+              title={sortDirection === "asc" ? "Ascending — click to reverse" : "Descending — click to reverse"}
+            >
+              {sortDirection === "asc" ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
+            </button>
           </div>
         </div>
 
-        {/* Tags filter */}
-        <div className="flex gap-2 overflow-x-auto pb-4 -mb-4 pt-1" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-          {ALL_TAGS.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(tag)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-[2px] border-black text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 ${
-                activeTag === tag
-                  ? "bg-[#7C3AED] text-white shadow-[3px_3px_0_#000] font-black"
-                  : "bg-white text-black shadow-[2px_2px_0_transparent] hover:shadow-[3px_3px_0_#000] font-bold"
-              }`}
-            >
-              {tag !== "ALL" && <Tag className="w-3 h-3" />}
-              {tag}
-            </button>
-          ))}
+        {/* Filter Bar */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 mr-1">
+              <Filter className="w-4 h-4 text-[#888]" />
+              <span className="text-[10px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>FILTERS</span>
+              {activeFilterCount > 0 && (
+                <span className="flex items-center justify-center w-5 h-5 bg-[#7C3AED] text-white text-[10px] border-[1.5px] border-black" style={{ fontWeight: 900 }}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </div>
+            
+            <FilterDropdown
+              label="ROOT"
+              icon={<Gem className="w-3.5 h-3.5" />}
+              options={rootOptions}
+              value={activeRoot}
+              onChange={setActiveRoot}
+              accentColor="#FF007F"
+            />
+
+            <FilterDropdown
+              label="POS"
+              icon={<Type className="w-3.5 h-3.5" />}
+              options={uniquePOS}
+              value={activePOS}
+              onChange={setActivePOS}
+              accentColor="#FF1744"
+            />
+
+            <FilterDropdown
+              label="LEVEL"
+              icon={<Layers className="w-3.5 h-3.5" />}
+              options={uniqueLevels}
+              value={activeLevel}
+              onChange={setActiveLevel}
+              accentColor="#0057FF"
+            />
+
+            <FilterDropdown
+              label="FREQ"
+              icon={<Zap className="w-3.5 h-3.5" />}
+              options={uniqueFrequencies}
+              value={activeFrequency}
+              onChange={setActiveFrequency}
+              accentColor="#FF6D00"
+            />
+
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => {
+                  setActiveRoot("ALL");
+                  setActiveLevel("ALL");
+                  setActiveFrequency("ALL");
+                  setActivePOS("ALL");
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 border-[2.5px] border-black bg-[#EF4444] text-white text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+                style={{ fontWeight: 900 }}
+              >
+                <X className="w-3.5 h-3.5" />
+                CLEAR
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Word grid */}

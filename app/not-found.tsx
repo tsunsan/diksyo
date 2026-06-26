@@ -7,7 +7,7 @@ export default function NotFound() {
       <div className="max-w-md w-full border-4 border-black bg-white p-8 shadow-[8px_8px_0_0_#000] text-center space-y-6">
         <div className="flex justify-center">
           <Image
-            src="/images/waiting.svg"
+            src="/images/Waiting.svg"
             alt="Waiting"
             width={200}
             height={200}
