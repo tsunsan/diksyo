@@ -11,6 +11,7 @@ import BaseWordDisambiguation from "@/components/base-word-disambiguation";
 import DictionaryClient from "@/components/dictionary";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -138,6 +139,9 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
     const discoverWordsList = await getRandomDiscoverWords();
     const dailyWord = await getWordOfTheDay();
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Provide matchedWord at the top of discoverWords to pre-select it
     const initialDiscoverWords = matchedWord
         ? [matchedWord, ...discoverWordsList.filter((w: any) => w.id !== matchedWord.id)]
@@ -156,6 +160,7 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                     initialSavedWordIds={initialSavedWordIds} 
                     initialDiscoverWords={initialDiscoverWords as any}
                     initialWordOfTheDay={dailyWord as any}
+                    isAuthenticated={!!user}
                 />
             </div>
         </div>

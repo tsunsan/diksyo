@@ -23,6 +23,8 @@ import {
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
 import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
+import { SignupForm } from "@/components/signup-form";
+import { LoginForm } from "@/components/login-form";
 
 function highlightBold(text: string) {
   if (!text) return null;
@@ -42,13 +44,17 @@ export default function DictionaryClient({
   initialWords, 
   initialSavedWordIds,
   initialDiscoverWords,
-  initialWordOfTheDay
+  initialWordOfTheDay,
+  isAuthenticated = false
 }: { 
   initialWords: any[], 
   initialSavedWordIds: string[],
   initialDiscoverWords?: any[],
-  initialWordOfTheDay?: any
+  initialWordOfTheDay?: any,
+  isAuthenticated?: boolean
 }) {
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const [words, setWords] = useState<any[]>(initialWords);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedWordIds));
   const [isLoading, setIsLoading] = useState(false);
@@ -133,6 +139,11 @@ export default function DictionaryClient({
   const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
 
   const handleSaveToVault = async (id: string) => {
+    if (!isAuthenticated) {
+      setShowAuthOverlay(true);
+      return;
+    }
+    
     try {
         setSavingId(id);
         const willSave = !savedIds.has(id);
@@ -183,8 +194,40 @@ export default function DictionaryClient({
   };
 
   return (
-    <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
-      {/* Word Detail Modal */}
+    <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative">
+      
+      {showAuthOverlay && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowAuthOverlay(false)}>
+          <div className="w-full max-w-md relative bg-white border-[4px] border-black shadow-[10px_10px_0_#FDE047] p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setShowAuthOverlay(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white border-2 border-black hover:bg-zinc-100 transition-colors z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex w-full mb-6 mt-2 border-[2px] border-black">
+              <button
+                onClick={() => setAuthMode("signup")}
+                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest transition-colors ${authMode === "signup" ? "bg-yellow-400 text-black" : "bg-white text-zinc-500 hover:bg-zinc-100"}`}
+              >
+                Sign Up
+              </button>
+              <div className="w-[2px] bg-black" />
+              <button
+                onClick={() => setAuthMode("login")}
+                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest transition-colors ${authMode === "login" ? "bg-yellow-400 text-black" : "bg-white text-zinc-500 hover:bg-zinc-100"}`}
+              >
+                Log In
+              </button>
+            </div>
+
+            {authMode === "signup" ? <SignupForm /> : <LoginForm />}
+          </div>
+        </div>
+      )}
+
+      {/* Main search and header */}
       <AnimatePresence>
         {modalWord && (
           <motion.div

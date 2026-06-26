@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner"
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
       {children}
       <Toaster position="top-center" />
+      <Analytics />
+      <SpeedInsights />
       </body>
       </html>
   );
