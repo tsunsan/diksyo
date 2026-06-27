@@ -2,11 +2,12 @@ import { searchWords, getUserSavedWordIds, getRandomDiscoverWords, getWordOfTheD
 import DictionaryClient from "@/components/dictionary";
 import { createClient } from "@/utils/supabase/server";
 
-export default async function DictionaryPage() {
+export default async function DictionaryPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
   const initialWords = await searchWords("");
   const initialSavedWordIds = await getUserSavedWordIds();
   const discoverWordsList = await getRandomDiscoverWords();
   const dailyWord = await getWordOfTheDay();
+  const params = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -17,5 +18,6 @@ export default async function DictionaryPage() {
             initialDiscoverWords={discoverWordsList as any}
             initialWordOfTheDay={dailyWord as any}
             isAuthenticated={!!user}
+            showOnboarding={params.onboarding === "true"}
         />;
 }

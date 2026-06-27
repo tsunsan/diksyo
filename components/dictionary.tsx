@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect, useActionState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   BookOpen,
@@ -22,13 +23,163 @@ import {
   AlertCircle,
   Lock,
   Mail,
-  User
+  User,
+  MousePointerClick,
+  Sparkles,
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
 import { login, signup, type AuthState } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
+
+/* ─── Tour Step Definitions ─── */
+const TOUR_STEPS = [
+  {
+    target: "data-tour-search",
+    title: "SEARCH FOR WORDS",
+    desc: "Type any Tagalog or English word to find it in the dictionary.",
+    position: "bottom" as const,
+  },
+  {
+    target: "data-tour-wordcard",
+    title: "EXPLORE WORD DETAILS",
+    desc: "Click on any word from the list to see its full definition, examples, and etymology.",
+    position: "right" as const,
+  },
+  {
+    target: "data-tour-save",
+    title: "SAVE TO YOUR VAULT",
+    desc: "Hit this button to add the word to your vault. Saved words power the Mastery quiz modes.",
+    position: "bottom" as const,
+  },
+];
+
+/* ─── Spotlight Tour Overlay ─── */
+function SpotlightTour({ step, totalSteps, onNext, onSkip }: {
+  step: number;
+  totalSteps: number;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const tourStep = TOUR_STEPS[step];
+
+  const updateRect = useCallback(() => {
+    const el = document.querySelector(`[${tourStep.target}]`);
+    if (el) {
+      setRect(el.getBoundingClientRect());
+    }
+  }, [tourStep.target]);
+
+  useEffect(() => {
+    // Small delay to let DOM settle
+    const timer = setTimeout(updateRect, 300);
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect);
+    };
+  }, [updateRect]);
+
+  if (!rect) return null;
+
+  const pad = 8;
+  const isLast = step === totalSteps - 1;
+
+  // Calculate tooltip position
+  let tooltipStyle: React.CSSProperties = {};
+  if (tourStep.position === "bottom") {
+    tooltipStyle = {
+      top: rect.bottom + pad + 12,
+      left: Math.min(Math.max(16, rect.left + rect.width / 2 - 160), window.innerWidth - 336),
+    };
+  } else if (tourStep.position === "right") {
+    tooltipStyle = {
+      top: rect.top + rect.height / 2 - 60,
+      left: Math.min(rect.right + pad + 12, window.innerWidth - 340),
+    };
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200]" onClick={onSkip}>
+      {/* Dark overlay with cutout */}
+      <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
+        <defs>
+          <mask id="spotlight-mask">
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            <rect
+              x={rect.left - pad}
+              y={rect.top - pad}
+              width={rect.width + pad * 2}
+              height={rect.height + pad * 2}
+              fill="black"
+            />
+          </mask>
+        </defs>
+        <rect
+          x="0" y="0" width="100%" height="100%"
+          fill="rgba(0,0,0,0.6)"
+          mask="url(#spotlight-mask)"
+        />
+      </svg>
+
+      {/* Spotlight border */}
+      <div
+        className="absolute border-[3px] border-[#FFE500] pointer-events-none transition-all duration-300"
+        style={{
+          top: rect.top - pad,
+          left: rect.left - pad,
+          width: rect.width + pad * 2,
+          height: rect.height + pad * 2,
+          boxShadow: "0 0 0 4px rgba(255,229,0,0.3), 0 0 20px rgba(255,229,0,0.2)",
+        }}
+      />
+
+      {/* Tooltip */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        key={step}
+        className="absolute w-[320px] bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-0 overflow-hidden"
+        style={{ ...tooltipStyle, pointerEvents: "auto" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Tooltip header */}
+        <div className="bg-[#FFE500] border-b-[2px] border-black px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-black" />
+            <span className="text-[10px] uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
+              Step {step + 1} of {totalSteps}
+            </span>
+          </div>
+          <button onClick={onSkip} className="text-[10px] uppercase tracking-wider text-black/50 hover:text-black transition-colors" style={{ fontWeight: 800 }}>
+            Skip
+          </button>
+        </div>
+
+        {/* Tooltip body */}
+        <div className="px-4 py-3">
+          <h4 className="text-black uppercase text-sm mb-1" style={{ fontWeight: 900 }}>{tourStep.title}</h4>
+          <p className="text-[#555] text-xs leading-relaxed" style={{ fontWeight: 600 }}>{tourStep.desc}</p>
+        </div>
+
+        {/* Tooltip footer */}
+        <div className="px-4 pb-3">
+          <button
+            onClick={onNext}
+            className="w-full py-2.5 bg-black text-white border-[2px] border-black text-xs uppercase tracking-widest shadow-[3px_3px_0_#FFE500] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all"
+            style={{ fontWeight: 900 }}
+          >
+            {isLast ? "GOT IT!" : "NEXT →"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 const authInitialState: AuthState = {
   error: undefined,
@@ -81,13 +232,15 @@ export default function DictionaryClient({
   initialSavedWordIds,
   initialDiscoverWords,
   initialWordOfTheDay,
-  isAuthenticated = false
+  isAuthenticated = false,
+  showOnboarding = false
 }: { 
   initialWords: any[], 
   initialSavedWordIds: string[],
   initialDiscoverWords?: any[],
   initialWordOfTheDay?: any,
-  isAuthenticated?: boolean
+  isAuthenticated?: boolean,
+  showOnboarding?: boolean
 }) {
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
@@ -106,6 +259,8 @@ export default function DictionaryClient({
   const [modalWord, setModalWord] = useState<any | null>(null);
   const [discoverWords, setDiscoverWords] = useState<any[]>(initialDiscoverWords || []);
   const [wordOfTheDay, setWordOfTheDay] = useState<any | null>(initialWordOfTheDay || null);
+  const [tourStep, setTourStep] = useState(showOnboarding ? 0 : -1);
+  const tourRouter = useRouter();
 
   // Auth form states
   const [loginState, loginAction, loginPending] = useActionState(login, authInitialState);
@@ -613,7 +768,7 @@ export default function DictionaryClient({
         {/* Sidebar: Search + Word List */}
         <div className="lg:col-span-1 flex flex-col gap-4">
           {/* Search */}
-          <div className="relative">
+          <div className="relative" data-tour-search>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
             <input
               type="text"
@@ -660,6 +815,7 @@ export default function DictionaryClient({
                       setSelectedId(w.id);
                     }
                   }}
+                  {...((!search ? discoverWords : words).indexOf(w) === 0 ? { "data-tour-wordcard": true } : {})}
                   className={`flex items-start gap-3 p-4 text-left border-[2.5px] transition-all cursor-pointer ${
                     selectedId === w.id
                       ? "bg-[#FDE047] border-black shadow-[4px_4px_0_#000]"
@@ -869,6 +1025,7 @@ export default function DictionaryClient({
                       </span>
                     </button>
                     <button
+                      data-tour-save
                       onClick={() => handleSaveToVault(word.id)}
                       disabled={savingId === word.id}
                       className={`px-3 h-10 border-[2px] border-black flex items-center justify-center gap-1.5 transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none text-xs font-black uppercase tracking-widest ${
@@ -1097,6 +1254,28 @@ export default function DictionaryClient({
           )}
         </div>
       </div>
+
+      {/* ─── Spotlight Tour ─── */}
+      <AnimatePresence>
+        {tourStep >= 0 && tourStep < TOUR_STEPS.length && (
+          <SpotlightTour
+            step={tourStep}
+            totalSteps={TOUR_STEPS.length}
+            onNext={() => {
+              if (tourStep < TOUR_STEPS.length - 1) {
+                setTourStep(tourStep + 1);
+              } else {
+                setTourStep(-1);
+                tourRouter.replace("/dictionary", { scroll: false });
+              }
+            }}
+            onSkip={() => {
+              setTourStep(-1);
+              tourRouter.replace("/dictionary", { scroll: false });
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
