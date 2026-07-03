@@ -733,7 +733,7 @@ export default function DictionaryClient({
                       <span className="text-xs uppercase tracking-widest text-[#888] mb-2 block" style={{ fontWeight: 800 }}>RELATED WORDS</span>
                       <div className="flex flex-wrap gap-2">
                         {modalWord.related.map((r: string) => (
-                          <button key={r} onClick={() => { setSearch(r); setIsLoading(true); setModalWord(null); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000]" style={{ fontWeight: 800 }}>
+                          <button key={r} onClick={() => { if (search !== r) { setSearch(r); setIsLoading(true); } setModalWord(null); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000]" style={{ fontWeight: 800 }}>
                             {r} <ArrowRight className="inline-block w-3 h-3 ml-1" />
                           </button>
                         ))}
@@ -1103,8 +1103,11 @@ export default function DictionaryClient({
                         <button
                           onClick={() => {
                             if (word.rootWordId) setSelectedId(word.rootWordId);
-                            setSearch(word.rootWord?.word || word.rootWordString || "");
-                            setIsLoading(true);
+                            const newSearch = word.rootWord?.word || word.rootWordString || "";
+                            if (search !== newSearch) {
+                              setSearch(newSearch);
+                              setIsLoading(true);
+                            }
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
                           className="inline-flex items-center gap-2 bg-[#FDE047] border-[2px] border-black px-3 py-1.5 text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-[#FACC15]"
@@ -1196,8 +1199,10 @@ export default function DictionaryClient({
                           <button
                             key={r}
                             onClick={() => {
-                              setSearch(r);
-                              setIsLoading(true);
+                              if (search !== r) {
+                                setSearch(r);
+                                setIsLoading(true);
+                              }
                               window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                             className="px-3 py-1.5 bg-white border-[2px] border-black text-xs uppercase tracking-wider hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
