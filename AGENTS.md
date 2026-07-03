@@ -11,7 +11,7 @@ This document serves as the primary source of truth for AI agents working on the
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS 4, shadcn/ui, next-themes, lucide-react, tw-animate-css
+- **Styling:** Tailwind CSS 4, shadcn/ui, next-themes, lucide-react, tw-animate-css (Note: Tailwind v4 uses CSS-based configuration located in `app/globals.css` or `app/index.css`, not `tailwind.config.js`).
 - **Database:** PostgreSQL (via Supabase)
 - **ORM:** Drizzle ORM
 - **Authentication:** Supabase Auth (@supabase/ssr)
@@ -46,21 +46,32 @@ Format: `<type>(<scope>): <description>` (Scope is optional but recommended).
 ### 2. Coding Standards
 - **TypeScript:** Strict mode is enabled. Use explicit types/interfaces. Avoid `any`.
 - **React:** Use React 19 patterns. Prefer functional components and hooks.
-- **Server-Side First:** Leverage Server Components by default. Use `'use client'` only when client-side interactivity is required (state, effects, events).
+- **Server-Side First:** Leverage Server Components by default. Fetch data using direct `async/await` in Server Components instead of `useEffect`. Use `'use client'` only when client-side interactivity is required.
 - **Imports:** Use `@/` alias for all internal imports (e.g., `@/components/ui/button`).
 - **Error Handling:** Handle errors gracefully in Server Actions using the `AuthState` pattern (error message + error title).
+- **Environment Variables:** Only variables prefixed with `NEXT_PUBLIC_` are safe for client-side use. Never expose server secrets (like Supabase Service keys) to the client.
+- **Cache Invalidation:** Always call `revalidatePath()` or `revalidateTag()` at the end of successful Server Actions to ensure the UI instantly reflects database mutations.
 
 ### 3. Database & ORM (Drizzle)
 - **Schema:** Defined in `db/schema.ts`.
 - **Migrations:** Use `drizzle-kit` for generating and pushing migrations.
 - **Credentials:** Connection string is stored in `DIRECT_URL` in `.env.local`.
+- **Database Resilience:** 
+  - Connection strings must strictly enforce pooling limits (e.g., `?connection_limit=5&connect_timeout=10`).
+  - Postgres client in `db/index.ts` must use `connect_timeout: 5` and `idle_timeout: 5` to fail fast and avoid Vercel 504 timeouts.
+  - All DB queries and Supabase API calls in Server Actions must be wrapped in `withExponentialBackoff(async () => { ... })` imported from `@/lib/db-utils` to handle retry storms.
+- **Egress Write Protection:** Do NOT use `.returning()` on `INSERT` or `UPDATE` operations unless absolutely necessary for the UI.
 
 ### 4. Authentication (Supabase)
 - Client-side Supabase: `utils/supabase/client.ts`.
 - Server-side Supabase: `utils/supabase/server.ts`.
 - Middleware: Ensure auth state is handled correctly in `middleware.ts` (if present) or via Server Actions.
 
-### 5. Domain Logic (FSRS)
+### 5. State Management & Form Validation
+- **Zustand:** Prefer local React state when possible. Use Zustand (store files should be located in a `store/` directory) strictly for complex, globally shared client state.
+- **Zod:** All `FormData` or JSON inputs to Server Actions must be strictly parsed and validated against Zod schemas before running any database queries to prevent malformed data injections.
+
+### 6. Domain Logic (FSRS)
 - Spaced repetition logic is encapsulated in `lib/fsrs-logic.ts`.
 - Use the `calculateNextReview` helper to determine the next review date and card state.
 

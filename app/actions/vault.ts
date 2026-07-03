@@ -5,6 +5,7 @@ import { userProgress, words } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { withExponentialBackoff } from "@/lib/db-utils";
 
 
 export async function getVaultWords() {
@@ -16,13 +17,13 @@ export async function getVaultWords() {
     }
 
     try {
-        const vaultEntries = await db.query.userProgress.findMany({
+        const vaultEntries = await withExponentialBackoff(() => db.query.userProgress.findMany({
             where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)),
             with: {
                 word: true,
             },
             orderBy: (progress, { desc }) => [desc(progress.nextReview)],
-        });
+        }));
 
         return { success: true, data: vaultEntries };
     } catch (error) {
@@ -41,28 +42,28 @@ export async function addWordToVault(wordId: string) {
 
     try {
         
-        const existing = await db.query.userProgress.findFirst({
+        const existing = await withExponentialBackoff(() => db.query.userProgress.findFirst({
             where: and(eq(userProgress.userId, user.id), eq(userProgress.wordId, wordId)),
-        });
+        }));
 
         if (existing) {
             if (existing.isArchived) {
-                await db.update(userProgress)
+                await withExponentialBackoff(() => db.update(userProgress)
                     .set({ isArchived: false, nextReview: new Date() })
-                    .where(eq(userProgress.id, existing.id));
+                    .where(eq(userProgress.id, existing.id)));
                 revalidatePath("/vault");
                 return { success: true };
             }
             return { success: false, error: "Word is already in your vault" };
         }
 
-        await db.insert(userProgress).values({
+        await withExponentialBackoff(() => db.insert(userProgress).values({
             userId: user.id,
             wordId: wordId,
             mastery: 0,
             stability: 0,
             difficulty: 0,
-        });
+        }));
 
         revalidatePath("/vault");
         return { success: true };
@@ -81,10 +82,10 @@ export async function getVaultWordCount() {
     }
 
     try {
-        const result = await db
+        const result = await withExponentialBackoff(() => db
             .select({ count: sql<number>`count(*)::int` })
             .from(userProgress)
-            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)));
+            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))));
 
         return { success: true, count: result[0]?.count ?? 0 };
     } catch (error) {
@@ -103,28 +104,28 @@ export async function seedStarterPack() {
 
     try {
         // Check if user already has words
-        const countResult = await db
+        const countResult = await withExponentialBackoff(() => db
             .select({ count: sql<number>`count(*)::int` })
             .from(userProgress)
-            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)));
+            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))));
 
         if ((countResult[0]?.count ?? 0) > 0) {
             return { success: false, error: "You already have words in your vault" };
         }
 
         // Get 15 random words from the dictionary
-        const randomWords = await db.query.words.findMany({
+        const randomWords = await withExponentialBackoff(() => db.query.words.findMany({
             orderBy: sql`RANDOM()`,
             limit: 8,
             columns: { id: true },
-        });
+        }));
 
         if (randomWords.length === 0) {
             return { success: false, error: "No words available in the dictionary" };
         }
 
         // Insert them as fresh vault entries
-        await db.insert(userProgress).values(
+        await withExponentialBackoff(() => db.insert(userProgress).values(
             randomWords.map((w) => ({
                 userId: user.id,
                 wordId: w.id,
@@ -133,7 +134,7 @@ export async function seedStarterPack() {
                 mastery: 0,
                 isArchived: false,
             }))
-        );
+        ));
 
         revalidatePath("/vault");
         revalidatePath("/quiz");

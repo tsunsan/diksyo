@@ -4,8 +4,11 @@ import { db } from "@/db";
 import { userProgress, words } from "@/db/schema";
 import { and, eq, ilike, sql, or, inArray } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
+import { withExponentialBackoff } from "@/lib/db-utils";
 
 export async function searchWordBySlug(slug: string) {
+    return withExponentialBackoff(async () => {
+
     const exactMatch = await db.query.words.findFirst({
         where: eq(words.slug, slug),
         with: {
@@ -21,9 +24,12 @@ export async function searchWordBySlug(slug: string) {
         limit: 5,
     });
     return { status: "SIMILAR" as const, data: similarWords };
+    });
 }
 
 export async function getRandomWordSlug() {
+    return withExponentialBackoff(async () => {
+
     const randomWord = await db.query.words.findFirst({
         orderBy: sql`RANDOM()`,
         columns: {
@@ -31,9 +37,12 @@ export async function getRandomWordSlug() {
         }
     });
     return randomWord?.slug || null;
+    });
 }
 
 export async function saveWordToVault(wordId: string) {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -69,9 +78,12 @@ export async function saveWordToVault(wordId: string) {
     });
 
     return { success: true, message: "Word successfully saved to vault." };
+    });
 }
 
 export async function removeWordFromVault(wordId: string) {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -89,9 +101,12 @@ export async function removeWordFromVault(wordId: string) {
         );
 
     return { success: true, message: "Word successfully removed from vault." };
+    });
 }
 
 export async function getUserSavedWordIds() {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -104,9 +119,12 @@ export async function getUserSavedWordIds() {
         columns: { wordId: true }
     });
     return saved.map(s => s.wordId).filter((id): id is string => id !== null);
+    });
 }
 
 export async function searchWords(query: string) {
+    return withExponentialBackoff(async () => {
+
     if (!query) {
         return db.query.words.findMany({ 
             with: { rootWord: true },
@@ -140,17 +158,23 @@ export async function searchWords(query: string) {
         ],
         limit: 50,
     });
+    });
 }
 
 export async function getRandomDiscoverWords() {
+    return withExponentialBackoff(async () => {
+
     return db.query.words.findMany({
         orderBy: sql`RANDOM()`,
         with: { rootWord: true },
         limit: 5
     });
+    });
 }
 
 export async function getWordOfTheDay() {
+    return withExponentialBackoff(async () => {
+
     const allWords = await db.query.words.findMany({
         columns: { id: true, word: true },
         orderBy: (words, { asc }) => [asc(words.word)]
@@ -166,18 +190,24 @@ export async function getWordOfTheDay() {
         where: eq(words.id, wordId),
         with: { rootWord: true }
     });
+    });
 }
 
 export async function getWordByExactSlug(slug: string) {
+    return withExponentialBackoff(async () => {
+
     return db.query.words.findFirst({
         where: eq(words.slug, slug),
         with: {
             rootWord: true,
         },
     });
+    });
 }
 
 export async function searchWordsByBaseWord(baseWord: string) {
+    return withExponentialBackoff(async () => {
+
     const normalizedWord = baseWord.trim().toLowerCase();
 
     if (!normalizedWord) {
@@ -191,9 +221,12 @@ export async function searchWordsByBaseWord(baseWord: string) {
         },
         orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
     });
+    });
 }
 
 export async function getAllDictionaryEntriesForSitemap() {
+    return withExponentialBackoff(async () => {
+
     return db.query.words.findMany({
         columns: {
             slug: true,
@@ -201,9 +234,12 @@ export async function getAllDictionaryEntriesForSitemap() {
         },
         orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
     });
+    });
 }
 
 export async function searchWordSuggestions(term: string, limit = 8) {
+    return withExponentialBackoff(async () => {
+
     const normalizedTerm = term.trim().toLowerCase();
 
     if (!normalizedTerm) {
@@ -239,4 +275,5 @@ export async function searchWordSuggestions(term: string, limit = 8) {
     const deduped = merged.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
 
     return deduped.slice(0, limit);
+    });
 }

@@ -1,10 +1,13 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { withExponentialBackoff } from "@/lib/db-utils"
 import { redirect } from 'next/navigation'
 import { AuthState } from './auth'
 
 export async function updateProfile(prevState: AuthState, formData: FormData): Promise<AuthState> {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -48,9 +51,12 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
     }
 
     return { success: 'Profile successfully updated.' }
+    });
 }
 
 export async function deleteAccount(prevState: AuthState, formData: FormData): Promise<AuthState> {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -67,4 +73,5 @@ export async function deleteAccount(prevState: AuthState, formData: FormData): P
 
     await supabase.auth.signOut()
     redirect('/login')
+    });
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useActionState, useCallback, useRef } from "react";
+import { useState, useEffect, useActionState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import {
@@ -20,6 +20,7 @@ import {
   Volume2,
   ExternalLink,
   X,
+  SlidersHorizontal,
   AlertCircle,
   Lock,
   Mail,
@@ -32,6 +33,28 @@ import { login, signup, type AuthState } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
+
+/* ─── Filter Constants ─── */
+const FILTER_POS_OPTIONS: { key: string; label: string; labelEn: string }[] = [
+  { key: "PANGNGALAN", label: "PANGNGALAN", labelEn: "NOUN" },
+  { key: "PANDIWA", label: "PANDIWA", labelEn: "VERB" },
+  { key: "PANG-URI", label: "PANG-URI", labelEn: "ADJ" },
+  { key: "PANG-ABAY", label: "PANG-ABAY", labelEn: "ADV" },
+  { key: "PANGHALIP", label: "PANGHALIP", labelEn: "PRON" },
+  { key: "PANDAMDAM", label: "PANDAMDAM", labelEn: "INTJ" },
+  { key: "PANGATNIG", label: "PANGATNIG", labelEn: "CONJ" },
+  { key: "PANG-UKOL", label: "PANG-UKOL", labelEn: "PREP" },
+  { key: "PANTUKOY", label: "PANTUKOY", labelEn: "ART" },
+  { key: "PANLAPI", label: "PANLAPI", labelEn: "AFFIX" },
+  { key: "DAGLAT", label: "DAGLAT", labelEn: "ABBR" },
+  { key: "PARIRALA / IDYOMA", label: "PARIRALA", labelEn: "PHRASE" },
+];
+
+const FILTER_LEVEL_OPTIONS = [
+  { key: "BEGINNER", label: "BEGINNER", emoji: "🟢" },
+  { key: "INTERMEDIATE", label: "INTERMEDIATE", emoji: "🟡" },
+  { key: "ADVANCED", label: "ADVANCED", emoji: "🟠" },
+];
 
 /* ─── Tour Step Definitions ─── */
 const TOUR_STEPS = [
@@ -257,6 +280,12 @@ export default function DictionaryClient({
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
+
+  /* ─── Filter State ─── */
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterPos, setFilterPos] = useState<Set<string>>(new Set());
+  const [filterLevel, setFilterLevel] = useState<string | null>(null);
+  const [filterRootOnly, setFilterRootOnly] = useState(false);
   const [discoverWords, setDiscoverWords] = useState<any[]>(initialDiscoverWords || []);
   const [wordOfTheDay, setWordOfTheDay] = useState<any | null>(initialWordOfTheDay || null);
   const [tourStep, setTourStep] = useState(showOnboarding ? 0 : -1);
@@ -359,6 +388,42 @@ export default function DictionaryClient({
                null;
   const isSaved = word ? savedIds.has(word.id) : false;
   const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
+
+  /* ─── Filtered Words (client-side) ─── */
+  const filteredWords = useMemo(() => {
+    let source = !search ? discoverWords : words;
+    if (filterPos.size > 0) {
+      source = source.filter((w: any) => {
+        const pos = (w.partOfSpeech || "").toUpperCase();
+        // Match exact or compound POS containing the filter key
+        return Array.from(filterPos).some(fp => pos === fp || pos.startsWith(fp + " /") || pos.includes("/ " + fp));
+      });
+    }
+    if (filterLevel) {
+      source = source.filter((w: any) => w.level === filterLevel);
+    }
+    if (filterRootOnly) {
+      source = source.filter((w: any) => !w.rootWordId && !w.rootWordString);
+    }
+    return source;
+  }, [words, discoverWords, search, filterPos, filterLevel, filterRootOnly]);
+
+  const activeFilterCount = (filterPos.size > 0 ? 1 : 0) + (filterLevel ? 1 : 0) + (filterRootOnly ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setFilterPos(new Set());
+    setFilterLevel(null);
+    setFilterRootOnly(false);
+  };
+
+  const togglePosFilter = (key: string) => {
+    setFilterPos(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const handleSaveToVault = async (id: string) => {
     if (!isAuthenticated) {
@@ -767,7 +832,7 @@ export default function DictionaryClient({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar: Search + Word List */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-          {/* Search */}
+          {/* Search + Filter Toggle */}
           <div className="relative" data-tour-search>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
             <input
@@ -775,10 +840,163 @@ export default function DictionaryClient({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="SEARCH WORDS..."
-              className="w-full pl-11 pr-4 py-3 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow uppercase text-sm"
+              className="w-full pl-11 pr-14 py-3 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow uppercase text-sm"
               style={{ fontWeight: 700 }}
             />
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 border-[2px] border-black flex items-center justify-center transition-all ${
+                showFilters || activeFilterCount > 0
+                  ? "bg-black text-[#FDE047] shadow-none"
+                  : "bg-white text-black hover:bg-[#FDE047] shadow-[2px_2px_0_#000] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
+              }`}
+              title="Toggle filters"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              {activeFilterCount > 0 && (
+                <span
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-[#FF007F] border-[1.5px] border-black text-white flex items-center justify-center text-[9px]"
+                  style={{ fontWeight: 900 }}
+                >
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
+
+          {/* ─── Filter Deck ─── */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                className="overflow-hidden"
+              >
+                <div className="border-[2.5px] border-black bg-white shadow-[4px_4px_0_#000]">
+                  {/* Panel Header */}
+                  <div className="bg-[#FDE047] border-b-[2px] border-black px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-black" />
+                      <span className="text-[10px] uppercase tracking-widest text-black" style={{ fontWeight: 900 }}>
+                        FILTER DECK
+                      </span>
+                    </div>
+                    {activeFilterCount > 0 && (
+                      <button
+                        onClick={clearAllFilters}
+                        className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-black/60 hover:text-black transition-colors"
+                        style={{ fontWeight: 800 }}
+                      >
+                        <X className="w-3 h-3" />
+                        CLEAR ALL
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-3 flex flex-col gap-3">
+                    {/* ── Part of Speech Pills ── */}
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest text-[#888] mb-1.5 block" style={{ fontWeight: 800 }}>
+                        BAHAGI NG PANANALITA
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {FILTER_POS_OPTIONS.map((pos) => {
+                          const isActive = filterPos.has(pos.key);
+                          const color = POS_COLORS[pos.key] || { bg: "#333", text: "#fff" };
+                          return (
+                            <button
+                              key={pos.key}
+                              onClick={() => togglePosFilter(pos.key)}
+                              className={`px-2 py-1 border-[1.5px] border-black text-[9px] uppercase tracking-wider transition-all ${
+                                isActive
+                                  ? "shadow-[2px_2px_0_#000] scale-[1.02]"
+                                  : "hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[2px_2px_0_#000]"
+                              }`}
+                              style={{
+                                fontWeight: 800,
+                                background: isActive ? color.bg : "#fff",
+                                color: isActive ? color.text : "#000",
+                              }}
+                            >
+                              {pos.labelEn}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Separator */}
+                    <div className="h-[2px] bg-black/10" />
+
+                    {/* ── Level Badges ── */}
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest text-[#888] mb-1.5 block" style={{ fontWeight: 800 }}>
+                        ANTAS · LEVEL
+                      </span>
+                      <div className="flex gap-1.5">
+                        {FILTER_LEVEL_OPTIONS.map((lvl) => {
+                          const isActive = filterLevel === lvl.key;
+                          const color = LEVEL_COLORS[lvl.key] || "#ccc";
+                          return (
+                            <button
+                              key={lvl.key}
+                              onClick={() => setFilterLevel(isActive ? null : lvl.key)}
+                              className={`flex-1 px-2 py-1.5 border-[1.5px] border-black text-[9px] uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
+                                isActive
+                                  ? "shadow-[2px_2px_0_#000] scale-[1.02]"
+                                  : "hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[2px_2px_0_#000]"
+                              }`}
+                              style={{
+                                fontWeight: 800,
+                                background: isActive ? color : "#fff",
+                                color: isActive ? (lvl.key === "ADVANCED" ? "#fff" : "#000") : "#000",
+                              }}
+                            >
+                              <span>{lvl.emoji}</span>
+                              <span className="hidden sm:inline">{lvl.label}</span>
+                              <span className="sm:hidden">{lvl.label.slice(0, 3)}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Separator */}
+                    <div className="h-[2px] bg-black/10" />
+
+                    {/* ── Root Words Only Toggle ── */}
+                    <button
+                      onClick={() => setFilterRootOnly(!filterRootOnly)}
+                      className={`w-full px-3 py-2 border-[1.5px] border-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                        filterRootOnly
+                          ? "bg-[#FF007F] text-white shadow-[2px_2px_0_#000]"
+                          : "bg-white text-black hover:bg-[#FFF0F5] hover:shadow-[2px_2px_0_#000]"
+                      }`}
+                      style={{ fontWeight: 900 }}
+                    >
+                      <span>⭐</span>
+                      ROOT WORDS ONLY
+                      {filterRootOnly && <Check className="w-3.5 h-3.5" />}
+                    </button>
+
+                    {/* ── Active Filter Summary ── */}
+                    {activeFilterCount > 0 && (
+                      <div className="flex items-center justify-between bg-[#FFFBF0] border-[1.5px] border-black/20 px-3 py-1.5">
+                        <span className="text-[9px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>
+                          {activeFilterCount} {activeFilterCount === 1 ? "FILTER" : "FILTERS"} ACTIVE
+                        </span>
+                        <span className="text-[9px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 700 }}>
+                          {filteredWords.length} {filteredWords.length === 1 ? "RESULT" : "RESULTS"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Word list */}
           <div className="flex flex-col gap-2">
@@ -796,11 +1014,11 @@ export default function DictionaryClient({
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-black" />
                     SEARCHING...
                 </div>
-            ) : (!search ? discoverWords : words).length === 0 ? (
+            ) : filteredWords.length === 0 ? (
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
-                    NO WORDS FOUND.
+                    {activeFilterCount > 0 ? "NO WORDS MATCH YOUR FILTERS." : "NO WORDS FOUND."}
                 </div>
-            ) : (!search ? discoverWords : words.slice(0, 12)).map((w) => {
+            ) : (search ? filteredWords.slice(0, 12) : filteredWords).map((w) => {
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
@@ -815,7 +1033,7 @@ export default function DictionaryClient({
                       setSelectedId(w.id);
                     }
                   }}
-                  {...((!search ? discoverWords : words).indexOf(w) === 0 ? { "data-tour-wordcard": true } : {})}
+                  {...(filteredWords.indexOf(w) === 0 ? { "data-tour-wordcard": true } : {})}
                   className={`flex items-start gap-3 p-4 text-left border-[2.5px] transition-all cursor-pointer ${
                     selectedId === w.id
                       ? "bg-[#FDE047] border-black shadow-[4px_4px_0_#000]"

@@ -9,6 +9,10 @@ if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is missing! Check your .env.local file.");
 }
 
-const client = postgres(process.env.DATABASE_URL, { prepare: false });
+const client = postgres(process.env.DATABASE_URL, { 
+    prepare: false,
+    connect_timeout: 5,
+    idle_timeout: 5
+});
 
 export const db = drizzle(client, { schema });

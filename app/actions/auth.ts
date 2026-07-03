@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { withExponentialBackoff } from "@/lib/db-utils"
 import { redirect } from 'next/navigation'
 
 
@@ -11,6 +12,8 @@ export type AuthState = {
 };
 
 export async function login(prevState: AuthState, formData: FormData): Promise<AuthState> {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -41,9 +44,12 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
     }
 
     redirect('/dictionary')
+    });
 }
 
 export async function signup(prevState: AuthState, formData: FormData): Promise<AuthState> {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -92,9 +98,12 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
     }
 
     return { success: 'Welcome to Diksyo. Rerouting to dictionary...' }
+    });
 }
 
 export async function requestPasswordReset(prevState: AuthState, formData: FormData): Promise<AuthState> {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     const email = formData.get('email') as string
 
@@ -118,9 +127,12 @@ export async function requestPasswordReset(prevState: AuthState, formData: FormD
     }
 
     return { success: 'Reset link dispatched! Check your inbox to proceed.' }
+    });
 }
 
 export async function updateUserPassword(prevState: AuthState, formData: FormData): Promise<AuthState> {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirm-password') as string
@@ -154,10 +166,14 @@ export async function updateUserPassword(prevState: AuthState, formData: FormDat
     }
 
     return { success: 'Password reinforced. Rerouting to dictionary...' }
+    });
 }
 
 export async function logout() {
+    return withExponentialBackoff(async () => {
+
     const supabase = await createClient()
     await supabase.auth.signOut()
     redirect('/login')
+    });
 }
