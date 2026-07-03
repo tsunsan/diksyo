@@ -309,6 +309,7 @@ export default function DictionaryClient({
         },
       });
       setShowAuthOverlay(false);
+      setTourStep(0);
     }
   }, [signupState?.success]);
 
@@ -832,49 +833,58 @@ export default function DictionaryClient({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar: Search + Word List */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-          {/* Search + Filter Toggle */}
-          <div className="relative" data-tour-search>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="SEARCH WORDS..."
-              className="w-full pl-11 pr-14 py-3 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow uppercase text-sm"
-              style={{ fontWeight: 700 }}
-            />
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 border-[2px] border-black flex items-center justify-center transition-all ${
-                showFilters || activeFilterCount > 0
-                  ? "bg-black text-[#FDE047] shadow-none"
-                  : "bg-white text-black hover:bg-[#FDE047] shadow-[2px_2px_0_#000] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
-              }`}
-              title="Toggle filters"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              {activeFilterCount > 0 && (
-                <span
-                  className="absolute -top-2 -right-2 w-5 h-5 bg-[#FF007F] border-[1.5px] border-black text-white flex items-center justify-center text-[9px]"
-                  style={{ fontWeight: 900 }}
-                >
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* ─── Filter Deck ─── */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className="overflow-hidden"
+          {/* Search + Filter Deck (unified container) */}
+          <div
+            className={`border-[2.5px] border-black bg-white transition-shadow ${
+              showFilters ? "shadow-[4px_4px_0_#000]" : ""
+            }`}
+            data-tour-search
+          >
+            {/* Search Input Row */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="SEARCH WORDS..."
+                className="w-full pl-11 pr-14 py-3 bg-transparent outline-none uppercase text-sm"
+                style={{ fontWeight: 700 }}
+              />
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 border-[2px] border-black flex items-center justify-center transition-all ${
+                  showFilters || activeFilterCount > 0
+                    ? "bg-black text-[#FDE047]"
+                    : "bg-white text-black hover:bg-[#FDE047] shadow-[2px_2px_0_#000]"
+                }`}
+                title="Toggle filters"
               >
-                <div className="border-[2.5px] border-black bg-white shadow-[4px_4px_0_#000]">
+                <SlidersHorizontal className="w-4 h-4" />
+                {activeFilterCount > 0 && (
+                  <span
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-[#FF007F] border-[1.5px] border-black text-white flex items-center justify-center text-[9px]"
+                    style={{ fontWeight: 900 }}
+                  >
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* ─── Filter Deck (expands within the same container) ─── */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                  className="overflow-hidden"
+                >
+                  {/* Separator between search and filters */}
+                  <div className="h-[2.5px] bg-black" />
+
                   {/* Panel Header */}
                   <div className="bg-[#FDE047] border-b-[2px] border-black px-3 py-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -993,10 +1003,10 @@ export default function DictionaryClient({
                       </div>
                     )}
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Word list */}
           <div className="flex flex-col gap-2">
