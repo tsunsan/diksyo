@@ -25,6 +25,19 @@ export const metadata: Metadata = {
   },
   description: "Diksyo is your ultimate Tagalog dictionary (diksyonaryo) and personal engine for mastering the Filipino language through active recall and spaced repetition.",
   keywords: ["Tagalog dictionary", "diksyonaryo", "Filipino dictionary", "learn Tagalog", "Tagalog translation"],
+  openGraph: {
+    title: "Diksyo | The Modern Tagalog Dictionary",
+    description: "Your ultimate Tagalog dictionary and learning engine.",
+    url: "https://diksyo.com",
+    siteName: "Diksyo",
+    locale: "en_PH",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Diksyo | The Modern Tagalog Dictionary",
+    description: "Your ultimate Tagalog dictionary and learning engine.",
+  },
 };
 
 export default function RootLayout({

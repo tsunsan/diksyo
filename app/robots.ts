@@ -8,6 +8,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: [
+        '/dictionary',
+        '/profile',
+        '/vault',
+        '/quiz',
+        '/update-password',
+        '/forgot-password'
+      ]
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   }

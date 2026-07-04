@@ -34,9 +34,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${siteUrl}/salita/random`,
+      url: `${siteUrl}/signup`,
       lastModified: now,
-      changeFrequency: "daily",
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/login`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/contact-us`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.5,
+    },
+    {
+      url: `${siteUrl}/privacy`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.5,
+    },
+    {
+      url: `${siteUrl}/terms`,
+      lastModified: now,
+      changeFrequency: "yearly",
       priority: 0.5,
     },
   ];
@@ -51,7 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const disambiguationRoutes: MetadataRoute.Sitemap = [...baseWordCounts.entries()]
     .filter(([, count]) => count > 1)
     .map(([baseWord]) => ({
-      url: `${siteUrl}/${baseWord}`,
+      url: `${siteUrl}/salita/${baseWord}`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.6,

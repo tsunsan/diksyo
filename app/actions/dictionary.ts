@@ -277,3 +277,20 @@ export async function searchWordSuggestions(term: string, limit = 8) {
     return deduped.slice(0, limit);
     });
 }
+
+export async function getLandingPageStats() {
+    return withExponentialBackoff(async () => {
+        const wordCountResult = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(words);
+
+        const rootCountResult = await db
+            .select({ count: sql<number>`count(distinct ${words.rootWordId})::int` })
+            .from(words);
+
+        return {
+            wordCount: wordCountResult[0]?.count ?? 0,
+            rootCount: rootCountResult[0]?.count ?? 0,
+        };
+    });
+}
