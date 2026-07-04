@@ -131,7 +131,8 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
             );
         }
 
-        notFound();
+        // Instead of notFound(), we let it fall through to render the DictionaryClient
+        // with the query pre-filled so the user can refine their search.
     }
 
     const initialWords = await searchWords("");
@@ -161,6 +162,7 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                     initialDiscoverWords={initialDiscoverWords as any}
                     initialWordOfTheDay={dailyWord as any}
                     isAuthenticated={!!user}
+                    initialSearch={!matchedWord ? resolvedParams.slug : undefined}
                 />
             </div>
         </div>

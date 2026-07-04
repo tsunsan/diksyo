@@ -256,14 +256,16 @@ export default function DictionaryClient({
   initialDiscoverWords,
   initialWordOfTheDay,
   isAuthenticated = false,
-  showOnboarding = false
+  showOnboarding = false,
+  initialSearch = ""
 }: { 
   initialWords: any[], 
   initialSavedWordIds: string[],
   initialDiscoverWords?: any[],
   initialWordOfTheDay?: any,
   isAuthenticated?: boolean,
-  showOnboarding?: boolean
+  showOnboarding?: boolean,
+  initialSearch?: string
 }) {
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
@@ -277,7 +279,7 @@ export default function DictionaryClient({
     
   const [selectedId, setSelectedId] = useState<string | null>(defaultSelectedId);
   
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch || "");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
 
