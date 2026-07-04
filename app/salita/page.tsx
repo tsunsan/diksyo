@@ -3,6 +3,13 @@ import DictionaryClient from "@/components/dictionary";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Browse the Tagalog Dictionary",
+  description: "Explore the full Diksyo Tagalog dictionary. Search for translations, discover new Tagalog words, and improve your Filipino vocabulary.",
+};
+
 export default async function DictionaryHubPage() {
   const initialWords = await searchWords("");
   const initialSavedWordIds = await getUserSavedWordIds();

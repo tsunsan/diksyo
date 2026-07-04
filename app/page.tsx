@@ -171,9 +171,9 @@ export default function LandingPage() {
                                 Decode Filipino.
                             </span>
                         </h1>
-                        <p className="hero-element mb-10 max-w-3xl text-xl font-bold text-white drop-shadow-[2px_2px_0_black] sm:text-2xl md:mb-12 md:text-3xl">
-                            Type any word to uncover its meaning, roots, and real-life context. Start your quest today.
-                        </p>
+                        <h2 className="hero-element mb-10 max-w-3xl text-xl font-bold text-white drop-shadow-[2px_2px_0_black] sm:text-2xl md:mb-12 md:text-3xl">
+                            Your ultimate <span className="text-yellow-300">Tagalog dictionary</span> (<em>diksyonaryo</em>). Type any word to uncover its meaning, roots, and real-life context.
+                        </h2>
 
                         <div className="hero-element w-full max-w-2xl transform transition-transform hover:scale-[1.02]">
                             <SearchBar />
@@ -196,7 +196,7 @@ export default function LandingPage() {
                                 For Everyone
                             </div>
                             <h2 className="mb-4 text-3xl font-black uppercase tracking-tighter sm:text-4xl md:text-5xl">
-                                A dictionary for learning
+                                A Tagalog dictionary for learning
                             </h2>
                             <p className="mb-8 text-lg font-bold sm:text-xl">
                                 Whether you’re looking up a specific word or just browsing, you’ll find a universe of friendly explanations and fun activities designed to educate and entertain.

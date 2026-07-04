@@ -19,8 +19,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Diksyo",
-  description: "Diksyo is your personal engine for mastering the Filipino language through active recall and spaced repetition.",
+  title: {
+    template: "%s | Diksyo - Tagalog Dictionary",
+    default: "Diksyo | The Modern Tagalog Dictionary & Learning Engine",
+  },
+  description: "Diksyo is your ultimate Tagalog dictionary (diksyonaryo) and personal engine for mastering the Filipino language through active recall and spaced repetition.",
+  keywords: ["Tagalog dictionary", "diksyonaryo", "Filipino dictionary", "learn Tagalog", "Tagalog translation"],
 };
 
 export default function RootLayout({
