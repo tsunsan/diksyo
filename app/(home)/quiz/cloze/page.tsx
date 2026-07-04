@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useTransition } from "react";
 import { useQuizStore, QuizWord } from "@/store/quiz-store";
 import { getVaultWords } from "@/app/actions/vault";
+import { submitQuizAnswer } from "@/app/actions/quiz";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Zap, 
@@ -35,9 +36,9 @@ export default function ClozeQuizPage() {
     currentIndex, 
     status, 
     correctCount, 
-    autoGradeResult, 
+    questionStartTime,
     startQuiz, 
-    submitAnswer, 
+    applyAnswerResult, 
     nextCard, 
     resetQuiz 
   } = useQuizStore();
@@ -50,15 +51,17 @@ export default function ClozeQuizPage() {
   const [totalXP, setTotalXP] = useState(0);
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
-  const [results, setResults] = useState<{ id: string; correct: boolean; word: string; translationPrompt: string }[]>([]);
+  const [results, setResults] = useState<{ id: string; correct: boolean; word: string; translationPrompt: string; xpGained: number; newMastery: number; level: string }[]>([]);
   const [showDetails, setShowDetails] = useState(false);
+  
+  const [isPending, startTransition] = useTransition();
 
   // --- Initializer ---
   const loadQuiz = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getVaultWords();
+      const res = await getVaultWords(true);
       if (res.success && res.data) {
         const clozeWords = res.data.reduce((acc: QuizWord[], item: any) => {
           const w = item.word;
@@ -77,25 +80,13 @@ export default function ClozeQuizPage() {
               partOfSpeech: w.partOfSpeech || "UNKNOWN",
               rootWord: w.originalExplanation || undefined,
               usageExamples: examples,
-              fsrsData: {
-                state: item.state ?? 0, 
-                reps: item.reps ?? 0,
-                lapses: item.lapses ?? 0,
-                elapsed_days: item.elapsed_days ?? 0,
-                scheduled_days: item.scheduled_days ?? 0,
-                stability: item.stability,
-                difficulty: item.difficulty,
-                lastReview: item.lastReview,
-                nextReview: item.nextReview,
-                mastery: item.mastery
-              }
+              level: w.level || "BEGINNER",
             });
           }
           return acc;
         }, []);
 
         if (clozeWords.length > 0) {
-          // Shuffle and take top 10
           startQuiz(clozeWords.sort(() => 0.5 - Math.random()).slice(0, 10));
         } else {
           setError("No suitable context sentences found in your vault.");
@@ -139,28 +130,48 @@ export default function ClozeQuizPage() {
 
   // --- Handlers ---
   const handleOptionClick = useCallback((option: string) => {
-    if (status !== 'typing') return;
-    setSelectedOption(option);
-    const isCorrect = submitAnswer(option);
-
-    if (isCorrect) {
-      setTotalXP(prev => prev + 10);
-      setStreak(prev => {
-        const newStreak = prev + 1;
-        setMaxStreak(max => (newStreak > max ? newStreak : max));
-        return newStreak;
-      });
-    } else {
-      setStreak(0);
-    }
+    if (status !== 'typing' || isPending) return;
     
-    setResults(prev => [...prev, {
-      id: deck[currentIndex].id,
-      word: deck[currentIndex].word,
-      translationPrompt: deck[currentIndex].englishPrompt,
-      correct: isCorrect,
-    }]);
-  }, [status, submitAnswer, currentIndex, deck]);
+    setSelectedOption(option);
+    
+    startTransition(async () => {
+      const timeTakenMs = Date.now() - questionStartTime;
+      const currentWord = deck[currentIndex];
+      
+      const res = await submitQuizAnswer({
+        wordId: currentWord.id,
+        userAnswer: option,
+        gameMode: "cloze",
+        timeTakenMs
+      });
+      
+      const isCorrect = res.success ? (res.correct || false) : false;
+      
+      applyAnswerResult(isCorrect);
+
+      if (isCorrect) {
+        const xp = res.xpGained || 10;
+        setTotalXP(prev => prev + xp);
+        setStreak(prev => {
+          const newStreak = prev + 1;
+          setMaxStreak(max => (newStreak > max ? newStreak : max));
+          return newStreak;
+        });
+      } else {
+        setStreak(0);
+      }
+      
+      setResults(prev => [...prev, {
+        id: currentWord.id,
+        word: currentWord.word,
+        translationPrompt: currentWord.englishPrompt,
+        correct: isCorrect,
+        xpGained: res.xpGained || 0,
+        newMastery: res.newMastery || 0,
+        level: res.level || "BEGINNER"
+      }]);
+    });
+  }, [status, isPending, questionStartTime, deck, currentIndex, applyAnswerResult]);
 
   const handleNext = useCallback(() => {
     if (status !== 'revealed') return;
@@ -176,7 +187,7 @@ export default function ClozeQuizPage() {
         handleNext();
       }
       
-      if (status === 'typing') {
+      if (status === 'typing' && !isPending) {
         const keyMap: Record<string, number> = { '1': 0, '2': 1, '3': 2, '4': 3 };
         if (keyMap[e.key] !== undefined && options[keyMap[e.key]]) {
           e.preventDefault();
@@ -187,7 +198,7 @@ export default function ClozeQuizPage() {
     
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [status, handleNext, options, handleOptionClick]);
+  }, [status, isPending, handleNext, options, handleOptionClick]);
 
   // --- Render Helpers ---
   if (loading) {
@@ -293,12 +304,14 @@ export default function ClozeQuizPage() {
                         <div>
                           <p className="font-black uppercase text-lg text-black">{res.word}</p>
                           <p className="text-xs uppercase font-bold text-gray-500 italic mt-1">&quot;{res.translationPrompt}&quot;</p>
+                          <p className="text-[10px] uppercase font-black text-black/60 mt-1">MASTERY: {res.newMastery}%</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`px-2 py-1 text-[10px] font-black uppercase shadow-[2px_2px_0_0_#000] border-2 border-black ${res.level === 'ADVANCED' ? 'bg-[#FF6D00] text-white' : res.level === 'INTERMEDIATE' ? 'bg-[#FDE047] text-black' : 'bg-[#00C853] text-black'}`}>{res.level}</span>
                           {res.correct ? (
-                            <span className="bg-[#00C853] text-black border-2 border-black px-2 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000]">+10 XP</span>
+                            <span className="bg-[#FFE500] text-black border-2 border-black px-2 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000]">+{res.xpGained} XP</span>
                           ) : (
-                            <span className="bg-[#FF1744] text-white border-2 border-black px-2 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000]">MISSED</span>
+                            <span className="bg-black text-white border-2 border-black px-2 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000]">MISSED</span>
                           )}
                         </div>
                       </div>
@@ -465,21 +478,29 @@ export default function ClozeQuizPage() {
           
           if (status === 'revealed') {
             if (isCorrectOption) {
-              btnStateClasses = "bg-[#00C853] text-black translate-x-[4px] translate-y-[4px] shadow-none z-10 scale-[1.02]";
-              badgeStateClasses = "bg-white text-black";
+               btnStateClasses = "bg-[#00C853] text-black translate-x-[4px] translate-y-[4px] shadow-none z-10 scale-[1.02]";
+               badgeStateClasses = "bg-white text-black";
             } else if (isSelected && !isCorrectOption) {
-              btnStateClasses = "bg-[#FF1744] text-white translate-x-[4px] translate-y-[4px] shadow-none";
-              badgeStateClasses = "bg-black text-white border-white";
+               btnStateClasses = "bg-[#FF1744] text-white translate-x-[4px] translate-y-[4px] shadow-none";
+               badgeStateClasses = "bg-black text-white border-white";
             } else {
-              btnStateClasses = "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed";
-              badgeStateClasses = "bg-gray-300 text-gray-500 border-gray-400";
+               btnStateClasses = "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed";
+               badgeStateClasses = "bg-gray-300 text-gray-500 border-gray-400";
             }
+          }
+
+          if (isPending && isSelected) {
+             btnStateClasses = "bg-[#FFE500] text-black translate-x-[4px] translate-y-[4px] shadow-none cursor-wait animate-pulse";
+             badgeStateClasses = "bg-white text-black";
+          } else if (isPending) {
+             btnStateClasses = "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed";
+             badgeStateClasses = "bg-gray-300 text-gray-500 border-gray-400";
           }
 
           return (
             <button
               key={idx}
-              disabled={status !== 'typing'}
+              disabled={status !== 'typing' || isPending}
               onClick={() => handleOptionClick(option)}
               className={`
                 border-[4px] border-black p-4 md:p-6 text-xl md:text-2xl font-black shadow-[8px_8px_0_#000] 
@@ -491,7 +512,8 @@ export default function ClozeQuizPage() {
               <span className={`w-12 h-12 flex items-center justify-center border-[3px] border-black flex-shrink-0 text-xl transition-colors ${badgeStateClasses}`}>
                 {LETTERS[idx]}
               </span>
-              <span className="uppercase truncate">{option}</span>
+              <span className="uppercase truncate flex-1">{option}</span>
+              {isPending && isSelected && <RefreshCw className="w-6 h-6 animate-spin" />}
             </button>
           );
         })}
@@ -522,7 +544,7 @@ export default function ClozeQuizPage() {
                        {isCorrect ? 'Flawless!' : 'Not Quite.'}
                      </p>
                      <p className="font-bold text-xs md:text-sm uppercase tracking-widest text-gray-400">
-                       {isCorrect ? `FSRS Grade: ${autoGradeResult?.toUpperCase()}` : `Target: ${currentWord.word}`}
+                       {isCorrect ? `+${results[results.length-1]?.xpGained} XP` : `Target: ${currentWord.word}`}
                      </p>
                   </div>
                </div>

@@ -37,7 +37,7 @@ import {
 import { getVaultWordCount, seedStarterPack } from "@/app/actions/vault";
 
 const LEARNING_MODES = [
-  { id: "affix", title: "Affix Builder", desc: "Construct words from roots.", icon: Blocks, available: true },
+  { id: "affix", title: "Affix Builder", desc: "Construct words from roots.", icon: Blocks, available: false },
   { id: "classic", title: "Classic Recognition", desc: "Translate Tagalog to English.", icon: Eye, available: false },
   { id: "production", title: "Production", desc: "Type the Tagalog translation.", icon: Keyboard, available: false },
   { id: "advanced", title: "Advanced Definition", desc: "Match definitions entirely in Tagalog.", icon: BookOpen, available: false },

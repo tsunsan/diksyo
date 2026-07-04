@@ -695,8 +695,8 @@ export default function DictionaryClient({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}
-              <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
+                <div className="min-w-0 break-words flex-1 w-full">
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span
                       className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest text-white shadow-[2px_2px_0_#000]"
@@ -726,7 +726,7 @@ export default function DictionaryClient({
                   </div>
                   <h2
                     className="text-black uppercase"
-                    style={{ fontWeight: 900, fontSize: "3rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+                    style={{ fontWeight: 900, fontSize: "clamp(2rem, 8vw, 3rem)", lineHeight: 1, letterSpacing: "-0.02em", wordBreak: "break-word" }}
                   >
                     {modalWord.word}
                   </h2>
@@ -739,7 +739,7 @@ export default function DictionaryClient({
                       </p>
                   )}
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto justify-end sm:justify-start">
                   <button
                     onClick={() => setModalWord(null)}
                     className="w-10 h-10 bg-black border-[2px] border-black flex items-center justify-center hover:bg-[#333] transition-colors"
@@ -945,7 +945,7 @@ export default function DictionaryClient({
                       <span className="text-[9px] uppercase tracking-widest text-[#888] mb-1.5 block" style={{ fontWeight: 800 }}>
                         ANTAS · LEVEL
                       </span>
-                      <div className="flex gap-1.5">
+                      <div className="flex flex-wrap gap-1.5">
                         {FILTER_LEVEL_OPTIONS.map((lvl) => {
                           const isActive = filterLevel === lvl.key;
                           const color = LEVEL_COLORS[lvl.key] || "#ccc";
@@ -953,7 +953,7 @@ export default function DictionaryClient({
                             <button
                               key={lvl.key}
                               onClick={() => setFilterLevel(isActive ? null : lvl.key)}
-                              className={`flex-1 px-2 py-1.5 border-[1.5px] border-black text-[9px] uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
+                              className={`flex-auto min-w-[80px] px-2 py-1.5 border-[1.5px] border-black text-[9px] uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
                                 isActive
                                   ? "shadow-[2px_2px_0_#000] scale-[1.02]"
                                   : "hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[2px_2px_0_#000]"
@@ -1051,7 +1051,7 @@ export default function DictionaryClient({
                   }`}
                 >
 <div className="flex-1 min-w-0">
-  <div className="flex items-center gap-1 mb-1">
+  <div className="flex items-center flex-wrap gap-1 mb-1">
     <span
       className="text-black uppercase"
       style={{ fontWeight: 900, fontSize: "1rem" }}
@@ -1062,7 +1062,7 @@ export default function DictionaryClient({
     {/* POS Badge */}
     {w.posEnglish ? (
       <span
-        className="inline-flex items-center justify-center h-[20px] px-1.5 border-[1.5px] border-black text-[9px] uppercase tracking-wider"
+        className="inline-flex items-center justify-center h-[20px] px-1.5 border-[1.5px] border-black text-[9px] uppercase tracking-wider whitespace-nowrap"
         style={{
           fontWeight: 800,
           background: ps.bg,
@@ -1196,8 +1196,8 @@ export default function DictionaryClient({
               {/* Main Card */}
               <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-4">
                 {/* Top row */}
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
+                  <div className="min-w-0 break-words flex-1 w-full">
                     <div className="flex items-center gap-2 flex-wrap mb-3">
                       {/* POS Badge */}
                       <span
@@ -1231,7 +1231,7 @@ export default function DictionaryClient({
 
                     <h2
                       className="text-black uppercase"
-                      style={{ fontWeight: 900, fontSize: "2.8rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+                      style={{ fontWeight: 900, fontSize: "clamp(2rem, 8vw, 2.8rem)", lineHeight: 1, letterSpacing: "-0.02em", wordBreak: "break-word" }}
                     >
                       {word.word}
                     </h2>
@@ -1242,7 +1242,7 @@ export default function DictionaryClient({
                     )}
                   </div>
 
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
                     <button
                       className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
                       aria-label="Listen (Coming Soon)"

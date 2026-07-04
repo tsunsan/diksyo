@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useTransition } from "react";
+import { getVaultWords } from "@/app/actions/vault";
+import { submitQuizAnswer } from "@/app/actions/quiz";
 import {
   Zap,
   ChevronRight,
@@ -19,91 +21,10 @@ import { POS_COLORS } from "@/lib/utils";
 import Link from "next/link";
 import { useTimeQuizStore } from "@/store/time-quiz-store";
 
-const QUIZ_WORDS = [
-  {
-    id: 1,
-    word: "Maganda",
-    partOfSpeech: "PANG-URI",
-    answer: "beautiful",
-    acceptedAnswers: ["beautiful", "pretty", "lovely", "gorgeous"],
-    rootWord: "Ganda",
-    rootDefinition: "Beauty; loveliness",
-    example: "Maganda ang umaga ngayon.",
-    hint: "Describes physical appearance or scenery",
-    difficulty: "EASY",
-    xp: 10,
-  },
-  {
-    id: 2,
-    word: "Kalayaan",
-    partOfSpeech: "PANGNGALAN",
-    answer: "freedom",
-    acceptedAnswers: ["freedom", "liberty", "independence"],
-    rootWord: "Laya",
-    rootDefinition: "Free; unbound; liberated",
-    example: "Ipinaglaban nila ang kalayaan ng bansa.",
-    hint: "A fundamental human right",
-    difficulty: "MEDIUM",
-    xp: 20,
-  },
-  {
-    id: 3,
-    word: "Umibig",
-    partOfSpeech: "PANDIWA",
-    answer: "to fall in love",
-    acceptedAnswers: ["to fall in love", "fell in love", "to love", "love"],
-    rootWord: "Ibig",
-    rootDefinition: "To desire; to want; to love",
-    example: "Umibig siya nang walang kondisyon.",
-    hint: "A feeling, not an action",
-    difficulty: "MEDIUM",
-    xp: 20,
-  },
-  {
-    id: 4,
-    word: "Kaliwanagan",
-    partOfSpeech: "PANGNGALAN",
-    answer: "enlightenment",
-    acceptedAnswers: ["enlightenment", "clarity", "illumination", "light"],
-    rootWord: "Liwanag",
-    rootDefinition: "Light; brightness; clarity",
-    example: "Hanapin natin ang kaliwanagan.",
-    hint: "The state of understanding something deeply",
-    difficulty: "HARD",
-    xp: 30,
-  },
-  {
-    id: 5,
-    word: "Matatag",
-    partOfSpeech: "PANG-URI",
-    answer: "strong",
-    acceptedAnswers: ["strong", "firm", "stable", "steadfast", "resilient"],
-    rootWord: "Tatag",
-    rootDefinition: "Strength; stability; firmness",
-    example: "Matatag ang loob niya kahit sa pagsubok.",
-    hint: "Describes stability of character",
-    difficulty: "EASY",
-    xp: 10,
-  },
-  {
-    id: 6,
-    word: "Nakakapagpabagabag damdamin",
-    partOfSpeech: "PARIRALA",
-    answer: "worrisome feeling",
-    acceptedAnswers: ["worrisome feeling", "troubling emotion", "disturbing feeling", "unsettling emotion"],
-    rootWord: "Bagabag",
-    rootDefinition: "Worry; restlessness; anxiety",
-    example: "Nakakapagpabagabag damdamin ang mga nangyayari.",
-    hint: "A feeling of being troubled or restless",
-    difficulty: "HARD",
-    xp: 40,
-  },
-];
-
 const DIFF_COLORS: Record<string, string> = {
-  EASY: "#00C853",
-  MEDIUM: "#FFE500",
-  HARD: "#FF1744",
+  BEGINNER: "#00C853",
+  INTERMEDIATE: "#FDE047",
+  ADVANCED: "#FF6D00",
 };
 
 type FeedbackState = "idle" | "correct" | "incorrect" | "timeout";
@@ -141,6 +62,7 @@ const AnimatedNumber = ({ value }: { value: number | string }) => (
 
 export default function QuizPage2() {
   const {
+    deck,
     currentIndex,
     setCurrentIndex,
     feedback,
@@ -157,27 +79,88 @@ export default function QuizPage2() {
     setQuizDone,
     hasSubmittedOnce,
     setHasSubmittedOnce,
+    startQuiz,
     resetQuiz
   } = useTimeQuizStore();
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
   const [flipped, setFlipped] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [showDetails, setShowDetails] = useState(false);
+  const [isPending, startTransition] = useTransition();
   
   const inputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
   const timerControls = useAnimation();
 
-  const current = QUIZ_WORDS[currentIndex];
+  const loadQuiz = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getVaultWords(true);
+      if (res.success && res.data) {
+        const words = res.data.map((item: any) => {
+          const w = item.word;
+          return {
+            id: item.wordId,
+            word: w.word,
+            englishPrompt: w.translation,
+            partOfSpeech: w.partOfSpeech || "UNKNOWN",
+            rootWord: w.rootWordString || w.originalExplanation || "Unknown Root",
+            rootDefinition: w.etymology || w.meaningFilipino || "No definition available",
+            usageExamples: Array.isArray(w.usageExamples) ? w.usageExamples : [],
+            level: w.level || "BEGINNER",
+            hint: w.usageNotes || "Translate this word to English",
+            xp: w.level === 'ADVANCED' ? 30 : w.level === 'INTERMEDIATE' ? 20 : 10,
+            example: (Array.isArray(w.usageExamples) && w.usageExamples[0]) ? w.usageExamples[0].sentence : "No example available.",
+            answer: w.translation,
+            acceptedAnswers: [w.translation]
+          };
+        });
+
+        if (words.length > 0) {
+          startQuiz(words.sort(() => 0.5 - Math.random()).slice(0, 10));
+        } else {
+          setError("No suitable words found in your vault.");
+        }
+      } else {
+        setError(res.error || "Failed to load vocabulary.");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  }, [startQuiz]);
+
+  useEffect(() => {
+    if (deck.length === 0 && !error) loadQuiz();
+    else if (deck.length > 0) setLoading(false);
+  }, [deck.length, loadQuiz, error]);
+
+  const current = deck[currentIndex];
+
+  const handleNext = useCallback(() => {
+    if (currentIndex < deck.length - 1) {
+      setCurrentIndex((i: number) => i + 1);
+      setAnswer("");
+      setFeedback("idle");
+      setFlipped(false);
+      setTimeLeft(15);
+    } else {
+      setQuizDone(true);
+    }
+  }, [currentIndex, deck.length, setCurrentIndex, setFeedback, setQuizDone]);
 
   // --- Timer Logic ---
   useEffect(() => {
-    if (feedback !== "idle" || quizDone) return;
+    if (feedback !== "idle" || quizDone || !current) return;
 
     if (timeLeft <= 0) {
       setFeedback("timeout");
-      setResults((prev) => [...prev, { id: current.id, correct: false, timeBonus: false }]);
+      setResults((prev) => [...prev, { id: current.id, correct: false, timeBonus: false, xpGained: 0, newMastery: 0, level: current.level || "BEGINNER" }]);
       setStreak(0);
       return;
     }
@@ -187,7 +170,7 @@ export default function QuizPage2() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, feedback, quizDone, current.id]);
+  }, [timeLeft, feedback, quizDone, current, setFeedback, setResults, setStreak]);
 
   // --- Urgency Effects ---
   useEffect(() => {
@@ -209,18 +192,6 @@ export default function QuizPage2() {
     }
   }, [feedback, currentIndex]);
 
-  const handleNext = () => {
-    if (currentIndex < QUIZ_WORDS.length - 1) {
-      setCurrentIndex((i) => i + 1);
-      setAnswer("");
-      setFeedback("idle");
-      setFlipped(false);
-      setTimeLeft(15);
-    } else {
-      setQuizDone(true);
-    }
-  };
-
   // --- Enter to Next Challenge ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -231,39 +202,78 @@ export default function QuizPage2() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [feedback, quizDone, currentIndex]);
+  }, [feedback, quizDone, handleNext]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+
+  if (loading) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }} className="w-16 h-16 bg-[#FFE500] border-4 border-black shadow-[4px_4px_0_0_#000] flex items-center justify-center">
+            <RefreshCw className="w-8 h-8 text-black" strokeWidth={3} />
+         </motion.div>
+      </div>
+    );
+  }
+
+  if (error || !current) {
+    return (
+      <div className="min-h-[600px] flex flex-col items-center justify-center p-6">
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0_0_#000] max-w-md w-full text-center">
+            <h2 className="text-3xl font-black italic uppercase tracking-tighter text-black mb-2">Vault Empty</h2>
+            <p className="font-bold text-sm uppercase text-gray-500 mb-8">{error || "No valid words available."}</p>
+            <Link href="/vault" className="inline-block w-full bg-[#FFE500] text-black font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#000] hover:shadow-none transition-all">Return to Vault</Link>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!answer.trim() || feedback !== "idle") return;
+    if (!answer.trim() || feedback !== "idle" || isPending) return;
 
     if (!hasSubmittedOnce) setHasSubmittedOnce(true);
 
-    const isCorrect = current.acceptedAnswers.some(
-      (a) => a.toLowerCase() === answer.trim().toLowerCase()
-    );
-
-    if (!isCorrect) {
-      await controls.start({
-        x: [0, -10, 10, -10, 10, 0],
-        transition: { duration: 0.4 }
+    startTransition(async () => {
+      const timeTakenMs = (15 - timeLeft) * 1000;
+      const res = await submitQuizAnswer({
+         wordId: current.id,
+         userAnswer: answer,
+         gameMode: "time",
+         timeTakenMs,
+         acceptedAnswers: current.acceptedAnswers
       });
-    }
 
-    const timeBonus = isCorrect && timeLeft > 10;
-    setFeedback(isCorrect ? "correct" : "incorrect");
-    setResults((prev) => [...prev, { id: current.id, correct: isCorrect, timeBonus }]);
+      if (res.success) {
+         const isCorrect = res.correct || false;
+         const timeBonus = isCorrect && timeLeft > 10;
+         setFeedback(isCorrect ? "correct" : "incorrect");
+         
+         setResults(prev => [...prev, {
+            id: current.id,
+            correct: isCorrect,
+            timeBonus,
+            xpGained: res.xpGained || 0,
+            level: res.level || "BEGINNER",
+            newMastery: res.newMastery || 0
+         }]);
 
-    if (isCorrect) {
-      setTotalXP((prev) => prev + current.xp + (timeBonus ? 5 : 0));
-      setStreak((prev) => {
-        const newStreak = prev + 1;
-        setMaxStreak(max => (newStreak > max ? newStreak : max));
-        return newStreak;
-      });
-    } else {
-      setStreak(0);
-    }
+         if (isCorrect) {
+            setTotalXP(prev => prev + (res.xpGained || 0));
+            setStreak(prev => {
+              const newStreak = prev + 1;
+              setMaxStreak(max => (newStreak > max ? newStreak : max));
+              return newStreak;
+            });
+         } else {
+            setStreak(0);
+            await controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
+         }
+      } else {
+         setFeedback("incorrect");
+         setStreak(0);
+         await controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
+      }
+    });
   };
 
   const handleRestart = () => {
@@ -344,31 +354,33 @@ export default function QuizPage2() {
                 >
                   <div className="flex flex-col gap-4 mt-6 max-h-[250px] overflow-y-auto">
                     {results.map((r, i) => {
-                      const w = QUIZ_WORDS.find((q) => q.id === r.id)!;
+                      const w = deck.find((q) => q.id === r.id)!;
                       return (
                         <motion.div
                           key={r.id + "-" + i}
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: i * 0.05 }}
-                          className={`flex items-center gap-4 p-4 border-[3px] border-black shadow-[4px_4px_0_#000] ${r.correct ? "bg-white" : "bg-[#FF1744]/10"}`}
+                          className={`flex flex-col sm:flex-row sm:items-center gap-4 p-4 border-[3px] border-black shadow-[4px_4px_0_#000] ${r.correct ? "bg-white" : "bg-[#FF1744]/10"}`}
                         >
-                          <div
-                            className={`w-12 h-12 border-[3px] border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0_#000] ${r.correct ? "bg-[#00C853]" : "bg-[#FF1744]"}`}
-                          >
-                            {r.correct ? <Check className="w-8 h-8 text-white" /> : <X className="w-8 h-8 text-white" />}
-                          </div>
-                          <div className="flex-1 text-left">
-                            <span className="text-black uppercase font-black text-xl block leading-none mb-1">
-                              {w.word}
-                            </span>
-                            <span className="text-[#666] text-xs uppercase tracking-wider font-bold">
-                              EXPECTED: {w.acceptedAnswers[0]}
-                            </span>
+                          <div className="flex items-center gap-4 flex-1">
+                             <div className={`w-12 h-12 border-[3px] border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0_#000] ${r.correct ? "bg-[#00C853]" : "bg-[#FF1744]"}`}>
+                               {r.correct ? <Check className="w-8 h-8 text-white" /> : <X className="w-8 h-8 text-white" />}
+                             </div>
+                             <div className="text-left">
+                               <span className="text-black uppercase font-black text-xl block leading-none mb-1">
+                                 {w.word}
+                               </span>
+                               <span className="text-[#666] text-xs uppercase tracking-wider font-bold">
+                                 EXPECTED: {w.answer}
+                               </span>
+                               <div className="mt-2 text-[10px] font-black tracking-widest text-black/60 uppercase">MASTERY: {r.newMastery}%</div>
+                             </div>
                           </div>
                           <div className="flex flex-col items-end shrink-0">
+                            <span className={`px-2 py-1 mb-2 text-[10px] font-black uppercase shadow-[2px_2px_0_0_#000] border-2 border-black ${r.level === 'ADVANCED' ? 'bg-[#FF6D00] text-white' : r.level === 'INTERMEDIATE' ? 'bg-[#FDE047] text-black' : 'bg-[#00C853] text-black'}`}>{r.level}</span>
                             <span className={`text-sm uppercase tracking-wider px-3 py-1 border-[2.5px] border-black font-black shadow-[2px_2px_0_#000] ${r.correct ? "bg-[#FFE500] text-black" : "bg-black text-white"}`}>
-                              {r.correct ? `+${w.xp + (r.timeBonus ? 5 : 0)} XP` : "MISS"}
+                              {r.correct ? `+${r.xpGained} XP` : "MISS"}
                             </span>
                             {r.timeBonus && <span className="text-[10px] font-black text-[#FF6D00] mt-1 tracking-wider uppercase">SPEED BONUS!</span>}
                           </div>
@@ -409,7 +421,7 @@ export default function QuizPage2() {
             <h1 className="uppercase tracking-tighter text-black font-black text-[2rem]">TIME ATTACK </h1>
           </div>
           <div className="flex gap-2 ml-14">
-             {QUIZ_WORDS.map((_, i) => (
+             {deck.map((_, i) => (
               <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.1 }} className="w-2 h-2 border-[1.5px] border-black" style={{ background: i < results.length ? (results[i].correct ? "#00C853" : "#FF1744") : (i === currentIndex ? "#FFE500" : "#ddd") }} />
             ))}
           </div>
@@ -433,11 +445,12 @@ export default function QuizPage2() {
 
       <div className="mb-10">
         <div className="flex items-end justify-between mb-3">
-          <motion.span key={currentIndex} initial={{ y: 5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-black">WORD {currentIndex + 1} / {QUIZ_WORDS.length}</motion.span>
-          <span className="text-2xl uppercase tracking-tighter text-black font-black">{Math.round(((currentIndex) / QUIZ_WORDS.length) * 100)}%</span>
+          <motion.span key={currentIndex} initial={{ y: 5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-black">WORD {currentIndex + 1} / {deck.length}</motion.span>
+          <span className="text-2xl uppercase tracking-tighter text-black font-black">{Math.round(((currentIndex) / deck.length) * 100)}%</span>
         </div>
-        <div className="h-6 bg-white border-[3px] border-black p-1 relative overflow-hidden">
-          <motion.div className="h-full bg-[#FFE500] border-r-[3px] border-black" initial={{ width: 0 }} animate={{ width: `${((currentIndex) / QUIZ_WORDS.length) * 100}%` }} transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }} />
+        {/* FIX APPLIED HERE: ADDED `relative` */}
+        <div className="relative w-full h-2 bg-white border-[3px] border-black overflow-hidden shadow-[2px_2px_0_#000]">
+          <motion.div className="h-full bg-[#FFE500] border-r-[3px] border-black" initial={{ width: 0 }} animate={{ width: `${((currentIndex) / deck.length) * 100}%` }} transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }} />
           <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="absolute inset-y-0 w-20 bg-white/30 skew-x-[-20deg]" />
         </div>
       </div>
@@ -451,7 +464,7 @@ export default function QuizPage2() {
             
             <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
               <span className="px-4 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] font-black" style={{ background: POS_COLORS[current.partOfSpeech]?.bg || "#333", color: POS_COLORS[current.partOfSpeech]?.text || "#fff" }}>{current.partOfSpeech}</span>
-              <span className="px-4 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] font-black" style={{ background: DIFF_COLORS[current.difficulty], color: current.difficulty === "MEDIUM" || current.difficulty === "EASY" ? "#000" : "#fff" }}>+{current.xp} XP</span>
+              <span className="px-4 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] font-black" style={{ background: DIFF_COLORS[current.level || "BEGINNER"] || "#00C853", color: current.level === "ADVANCED" ? "#fff" : "#000" }}>{current.level || "BEGINNER"}</span>
             </div>
 
             {!flipped ? (
@@ -485,7 +498,7 @@ export default function QuizPage2() {
                           <motion.div>
                             <div className="w-24 h-24 bg-white border-[4px] border-black flex items-center justify-center mx-auto mb-6 shadow-[8px_8px_0_#000]"><X className="w-16 h-16 text-[#FF1744]" /></div>
                             <h2 className="text-white uppercase font-black text-[3rem]">{feedback === "timeout" ? "TIME UP!" : "NOT QUITE!"}</h2>
-                            <div className="bg-black text-white px-6 py-2 mt-4 inline-block border-[2px] border-white font-black text-xs">ANSWER: {current.answer.toUpperCase()}</div>
+                            <div className="mt-4 px-4 py-2 bg-[#FF1744] text-white inline-block border-[3px] border-white font-black text-xs">ANSWER: {(current.answer || "").toUpperCase()}</div>
                           </motion.div>
                         )}
                       </div>
@@ -512,14 +525,12 @@ export default function QuizPage2() {
         <motion.div animate={{ y: [0, -20, 0], rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute -right-12 top-1/2 -z-10 opacity-10"><Star className="w-32 h-32 text-black" /></motion.div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-8">
+      <form onSubmit={handleSubmit} className="mb-8 relative">
         <div className="flex gap-4">
-          <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle"} placeholder={feedback !== "idle" ? "" : "TYPE IN ENGLISH..."} className="flex-1 px-8 py-6 bg-white border-[4px] border-black outline-none shadow-[8px_8px_0_#000] focus:shadow-[12px_12px_0_#000] transition-all uppercase text-xl placeholder:text-[#ccc] disabled:bg-[#eee] font-black" />
-          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim()} className="px-10 py-6 bg-black text-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
-            <span>CHECK</span>
-            <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none">
-              ENTER ↵
-            </kbd>
+          <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle" || isPending} placeholder={feedback !== "idle" || isPending ? "" : "TYPE IN ENGLISH..."} className={`flex-1 px-8 py-6 bg-white border-[4px] border-black outline-none shadow-[8px_8px_0_#000] focus:shadow-[12px_12px_0_#000] transition-all uppercase text-xl placeholder:text-[#ccc] font-black ${isPending ? 'bg-gray-100 opacity-60 animate-pulse' : ''} disabled:bg-[#eee]`} />
+          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim() || isPending} className="px-10 py-6 bg-black text-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+            {isPending ? <RefreshCw className="w-6 h-6 animate-spin" /> : <span>CHECK</span>}
+            {!isPending && <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none">ENTER ↵</kbd>}
           </motion.button>
         </div>
       </form>
@@ -536,7 +547,7 @@ export default function QuizPage2() {
         <AnimatePresence>
           {feedback !== "idle" && (
             <motion.button initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 50, opacity: 0 }} whileHover={{ x: 10, backgroundColor: "#000", color: "#fff" }} onClick={handleNext} className="ml-auto flex items-center gap-4 px-10 py-4 bg-[#FFE500] text-black border-[4px] border-black shadow-[6px_6px_0_#000] uppercase font-black transition-all">
-              {currentIndex < QUIZ_WORDS.length - 1 ? "NEXT CHALLENGE" : "FINISH"} <ChevronRight className="w-6 h-6" />
+              {currentIndex < deck.length - 1 ? "NEXT CHALLENGE" : "FINISH"} <ChevronRight className="w-6 h-6" />
             </motion.button>
           )}
         </AnimatePresence>

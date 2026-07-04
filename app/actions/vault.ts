@@ -2,13 +2,13 @@
 
 import { db } from "@/db";
 import { userProgress, words } from "@/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, lt } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { withExponentialBackoff } from "@/lib/db-utils";
 
 
-export async function getVaultWords() {
+export async function getVaultWords(excludeMastered: boolean = false) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -18,7 +18,11 @@ export async function getVaultWords() {
 
     try {
         const vaultEntries = await withExponentialBackoff(() => db.query.userProgress.findMany({
-            where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)),
+            where: and(
+                eq(userProgress.userId, user.id), 
+                eq(userProgress.isArchived, false),
+                excludeMastered ? lt(userProgress.stability, 50) : undefined
+            ),
             with: {
                 word: true,
             },

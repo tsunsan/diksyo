@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { BookMarked, History, ChevronRight, ChevronDown, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star, Filter, ArrowUp, ArrowDown, Layers, Zap, Type, Gem } from "lucide-react";
+import { BookMarked, History, ChevronRight, ChevronDown, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star, Filter, ArrowUp, ArrowDown, Layers, Zap, Type, Gem, Minimize, Maximize } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,13 +44,15 @@ function getMasteryStatus(entry: VaultEntry) {
   if (!entry.lastReview) {
     return { label: "NEW" + suffix, bg: "bg-[#3B82F6]", icon: Sparkles };
   }
+  
+  if (entry.stability && entry.stability >= 50) {
+    return { label: "MASTERED" + suffix, bg: "bg-[#10B981]", icon: CheckCircle2 };
+  }
+
   const now = new Date();
   const nextDate = entry.nextReview ? new Date(entry.nextReview) : null;
   if (nextDate && nextDate <= now) {
     return { label: "DUE" + suffix, bg: "bg-[#EF4444]", icon: Clock };
-  }
-  if (entry.stability && entry.stability > 50) {
-    return { label: "MASTERED" + suffix, bg: "bg-[#10B981]", icon: CheckCircle2 };
   }
   return { label: "LEARNING" + suffix, bg: "bg-[#F59E0B]", icon: PlayCircle };
 }
@@ -149,6 +151,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
+  const [isCompactMode, setIsCompactMode] = useState(false);
 
   // Root word filter options
   const rootOptions = ["ALL", "ROOT WORDS", "DERIVED"];
@@ -284,8 +287,6 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
       const res = await addWordToVault(wordId);
       if (res.success) {
         toast.success(`${word.toUpperCase()} ADDED TO VAULT!`);
-        setIsDialogOpen(false);
-        setDialogQuery("");
       } else {
         toast.error(res.error || "FAILED TO ADD WORD");
       }
@@ -602,68 +603,79 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
 
         {/* Filter Bar */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 mr-1">
-              <Filter className="w-4 h-4 text-[#888]" />
-              <span className="text-[10px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>FILTERS</span>
+          <div className="flex items-center justify-between gap-2 flex-wrap w-full">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 mr-1">
+                <Filter className="w-4 h-4 text-[#888]" />
+                <span className="text-[10px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>FILTERS</span>
+                {activeFilterCount > 0 && (
+                  <span className="flex items-center justify-center w-5 h-5 bg-[#7C3AED] text-white text-[10px] border-[1.5px] border-black" style={{ fontWeight: 900 }}>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
+              
+              <FilterDropdown
+                label="ROOT"
+                icon={<Gem className="w-3.5 h-3.5" />}
+                options={rootOptions}
+                value={activeRoot}
+                onChange={setActiveRoot}
+                accentColor="#FF007F"
+              />
+
+              <FilterDropdown
+                label="POS"
+                icon={<Type className="w-3.5 h-3.5" />}
+                options={uniquePOS}
+                value={activePOS}
+                onChange={setActivePOS}
+                accentColor="#FF1744"
+              />
+
+              <FilterDropdown
+                label="LEVEL"
+                icon={<Layers className="w-3.5 h-3.5" />}
+                options={uniqueLevels}
+                value={activeLevel}
+                onChange={setActiveLevel}
+                accentColor="#0057FF"
+              />
+
+              <FilterDropdown
+                label="FREQ"
+                icon={<Zap className="w-3.5 h-3.5" />}
+                options={uniqueFrequencies}
+                value={activeFrequency}
+                onChange={setActiveFrequency}
+                accentColor="#FF6D00"
+              />
+
               {activeFilterCount > 0 && (
-                <span className="flex items-center justify-center w-5 h-5 bg-[#7C3AED] text-white text-[10px] border-[1.5px] border-black" style={{ fontWeight: 900 }}>
-                  {activeFilterCount}
-                </span>
+                <button
+                  onClick={() => {
+                    setActiveRoot("ALL");
+                    setActiveLevel("ALL");
+                    setActiveFrequency("ALL");
+                    setActivePOS("ALL");
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 border-[2.5px] border-black bg-[#EF4444] text-white text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+                  style={{ fontWeight: 900 }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  CLEAR
+                </button>
               )}
             </div>
-            
-            <FilterDropdown
-              label="ROOT"
-              icon={<Gem className="w-3.5 h-3.5" />}
-              options={rootOptions}
-              value={activeRoot}
-              onChange={setActiveRoot}
-              accentColor="#FF007F"
-            />
 
-            <FilterDropdown
-              label="POS"
-              icon={<Type className="w-3.5 h-3.5" />}
-              options={uniquePOS}
-              value={activePOS}
-              onChange={setActivePOS}
-              accentColor="#FF1744"
-            />
-
-            <FilterDropdown
-              label="LEVEL"
-              icon={<Layers className="w-3.5 h-3.5" />}
-              options={uniqueLevels}
-              value={activeLevel}
-              onChange={setActiveLevel}
-              accentColor="#0057FF"
-            />
-
-            <FilterDropdown
-              label="FREQ"
-              icon={<Zap className="w-3.5 h-3.5" />}
-              options={uniqueFrequencies}
-              value={activeFrequency}
-              onChange={setActiveFrequency}
-              accentColor="#FF6D00"
-            />
-
-            {activeFilterCount > 0 && (
-              <button
-                onClick={() => {
-                  setActiveRoot("ALL");
-                  setActiveLevel("ALL");
-                  setActiveFrequency("ALL");
-                  setActivePOS("ALL");
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 border-[2.5px] border-black bg-[#EF4444] text-white text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
-                style={{ fontWeight: 900 }}
-              >
-                <X className="w-3.5 h-3.5" />
-                CLEAR
-              </button>
-            )}
+            <button
+              onClick={() => setIsCompactMode(!isCompactMode)}
+              className="flex items-center gap-1.5 px-3 py-2 border-[2.5px] border-black bg-white text-black text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[2px_2px_0_transparent] hover:shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+              style={{ fontWeight: 900 }}
+            >
+              {isCompactMode ? <Maximize className="w-3.5 h-3.5" /> : <Minimize className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{isCompactMode ? "MAXIMIZE" : "MINIMIZE"}</span>
+            </button>
           </div>
         </div>
 
@@ -682,7 +694,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 transition={{ duration: 0.3 }}
                 key={entry.id}
                 onClick={() => handleCardClick(entry)}
-                className={`group relative bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] p-5 flex flex-col gap-3 transition-all cursor-pointer 
+                className={`group relative bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] ${isCompactMode ? "p-3 gap-1.5" : "p-5 gap-3"} flex flex-col transition-all cursor-pointer 
                   ${editMode ? "hover:-translate-y-0.5" : "hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#000]"}
                   ${isSelected && editMode ? "border-[#EF4444] bg-[#FEF2F2] ring-4 ring-[#EF4444] ring-opacity-20" : ""}
                 `}
@@ -698,7 +710,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                     <div className="flex items-center gap-2">
                       <span
                         className="text-black uppercase"
-                        style={{ fontWeight: 900, fontSize: "1.3rem", lineHeight: 1.2 }}
+                        style={{ fontWeight: 900, fontSize: isCompactMode ? "1.1rem" : "1.3rem", lineHeight: 1.2 }}
                       >
                         {w.word}
                       </span>
@@ -711,7 +723,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
       </span>
                       )}
                     </div>
-                    {w.pronunciation && (
+                    {w.pronunciation && !isCompactMode && (
                       <p
                         className="text-[#888] text-xs mt-0.5 mb-1"
                         style={{ fontWeight: 600 }}
@@ -720,7 +732,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                       </p>
                     )}
                     <p
-                      className="text-[#333] text-xs uppercase tracking-wider mt-1"
+                      className={`text-[#333] text-xs uppercase tracking-wider ${isCompactMode ? "mt-0.5" : "mt-1"}`}
                       style={{ fontWeight: 600 }}
                     >
                       {w.translation}
@@ -735,26 +747,28 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 </div>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mt-auto mb-2">
-                  {(w.tags || []).map((tag) => (
-                    <span
-                      key={tag}
-                      className="flex items-center gap-1 px-2 py-0.5 bg-[#FFFBF0] border-[1.5px] border-black text-[9px] uppercase tracking-wider"
-                      style={{ fontWeight: 800 }}
-                    >
-                      <Tag className="w-2.5 h-2.5" />
-                      {tag}
-                    </span>
-                  ))}
-                  {(!w.tags || w.tags.length === 0) && (
-                    <span className="text-[#aaa] text-[9px] uppercase tracking-wider font-bold">
-                      NO TAGS
-                    </span>
-                  )}
-                </div>
+                {!isCompactMode && (
+                  <div className="flex flex-wrap gap-1.5 mt-auto mb-2">
+                    {(w.tags || []).map((tag) => (
+                      <span
+                        key={tag}
+                        className="flex items-center gap-1 px-2 py-0.5 bg-[#FFFBF0] border-[1.5px] border-black text-[9px] uppercase tracking-wider"
+                        style={{ fontWeight: 800 }}
+                      >
+                        <Tag className="w-2.5 h-2.5" />
+                        {tag}
+                      </span>
+                    ))}
+                    {(!w.tags || w.tags.length === 0) && (
+                      <span className="text-[#aaa] text-[9px] uppercase tracking-wider font-bold">
+                        NO TAGS
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Footer with Mastery Pill */}
-                <div className="flex items-end justify-between mt-auto pt-4 border-t-[2px] border-black">
+                <div className={`flex items-end justify-between mt-auto ${isCompactMode ? "pt-2" : "pt-4"} border-t-[2px] border-black`}>
                   {(() => {
                     const status = getMasteryStatus(entry);
                     const StatusIcon = status.icon;
