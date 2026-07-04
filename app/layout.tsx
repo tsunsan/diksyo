@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://diksyo.app"),
   title: {
     template: "%s | Diksyo - Tagalog Dictionary",
     default: "Diksyo | The Modern Tagalog Dictionary & Learning Engine",
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Diksyo | The Modern Tagalog Dictionary",
     description: "Your ultimate Tagalog dictionary and learning engine.",
-    url: "https://diksyo.com",
+    url: "https://diksyo.app",
     siteName: "Diksyo",
     locale: "en_PH",
     type: "website",
