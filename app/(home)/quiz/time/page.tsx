@@ -105,18 +105,18 @@ export default function QuizPage2() {
           const w = item.word;
           return {
             id: item.wordId,
-            word: w.word,
+            word: w.translation,
             englishPrompt: w.translation,
             partOfSpeech: w.partOfSpeech || "UNKNOWN",
-            rootWord: w.rootWordString || w.originalExplanation || "Unknown Root",
-            rootDefinition: w.etymology || w.meaningFilipino || "No definition available",
+            rootWord: w.meaningFilipino || w.originalExplanation || "No Filipino meaning available",
+            rootDefinition: w.usageNotes || "No notes available",
             usageExamples: Array.isArray(w.usageExamples) ? w.usageExamples : [],
             level: w.level || "BEGINNER",
-            hint: w.usageNotes || "Translate this word to English",
+            hint: w.usageNotes || "Translate this to Tagalog",
             xp: w.level === 'ADVANCED' ? 30 : w.level === 'INTERMEDIATE' ? 20 : 10,
-            example: (Array.isArray(w.usageExamples) && w.usageExamples[0]) ? w.usageExamples[0].sentence : "No example available.",
-            answer: w.translation,
-            acceptedAnswers: [w.translation]
+            example: (Array.isArray(w.usageExamples) && w.usageExamples[0]) ? w.usageExamples[0].translation : "No example available.",
+            answer: w.word,
+            acceptedAnswers: [w.word]
           };
         });
 
@@ -469,7 +469,7 @@ export default function QuizPage2() {
 
             {!flipped ? (
               <div className="text-center mt-8">
-                <p className="uppercase tracking-[0.3em] text-[10px] mb-6 font-black" style={{ color: cardTextColor + "cc" }}>TRANSLATE THIS WORD</p>
+                <p className="uppercase tracking-[0.3em] text-[10px] mb-6 font-black" style={{ color: cardTextColor + "cc" }}>TRANSLATE TO TAGALOG</p>
                 <div className="relative w-full max-w-full mx-auto mb-8">
                   <motion.div className="uppercase tracking-tighter font-black text-4xl sm:text-5xl md:text-[4.5rem] leading-[1.1] md:leading-[0.9] flex flex-wrap justify-center items-center break-words" style={{ color: cardTextColor }}>
                     {current.word.split(" ").map((wordStr, wordIdx) => (
@@ -511,12 +511,11 @@ export default function QuizPage2() {
                 <div className="relative inline-block mb-10 w-[90%] sm:w-auto max-w-full">
                   <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 4, repeat: Infinity }} className="absolute -inset-4 bg-[#FFE500] border-[4px] border-black -z-10 shadow-[8px_8px_0_#000]" />
                   <div className="px-6 py-6 sm:px-10 break-words">
-                    <p className="text-[10px] uppercase font-black text-black/40 mb-2">ROOT WORD</p>
-                    <h2 className="uppercase tracking-tighter text-black font-black text-4xl sm:text-5xl md:text-[4rem] leading-[0.9] break-words">{current.rootWord}</h2>
+                    <p className="text-[10px] uppercase font-black text-black/40 mb-2">FILIPINO MEANING</p>
+                    <h2 className="uppercase tracking-tighter text-black font-black text-2xl sm:text-3xl md:text-4xl leading-tight break-words">{current.rootWord}</h2>
                   </div>
                 </div>
                 <p className="text-xl text-black/70 uppercase tracking-widest px-10 mb-8 font-black">{current.rootDefinition}</p>
-                <div className="inline-block bg-white/50 border-[2px] border-black p-4"><p className="text-xs text-black uppercase font-bold">"{current.word}" is derived from "{current.rootWord}"</p></div>
               </motion.div>
             )}
             </motion.div>
@@ -527,7 +526,7 @@ export default function QuizPage2() {
 
       <form onSubmit={handleSubmit} className="mb-8 relative">
         <div className="flex gap-4">
-          <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle" || isPending} placeholder={feedback !== "idle" || isPending ? "" : "TYPE IN ENGLISH..."} className={`flex-1 px-8 py-6 bg-white border-[4px] border-black outline-none shadow-[8px_8px_0_#000] focus:shadow-[12px_12px_0_#000] transition-all uppercase text-xl placeholder:text-[#ccc] font-black ${isPending ? 'bg-gray-100 opacity-60 animate-pulse' : ''} disabled:bg-[#eee]`} />
+          <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle" || isPending} placeholder={feedback !== "idle" || isPending ? "" : "TYPE IN TAGALOG..."} className={`flex-1 px-8 py-6 bg-white border-[4px] border-black outline-none shadow-[8px_8px_0_#000] focus:shadow-[12px_12px_0_#000] transition-all uppercase text-xl placeholder:text-[#ccc] font-black ${isPending ? 'bg-gray-100 opacity-60 animate-pulse' : ''} disabled:bg-[#eee]`} />
           <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim() || isPending} className="px-10 py-6 bg-black text-[#FFE500] border-[4px] border-black shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
             {isPending ? <RefreshCw className="w-6 h-6 animate-spin" /> : <span>CHECK</span>}
             {!isPending && <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none">ENTER ↵</kbd>}
@@ -536,7 +535,7 @@ export default function QuizPage2() {
       </form>
 
       <div className="flex gap-4 flex-wrap items-center">
-        <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} onClick={() => setFlipped(!flipped)} className="flex items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><RotateCcw className={`w-5 h-5 transition-transform duration-500 ${flipped ? "rotate-180" : ""}`} />{flipped ? "HIDE ROOT" : "VIEW ROOT"}</motion.button>
+        <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} onClick={() => setFlipped(!flipped)} className="flex items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><RotateCcw className={`w-5 h-5 transition-transform duration-500 ${flipped ? "rotate-180" : ""}`} />{flipped ? "HIDE MEANING" : "VIEW MEANING"}</motion.button>
         <button className="flex items-center gap-3 px-6 py-4 bg-[#f0f0f0] border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all cursor-not-allowed group relative">
           <Volume2 className="w-5 h-5 text-[#888]" />
           <span className="text-[#888]">PRONOUNCE</span>
