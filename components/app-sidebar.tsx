@@ -75,7 +75,7 @@ export function AppSidebar({
         <div className="px-4 pb-6 border-t-4 border-black pt-6 flex flex-col gap-4">
           {user && (
             <Link
-              href="/home/profile"
+              href="/profile"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-3 p-2 hover:bg-yellow-100 hover:translate-x-[2px] transition-all border-4 border-transparent hover:border-black group"
             >
