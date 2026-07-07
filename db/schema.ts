@@ -78,3 +78,121 @@ export const wordRelations = relations(words, ({ one, many }) => ({
     derivedWords: many(words, { relationName: "rootDerived" }),
     progress: many(userProgress),
 }));
+
+export const userProfiles = pgTable("user_profiles", {
+    userId: uuid("user_id").primaryKey().notNull(),
+    username: text("username"),
+    displayName: text("display_name"),
+    xp: integer("xp").default(0).notNull(),
+    level: integer("level").default(1).notNull(),
+    currentStreak: integer("current_streak").default(0).notNull(),
+    longestStreak: integer("longest_streak").default(0).notNull(),
+    lastActiveDate: timestamp("last_active_date", { withTimezone: true }),
+    wordsMastered: integer("words_mastered").default(0).notNull(),
+    quizzesCompleted: integer("quizzes_completed").default(0).notNull(),
+    perfectQuizzes: integer("perfect_quizzes").default(0).notNull(),
+    fastestQuizMs: integer("fastest_quiz_ms"),
+    totalTimeLearningMs: integer("total_time_learning_ms").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+    pgPolicy("Public read for leaderboard", {
+        as: "permissive",
+        for: "select",
+        to: "public",
+        using: sql`true`,
+    }),
+    pgPolicy("Users update own profile", {
+        as: "permissive",
+        for: "update",
+        to: "authenticated",
+        using: sql`(select auth.uid()) = user_id`,
+        withCheck: sql`(select auth.uid()) = user_id`,
+    }),
+    pgPolicy("Users insert own profile", {
+        as: "permissive",
+        for: "insert",
+        to: "authenticated",
+        withCheck: sql`(select auth.uid()) = user_id`,
+    })
+]);
+
+export const userAchievements = pgTable("user_achievements", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    achievementId: text("achievement_id").notNull(),
+    unlockedAt: timestamp("unlocked_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+    index("achievements_user_idx").on(table.userId),
+    pgPolicy("Users read own achievements", {
+        as: "permissive",
+        for: "select",
+        to: "authenticated",
+        using: sql`(select auth.uid()) = user_id`,
+    }),
+    pgPolicy("Users insert own achievements", {
+        as: "permissive",
+        for: "insert",
+        to: "authenticated",
+        withCheck: sql`(select auth.uid()) = user_id`,
+    })
+]);
+
+export const dailyActivity = pgTable("daily_activity", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    date: timestamp("date", { mode: "date" }).notNull(),
+    xpEarned: integer("xp_earned").default(0).notNull(),
+    wordsLearned: integer("words_learned").default(0).notNull(),
+    correctAnswers: integer("correct_answers").default(0).notNull(),
+    totalAnswers: integer("total_answers").default(0).notNull(),
+}, (table) => [
+    index("daily_activity_user_date_idx").on(table.userId, table.date),
+    pgPolicy("Users read own activity", {
+        as: "permissive",
+        for: "select",
+        to: "authenticated",
+        using: sql`(select auth.uid()) = user_id`,
+    }),
+    pgPolicy("Users insert own activity", {
+        as: "permissive",
+        for: "insert",
+        to: "authenticated",
+        withCheck: sql`(select auth.uid()) = user_id`,
+    }),
+    pgPolicy("Users update own activity", {
+        as: "permissive",
+        for: "update",
+        to: "authenticated",
+        using: sql`(select auth.uid()) = user_id`,
+        withCheck: sql`(select auth.uid()) = user_id`,
+    })
+]);
+
+export const userProfileRelations = relations(userProfiles, ({ many }) => ({
+    achievements: many(userAchievements),
+    dailyActivity: many(dailyActivity),
+}));
+
+export const userAchievementRelations = relations(userAchievements, ({ one }) => ({
+    profile: one(userProfiles, { fields: [userAchievements.userId], references: [userProfiles.userId] }),
+}));
+
+export const dailyActivityRelations = relations(dailyActivity, ({ one }) => ({
+    profile: one(userProfiles, { fields: [dailyActivity.userId], references: [userProfiles.userId] }),
+}));
+
+export const levels = pgTable("levels", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    minXp: integer("min_xp").notNull(),
+    color: text("color").notNull(),
+});
+
+export const achievementsConfig = pgTable("achievements_config", {
+    id: text("id").primaryKey(),
+    icon: text("icon").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    conditionType: text("condition_type").notNull(),
+    conditionValue: integer("condition_value").notNull(),
+});

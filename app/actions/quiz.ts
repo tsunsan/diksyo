@@ -1,11 +1,12 @@
 "use server";
 
 import { db } from "@/db";
-import { userProgress, words } from "@/db/schema";
+import { userProgress, words, userProfiles, dailyActivity } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { withExponentialBackoff } from "@/lib/db-utils";
 import { calculateNextReview, FSRSGrade } from "@/lib/fsrs-logic";
+import { getPHTDate } from "@/lib/date-utils";
 
 export interface QuizSubmission {
     wordId: string;
@@ -80,16 +81,106 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
         const newMastery = calculateMastery(newFsrsStats.stability);
 
         // Update DB
-        await withExponentialBackoff(() => db.update(userProgress)
-            .set({
-                stability: newFsrsStats.stability,
-                difficulty: newFsrsStats.difficulty,
-                lastReview: newFsrsStats.fsrsData.last_review || new Date(),
-                nextReview: newFsrsStats.nextReviewDate,
-                mastery: newMastery,
-            })
-            .where(eq(userProgress.id, progressRecord.id))
-        );
+        await withExponentialBackoff(async () => {
+            // Update FSRS Progress
+            await db.update(userProgress)
+                .set({
+                    stability: newFsrsStats.stability,
+                    difficulty: newFsrsStats.difficulty,
+                    lastReview: newFsrsStats.fsrsData.last_review || new Date(),
+                    nextReview: newFsrsStats.nextReviewDate,
+                    mastery: newMastery,
+                })
+                .where(eq(userProgress.id, progressRecord.id));
+
+            // Determine if daily streak should be incremented
+            const profile = await db.query.userProfiles.findFirst({
+                where: eq(userProfiles.userId, user.id)
+            });
+
+            if (profile) {
+                const now = new Date();
+                const lastActive = profile.lastActiveDate ? new Date(profile.lastActiveDate) : null;
+                
+                let newStreak = profile.currentStreak;
+                
+                if (lastActive) {
+                    const diffTime = Math.abs(now.getTime() - lastActive.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    
+                    if (diffDays === 1) {
+                        // Played yesterday, increment streak
+                        newStreak += 1;
+                    } else if (diffDays > 1) {
+                        // Missed a day, reset streak
+                        newStreak = 1;
+                    }
+                    // If diffDays === 0 (played today already), keep streak the same
+                } else {
+                    // First time playing ever
+                    newStreak = 1;
+                }
+
+                const newLongestStreak = Math.max(newStreak, profile.longestStreak);
+                
+                // Track fastest quiz if correct
+                let fastest = profile.fastestQuizMs;
+                if (isCorrect) {
+                    if (!fastest || timeTakenMs < fastest) {
+                        fastest = timeTakenMs;
+                    }
+                }
+
+                const perfectUpdate = isCorrect && timeTakenMs > 0 ? 1 : 0; // Simple approximation for now
+
+                await db.update(userProfiles)
+                    .set({
+                        xp: profile.xp + xpGained,
+                        quizzesCompleted: profile.quizzesCompleted + 1,
+                        currentStreak: newStreak,
+                        longestStreak: newLongestStreak,
+                        lastActiveDate: now,
+                        fastestQuizMs: fastest,
+                        perfectQuizzes: profile.perfectQuizzes + perfectUpdate,
+                        totalTimeLearningMs: profile.totalTimeLearningMs + timeTakenMs,
+                    })
+                    .where(eq(userProfiles.userId, user.id));
+            }
+
+            // Update Daily Activity
+            const today = getPHTDate();
+
+            const activity = await db.query.dailyActivity.findFirst({
+                where: and(eq(dailyActivity.userId, user.id), eq(dailyActivity.date, today))
+            });
+
+            if (activity) {
+                await db.update(dailyActivity)
+                    .set({
+                        xpEarned: activity.xpEarned + xpGained,
+                        totalAnswers: activity.totalAnswers + 1,
+                        correctAnswers: activity.correctAnswers + (isCorrect ? 1 : 0),
+                    })
+                    .where(eq(dailyActivity.id, activity.id));
+            } else {
+                await db.insert(dailyActivity).values({
+                    userId: user.id,
+                    date: today,
+                    xpEarned: xpGained,
+                    totalAnswers: 1,
+                    correctAnswers: isCorrect ? 1 : 0,
+                    wordsLearned: 1, // Assume 1 word learned on first activity
+                });
+            }
+        });
+
+        // Trigger Achievement Engine asynchronously (don't await it so we don't block the UI response)
+        import("@/lib/gamification-engine").then(({ checkAndAwardAchievements }) => {
+            checkAndAwardAchievements(user.id, {
+                timeTakenMs: timeTakenMs,
+                accuracy: isCorrect ? 100 : 0
+            });
+        });
 
         return {
             success: true,

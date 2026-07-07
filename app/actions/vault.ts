@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { userProgress, words } from "@/db/schema";
-import { eq, and, sql, lt } from "drizzle-orm";
+import { eq, and, sql, lt, notInArray } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { withExponentialBackoff } from "@/lib/db-utils";
@@ -108,19 +108,23 @@ export async function seedStarterPack() {
 
     try {
         // Check if user already has words
-        const countResult = await withExponentialBackoff(() => db
-            .select({ count: sql<number>`count(*)::int` })
-            .from(userProgress)
-            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))));
+        const allExistingWords = await withExponentialBackoff(() => db.query.userProgress.findMany({
+            where: eq(userProgress.userId, user.id),
+            columns: { wordId: true, isArchived: true }
+        }));
+        
+        const activeWordCount = allExistingWords.filter(w => !w.isArchived).length;
+        const allExistingWordIds = allExistingWords.map(w => w.wordId).filter(Boolean) as string[];
 
-        if ((countResult[0]?.count ?? 0) > 0) {
-            return { success: false, error: "You already have words in your vault" };
+        if (activeWordCount >= 10) {
+            return { success: false, error: "You already have enough words in your vault" };
         }
 
-        // Get 15 random words from the dictionary
+        // Get 10 random words from the dictionary, excluding existing ones
         const randomWords = await withExponentialBackoff(() => db.query.words.findMany({
+            where: allExistingWordIds.length > 0 ? notInArray(words.id, allExistingWordIds) : undefined,
             orderBy: sql`RANDOM()`,
-            limit: 8,
+            limit: 10,
             columns: { id: true },
         }));
 

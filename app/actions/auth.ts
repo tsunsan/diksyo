@@ -87,7 +87,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
         console.error("Supabase Auth Error:", error.message)
         if (error.message === "User already registered") {
             return {
-                error: 'Account already exists. Please switch to the Login tab.',
+                error: 'Account already exists (or is linked to Google). Please switch to the Login tab or use Continue with Google.',
                 errorTitle: 'REGISTRATION HALTED'
             }
         }

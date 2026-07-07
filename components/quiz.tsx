@@ -222,8 +222,8 @@ export function QuizModeClient() {
   function handleStartTraining() {
     if (!selectedMode) return;
 
-    // Intercept mastery modes with empty vault
-    if (MASTERY_MODE_IDS.has(selectedMode) && vaultCount === 0) {
+    // Intercept mastery modes with too few words in vault
+    if (MASTERY_MODE_IDS.has(selectedMode) && vaultCount !== null && vaultCount < 10) {
       setShowOnboarding(true);
       return;
     }
@@ -235,9 +235,12 @@ export function QuizModeClient() {
     startTransition(async () => {
       const result = await seedStarterPack();
       if (result.success) {
-        setVaultCount(result.count ?? 8);
+        setVaultCount(result.count ?? 10);
         setShowOnboarding(false);
         router.push(`/quiz/${selectedMode}`);
+      } else {
+        console.error(result.error);
+        alert(result.error || "Failed to add starter pack");
       }
     });
   }
@@ -429,7 +432,7 @@ export function QuizModeClient() {
               <div>
                 <DialogHeader>
                   <DialogTitle className="text-black uppercase tracking-tight text-lg" style={{ fontWeight: 900 }}>
-                    Your vault is empty
+                    More words needed
                   </DialogTitle>
                 </DialogHeader>
               </div>
@@ -439,7 +442,7 @@ export function QuizModeClient() {
           {/* Body */}
           <div className="px-6 py-5">
             <DialogDescription className="text-[#333] text-sm leading-relaxed mb-1" style={{ fontWeight: 600 }}>
-              Mastery modes use <span className="font-black">spaced repetition</span> to train you on words saved in your vault. You need at least a few words to get started.
+              Mastery modes use <span className="font-black">spaced repetition</span> to train you on words saved in your vault. You need at least 10 words to get started.
             </DialogDescription>
 
             <div className="flex items-center gap-2 mt-3 mb-6">
@@ -463,7 +466,7 @@ export function QuizModeClient() {
                   <span className="block uppercase text-sm" style={{ fontWeight: 900 }}>
                     {isPending ? "Adding words..." : "Add Starter Pack"}
                   </span>
-                  <span className="block text-[11px] text-white/70" style={{ fontWeight: 600 }}>8 common Tagalog words added to your vault</span>
+                  <span className="block text-[11px] text-white/70" style={{ fontWeight: 600 }}>10 common Tagalog words added to your vault</span>
                 </div>
               </button>
 
