@@ -577,187 +577,170 @@ export const EnvVigan = () => (
   </>
 );
 
-export const EnvBinondo = () => (
+export const EnvApo = () => (
   <>
-    {/* Night Sky / Moon */}
-    <div className="absolute top-6 left-[15%] w-10 h-10 bg-[#FFF8E7] border-[3px] border-black shadow-[3px_3px_0_#000] rounded-full z-0" />
+    {/* Cosmic Night Sky with Stars, Moon, Galaxy & Comets */}
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {/* Neobrutalist Galaxy Band */}
+      <div className="absolute top-[-20px] left-[-10%] w-[120%] h-[150px] rotate-[15deg] z-0 overflow-visible pointer-events-none">
+        {/* Main galaxy ribbons */}
+        <div className="absolute top-4 w-full h-[60px] bg-[#2563EB] opacity-40 border-y-[2px] border-black skew-x-[30deg]" />
+        <div className="absolute top-8 w-full h-[40px] bg-[#0EA5E9] opacity-40 border-[2px] border-black -skew-x-[20deg]" />
+        <div className="absolute top-12 left-[10%] w-[80%] h-[50px] bg-[#2DD4BF] opacity-30 border-[2px] border-black skew-x-[45deg]" />
+        
+        {/* Dense Galaxy Stars */}
+        <div className="absolute top-2 left-[15%] w-2 h-2 bg-white border-[1px] border-black rounded-sm shadow-[2px_2px_0_#FCD34D]" />
+        <div className="absolute top-10 left-[25%] w-3 h-3 bg-[#FCD34D] border-[1px] border-black rounded-full shadow-[2px_2px_0_#fff]" />
+        <div className="absolute top-6 left-[40%] w-1.5 h-1.5 bg-white border-[1px] border-black rounded-sm" />
+        <div className="absolute top-14 left-[55%] w-2.5 h-2.5 bg-[#BAE6FD] border-[1px] border-black rounded-sm shadow-[2px_2px_0_#fff]" />
+        <div className="absolute top-4 left-[75%] w-2 h-2 bg-white border-[1px] border-black rounded-full" />
+        <div className="absolute top-12 left-[85%] w-3 h-3 bg-[#67E8F9] border-[1px] border-black rounded-sm shadow-[2px_2px_0_#fff]" />
+      </div>
 
-    {/* Epic Fireworks */}
-    {[
-      { top: "top-10", left: "left-[20%]", delay: 0, c1: "bg-[#EF4444]", c2: "bg-[#FCD34D]" },
-      { top: "top-4", left: "left-[45%]", delay: 1.2, c1: "bg-[#3B82F6]", c2: "bg-[#10B981]" },
-      { top: "top-16", left: "left-[60%]", delay: 0.5, c1: "bg-[#EC4899]", c2: "bg-[#FCD34D]" },
-      { top: "top-2", left: "left-[80%]", delay: 1.8, c1: "bg-[#F59E0B]", c2: "bg-[#EF4444]" },
-      { top: "top-20", left: "left-[90%]", delay: 0.8, c1: "bg-[#8B5CF6]", c2: "bg-[#06B6D4]" },
-    ].map((f, i) => (
-      <motion.div key={i} animate={{ scale: [0, 2, 0], opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeOut", delay: f.delay }} className={`absolute ${f.top} ${f.left} w-24 h-24 pointer-events-none z-0`}>
-        <div className={`absolute top-1/2 left-1/2 w-[3px] h-5 ${f.c1} -translate-x-1/2 -translate-y-full -mt-2`} />
-        <div className={`absolute top-1/2 left-1/2 w-[3px] h-5 ${f.c2} -translate-x-1/2 translate-y-2`} />
-        <div className={`absolute top-1/2 left-1/2 h-[3px] w-5 ${f.c1} -translate-y-1/2 -translate-x-full -ml-2`} />
-        <div className={`absolute top-1/2 left-1/2 h-[3px] w-5 ${f.c2} -translate-y-1/2 translate-x-2`} />
-        <div className="absolute top-1/2 left-1/2 w-[2px] h-4 bg-[#FFF] -translate-x-1/2 -translate-y-full -mt-1 rotate-45 origin-bottom" />
-        <div className="absolute top-1/2 left-1/2 w-[2px] h-4 bg-[#FFF] -translate-x-1/2 -translate-y-full -mt-1 -rotate-45 origin-bottom" />
-        <div className="absolute top-1/2 left-1/2 w-[2px] h-4 bg-[#FFF] -translate-x-1/2 translate-y-1 rotate-45 origin-top" />
-        <div className="absolute top-1/2 left-1/2 w-[2px] h-4 bg-[#FFF] -translate-x-1/2 translate-y-1 -rotate-45 origin-top" />
+      {/* Massive Glowing Neobrutalist Moon */}
+      <div className="absolute top-[20px] left-[65%] w-24 h-24 bg-[#FEF08A] border-[4px] border-black rounded-full shadow-[8px_8px_0_#F59E0B] flex items-center justify-center">
+        {/* Craters */}
+        <div className="absolute top-4 left-4 w-6 h-6 bg-[#FDE047] border-[2px] border-black rounded-full" />
+        <div className="absolute bottom-4 right-6 w-4 h-4 bg-[#FDE047] border-[2px] border-black rounded-full" />
+        <div className="absolute top-10 right-3 w-3 h-3 bg-[#FDE047] border-[2px] border-black rounded-full" />
+      </div>
+
+      {/* Shooting Star / Comet */}
+      <motion.div 
+        animate={{ x: ['150vw', '-50vw'], y: [-50, 150] }}
+        transition={{ repeat: Infinity, duration: 8, delay: 2, ease: "linear" }}
+        className="absolute top-0 left-0 flex items-center z-0"
+      >
+        <div className="w-16 h-1 bg-gradient-to-r from-transparent to-white" />
+        <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_10px_#fff]" />
       </motion.div>
-    ))}
 
-    {/* Voxel Flying Dragon (Red & Gold) */}
+      {/* Twinkling Stars */}
+      <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className="absolute top-4 left-[20%] w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_#fff]" />
+      <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 3, ease: "easeInOut", delay: 1 }} className="absolute top-12 left-[50%] w-2 h-2 bg-[#FCD34D] rounded-full shadow-[0_0_10px_#FCD34D]" />
+      <motion.div animate={{ opacity: [0.1, 1, 0.1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", delay: 0.5 }} className="absolute top-8 right-[30%] w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_#fff]" />
+      <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 2 }} className="absolute top-16 right-[15%] w-1 h-1 bg-white rounded-full shadow-[0_0_6px_#fff]" />
+      <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 1.5 }} className="absolute top-6 left-[70%] w-2 h-2 bg-white rounded-full shadow-[0_0_8px_#fff]" />
+      <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut", delay: 0.8 }} className="absolute top-20 left-[10%] w-1.5 h-1.5 bg-[#FCD34D] rounded-full shadow-[0_0_8px_#FCD34D]" />
+    </div>
+
+    {/* Stylized Floating Clouds (Neobrutalist) */}
     <motion.div 
-      animate={{ x: ['120vw', '-40vw'] }}
-      transition={{ x: { repeat: Infinity, duration: 18, ease: "linear" } }}
-      className="absolute top-[20px] z-30 flex items-center scale-[0.6] origin-center"
+      animate={{ x: [-20, 20, -20] }} 
+      transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
+      className="absolute bottom-[100px] left-[15%] z-0"
     >
-      <motion.div animate={{ y: [-20, 20, -20] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className="relative w-[400px] h-[300px] flex items-center justify-center">
-         
-         {/* Back Wing (Behind Body) */}
-         <motion.div animate={{ rotate: [-20, 15, -20] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} className="absolute left-[160px] top-[50px] w-32 h-40 origin-bottom-left z-0">
-            {/* Wing Arm (Red) */}
-            <div className="absolute bottom-0 left-0 w-32 h-6 bg-[#B91C1C] border-[3px] border-black -rotate-[30deg] origin-bottom-left" />
-            <div className="absolute bottom-20 left-24 w-16 h-6 bg-[#B91C1C] border-[3px] border-black rotate-[20deg] origin-bottom-left" />
-            {/* Membrane Blocks (Gold) */}
-            <div className="absolute bottom-8 left-4 w-20 h-12 bg-[#F59E0B] border-[3px] border-black -rotate-[10deg]" />
-            <div className="absolute bottom-16 left-12 w-16 h-12 bg-[#F59E0B] border-[3px] border-black -rotate-[20deg]" />
-         </motion.div>
-
-         {/* Tail */}
-         <div className="absolute left-[260px] top-[170px] flex items-start z-10 -rotate-12">
-            <motion.div animate={{ y: [-5, 5, -5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-12 h-12 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] -ml-2 flex flex-col justify-end relative z-40">
-               <div className="w-full h-3 bg-[#FCD34D] border-t-[3px] border-black" />
-               <div className="absolute -top-4 right-2 w-4 h-4 bg-[#FCD34D] border-[3px] border-black" />
-            </motion.div>
-            <motion.div animate={{ y: [-5, 5, -5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-10 h-10 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] -ml-2 flex flex-col justify-end mt-1 z-30">
-               <div className="w-full h-3 bg-[#FCD34D] border-t-[3px] border-black" />
-            </motion.div>
-            <motion.div animate={{ y: [-5, 5, -5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.6 }} className="w-8 h-8 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] -ml-2 flex flex-col justify-end mt-2 z-20">
-               <div className="w-full h-2 bg-[#FCD34D] border-t-[3px] border-black" />
-            </motion.div>
-            <motion.div animate={{ y: [-5, 5, -5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.8 }} className="w-6 h-6 bg-[#B91C1C] border-[3px] border-black shadow-[3px_3px_0_#000] -ml-2 mt-3 z-10" />
-         </div>
-
-         {/* Body */}
-         <div className="absolute left-[130px] top-[150px] flex items-start z-20 -rotate-6">
-            <div className="w-20 h-20 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] -mr-2 flex flex-col justify-end relative z-30">
-               <div className="w-full h-5 bg-[#FCD34D] border-t-[3px] border-black" />
-               <div className="absolute -top-4 right-6 w-5 h-5 bg-[#FCD34D] border-[3px] border-black" />
-            </div>
-            <div className="w-16 h-16 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] -mr-2 mt-2 flex flex-col justify-end relative z-20">
-               <div className="w-full h-4 bg-[#FCD34D] border-t-[3px] border-black" />
-               <div className="absolute -top-4 right-4 w-4 h-4 bg-[#FCD34D] border-[3px] border-black" />
-            </div>
-            <div className="w-16 h-16 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] mt-4 flex flex-col justify-end relative z-10">
-               <div className="w-full h-4 bg-[#FCD34D] border-t-[3px] border-black" />
-               <div className="absolute -top-4 right-4 w-4 h-4 bg-[#FCD34D] border-[3px] border-black" />
-            </div>
-         </div>
-
-         {/* Legs */}
-         {/* Back Leg */}
-         <motion.div animate={{ rotate: [-20, 20, -20] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} className="absolute left-[220px] top-[200px] w-6 h-20 bg-[#B91C1C] border-[3px] border-black z-10 origin-top">
-            <div className="absolute bottom-0 -left-4 w-10 h-6 bg-[#B91C1C] border-[3px] border-black" />
-         </motion.div>
-         {/* Front Leg */}
-         <motion.div animate={{ rotate: [20, -20, 20] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} className="absolute left-[160px] top-[210px] w-8 h-24 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] z-30 origin-top">
-            <div className="absolute bottom-0 -left-6 w-14 h-8 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000]" />
-         </motion.div>
-
-         {/* Front Wing (In Front of Body) */}
-         <motion.div animate={{ rotate: [-30, 40, -30] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} className="absolute left-[140px] top-[30px] w-48 h-56 origin-bottom-left z-40">
-            {/* Wing Arm (Red) */}
-            <div className="absolute bottom-0 left-0 w-48 h-8 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] -rotate-[30deg] origin-bottom-left z-20" />
-            <div className="absolute bottom-28 left-40 w-24 h-6 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] rotate-[30deg] origin-bottom-left z-20" />
-            
-            {/* Membrane Blocks (Gold) */}
-            <div className="absolute bottom-10 left-10 w-32 h-20 bg-[#FCD34D] border-[3px] border-black shadow-[4px_4px_0_#000] -rotate-[15deg] z-10" />
-            <div className="absolute bottom-20 left-20 w-24 h-16 bg-[#FCD34D] border-[3px] border-black shadow-[4px_4px_0_#000] -rotate-[5deg] z-10" />
-            <div className="absolute bottom-28 left-28 w-16 h-12 bg-[#FCD34D] border-[3px] border-black shadow-[4px_4px_0_#000] rotate-[15deg] z-10" />
-         </motion.div>
-
-         {/* Neck */}
-         <div className="absolute left-[80px] top-[140px] flex items-end z-20 rotate-12">
-            <div className="w-10 h-10 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] -mr-2 flex flex-col justify-end relative z-20">
-               <div className="w-full h-2 bg-[#FCD34D] border-t-[3px] border-black" />
-            </div>
-            <div className="w-12 h-12 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] flex flex-col justify-end relative z-10">
-               <div className="w-full h-3 bg-[#FCD34D] border-t-[3px] border-black" />
-            </div>
-         </div>
-
-         {/* Head */}
-         <motion.div animate={{ rotate: [-5, 5, -5] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className="absolute left-[20px] top-[100px] w-20 h-20 bg-[#EF4444] border-[3px] border-black shadow-[4px_4px_0_#000] z-30 origin-bottom-right">
-            {/* Snout */}
-            <div className="absolute top-6 -left-12 w-16 h-10 bg-[#EF4444] border-[3px] border-black shadow-[2px_2px_0_#000]">
-               {/* Nostril */}
-               <div className="absolute top-2 left-2 w-3 h-3 bg-[#7F1D1D] border-[2px] border-black" />
-               {/* Mouth line */}
-               <div className="absolute bottom-2 left-0 w-10 h-[3px] bg-black" />
-            </div>
-            {/* Eyes */}
-            <div className="absolute top-2 left-2 w-6 h-6 bg-[#FCD34D] border-[3px] border-black shadow-[2px_2px_0_#000] flex justify-center items-center">
-               <div className="w-2 h-2 bg-black" />
-            </div>
-            {/* Horns (Gold blocks) */}
-            <div className="absolute -top-8 right-2 w-6 h-10 bg-[#FCD34D] border-[3px] border-black shadow-[2px_2px_0_#000]" />
-            <div className="absolute -top-6 right-10 w-4 h-8 bg-[#FCD34D] border-[3px] border-black shadow-[2px_2px_0_#000]" />
-         </motion.div>
-
-      </motion.div>
+      <div className="w-24 h-8 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] rounded-full opacity-90" />
+      <div className="absolute -top-4 left-4 w-12 h-8 bg-white border-[3px] border-black border-b-0 rounded-t-full" />
     </motion.div>
 
-    {/* Filipino-Chinese Friendship Arch (Binondo Arch) */}
-    <div className="absolute bottom-[56px] left-[25%] -translate-x-1/2 flex flex-col items-center z-10 scale-[0.55] origin-bottom">
-      {/* Top Roof tier */}
-      <div className="w-32 h-6 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] z-30 relative flex justify-between px-2" style={{ clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0 100%)' }}>
-         <div className="w-[2px] h-full bg-black opacity-30" />
-         <div className="w-[2px] h-full bg-black opacity-30" />
-      </div>
-      {/* Archway Sign */}
-      <div className="w-24 h-10 bg-[#10B981] border-[3px] border-black shadow-[3px_3px_0_#000] -mt-1 z-20 flex justify-center items-center">
-         <span className="text-[#FCD34D] font-black tracking-widest text-[10px]">BINONDO</span>
-      </div>
-      {/* Pillars */}
-      <div className="w-40 flex justify-between -mt-1 z-10 relative">
-         <div className="w-8 h-24 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] flex justify-center">
-            <div className="w-1 h-full bg-[#FCD34D] opacity-80" />
-         </div>
-         {/* Hanging Lanterns */}
-         <div className="flex-1 flex justify-around mt-2 z-10">
-            <div className="w-4 h-6 bg-[#EF4444] border-[2px] border-black rounded-full relative shadow-[0_2px_10px_#FCD34D]">
-               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-px h-2 bg-[#FCD34D]" />
-            </div>
-            <div className="w-4 h-6 bg-[#EF4444] border-[2px] border-black rounded-full relative shadow-[0_2px_10px_#FCD34D]">
-               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-px h-2 bg-[#FCD34D]" />
-            </div>
-         </div>
-         <div className="w-8 h-24 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] flex justify-center">
-            <div className="w-1 h-full bg-[#FCD34D] opacity-80" />
-         </div>
-      </div>
+    <motion.div 
+      animate={{ x: [20, -20, 20] }} 
+      transition={{ repeat: Infinity, duration: 20, ease: "easeInOut", delay: 2 }}
+      className="absolute bottom-[130px] right-[10%] z-0"
+    >
+      <div className="w-32 h-10 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] rounded-full opacity-90" />
+      <div className="absolute -top-5 left-6 w-16 h-10 bg-white border-[3px] border-black border-b-0 rounded-t-full" />
+    </motion.div>
+
+    {/* Distant Mountain Silhouettes */}
+    <div className="absolute bottom-[56px] left-[0%] w-[150px] h-[80px] z-0 opacity-80">
+      <svg viewBox="0 0 150 80" className="w-full h-full" style={{ filter: 'drop-shadow(3px 3px 0px #000)' }} preserveAspectRatio="none">
+        <path d="M75 10 L150 80 L0 80 Z" fill="#1E1B4B" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+      </svg>
+    </div>
+    <div className="absolute bottom-[56px] right-[-5%] w-[200px] h-[100px] z-0 opacity-80">
+      <svg viewBox="0 0 200 100" className="w-full h-full" style={{ filter: 'drop-shadow(3px 3px 0px #000)' }} preserveAspectRatio="none">
+        <path d="M100 20 L200 100 L0 100 Z" fill="#1E1B4B" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+      </svg>
     </div>
 
-    {/* Traditional Chinese Pagoda (Right) */}
-    <div className="absolute bottom-[56px] left-[75%] -translate-x-1/2 flex flex-col items-center z-10 scale-[0.6] origin-bottom">
-       {/* Tier 3 */}
-       <div className="w-16 h-6 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] z-30" style={{ clipPath: 'polygon(20% 0, 80% 0, 100% 100%, 0 100%)' }} />
-       <div className="w-12 h-10 bg-[#FCD34D] border-[3px] border-black border-t-0 shadow-[3px_3px_0_#000] -mt-1 p-1 z-20 flex justify-center">
-          <div className="w-4 h-full bg-[#B91C1C] border-[2px] border-black" />
-       </div>
-       
-       {/* Tier 2 */}
-       <div className="w-24 h-6 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] z-30 -mt-1" style={{ clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0 100%)' }} />
-       <div className="w-20 h-10 bg-[#FCD34D] border-[3px] border-black border-t-0 shadow-[3px_3px_0_#000] -mt-1 p-1 z-20 flex justify-evenly">
-          <div className="w-4 h-full bg-[#B91C1C] border-[2px] border-black" />
-          <div className="w-4 h-full bg-[#B91C1C] border-[2px] border-black" />
-       </div>
-
-       {/* Tier 1 */}
-       <div className="w-32 h-8 bg-[#EF4444] border-[3px] border-black shadow-[3px_3px_0_#000] z-30 -mt-1" style={{ clipPath: 'polygon(10% 0, 90% 0, 100% 100%, 0 100%)' }} />
-       <div className="w-28 h-16 bg-[#FCD34D] border-[3px] border-black border-t-0 shadow-[3px_3px_0_#000] -mt-1 flex flex-col items-center justify-end z-20">
-          <div className="w-10 h-12 bg-[#EF4444] border-[3px] border-black border-b-0 rounded-t-xl flex justify-center">
-             <div className="w-[2px] h-full bg-black opacity-30" />
-          </div>
-       </div>
+    {/* Main Mount Apo Summit */}
+    <div className="absolute bottom-[56px] right-[5%] w-[280px] h-[130px] z-10">
+      <svg viewBox="0 0 350 160" className="w-full h-full" style={{ filter: 'drop-shadow(5px 5px 0px #000)' }} preserveAspectRatio="none">
+        {/* Right Secondary Peak */}
+        <path d="M260 60 L350 160 L180 160 Z" fill="#4338CA" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        <path d="M260 60 L290 95 L270 105 L250 90 Z" fill="#C7D2FE" stroke="#000" strokeWidth="2" strokeLinejoin="round" />
+        
+        {/* Main Peak */}
+        <path d="M150 10 L280 160 L20 160 Z" fill="#312E81" stroke="#000" strokeWidth="4" strokeLinejoin="round" />
+        
+        {/* Main Peak Snow Cap (Jagged Neobrutalism) */}
+        <path d="M150 10 L195 65 L170 80 L150 60 L130 75 L105 60 Z" fill="#E0E7FF" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+      </svg>
     </div>
+
+    {/* The Mythical Philippine Eagle (Haring Ibon) - Realistic Geometric Phoenix Style */}
+    <motion.div 
+      animate={{ left: ['-40%', '15%', '65%', '120%'], y: [-100, -60, -80, -110], rotate: [15, -5, -15, 15] }} 
+      transition={{ 
+        repeat: Infinity, 
+        duration: 14, 
+        ease: "linear"
+      }}
+      className="absolute top-[0px] z-[5] scale-[0.25] origin-center flex items-center justify-center"
+    >
+      {/* Phoenix Golden Fire Trail */}
+      <div className="absolute top-[110px] left-[-30px] z-0 flex gap-2">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <motion.div
+            key={i}
+            animate={{ scale: [1.2, 0], opacity: [0.9, 0], x: [0, 100] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.15, ease: "easeOut" }}
+            className="w-16 h-16 bg-[#FCD34D] border-[3px] border-[#EA580C] shadow-[0_0_20px_#F59E0B] rounded-full absolute"
+            style={{ left: `${-i * 25}px` }}
+          />
+        ))}
+      </div>
+
+      <svg viewBox="0 0 400 250" className="w-[400px] h-[250px] relative z-10" style={{ filter: 'drop-shadow(0px 0px 15px #F59E0B)' }}>
+        {/* Right (Background) Wing (Flapping) */}
+        <motion.g 
+          animate={{ rotate: [-25, 20, -25] }} 
+          transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
+          style={{ transformOrigin: "210px 75px" }}
+        >
+          <polygon points="180,90 260,30 320,20 240,60" fill="#EA580C" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+          <polygon points="320,20 370,10 330,35 380,30 325,50 360,50 300,70 240,60" fill="#DC2626" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        </motion.g>
+
+        {/* Tail */}
+        <polygon points="120,100 40,80 20,110 90,120" fill="#EA580C" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        <polygon points="40,80 10,95 20,110" fill="#FCD34D" stroke="#000" strokeWidth="2" strokeLinejoin="round" />
+
+        {/* Body (Chest & Back) */}
+        <polygon points="120,100 180,85 220,100 160,115" fill="#DC2626" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        <polygon points="120,100 160,115 220,100 230,130 180,140 130,125" fill="#FEF08A" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+
+        {/* Neck & Shaggy Crest */}
+        <polygon points="200,90 230,70 250,90 220,110" fill="#F97316" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        <polygon points="210,80 190,50 230,65 240,40 250,70 270,55 260,85" fill="#F59E0B" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        <polygon points="230,65 205,45 225,55" fill="#FEF08A" stroke="#000" strokeWidth="2" strokeLinejoin="round" />
+
+        {/* Head */}
+        <polygon points="240,85 260,75 280,85 275,105 245,100" fill="#FEF08A" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        
+        {/* Beak */}
+        <polygon points="275,85 305,85 315,110 295,98 275,100" fill="#1E293B" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+        <polygon points="275,85 300,90 280,95" fill="#334155" stroke="#000" strokeWidth="2" />
+
+        {/* Eye */}
+        <polygon points="260,85 268,83 270,88 262,90" fill="#EF4444" stroke="#000" strokeWidth="2" strokeLinejoin="round" />
+        <circle cx="266" cy="87" r="1.5" fill="#000" />
+        <line x1="255" y1="80" x2="275" y2="85" stroke="#000" strokeWidth="3" />
+
+        {/* Left (Foreground) Wing (Flapping) */}
+        <motion.g 
+          animate={{ rotate: [25, -20, 25] }} 
+          transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
+          style={{ transformOrigin: "140px 120px" }}
+        >
+          <polygon points="160,110 210,125 150,170 120,130" fill="#DC2626" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+          <polygon points="150,170 160,220 130,185 120,230 105,185 80,220 90,170 120,130" fill="#B91C1C" stroke="#000" strokeWidth="3" strokeLinejoin="round" />
+          <polygon points="150,170 155,190 140,175" fill="#FCD34D" stroke="#000" strokeWidth="2" />
+        </motion.g>
+      </svg>
+    </motion.div>
   </>
 );
 
@@ -787,75 +770,75 @@ export const JeepneySignboard = ({
       subText: '#FFE500',
       subtitle: 'BUSY MANILA' 
     },
-    // 1: Slanted Splash (Luneta)
+    // 1: Bottom Dome (Luneta)
     { 
-      type: 'slanted', 
-      bg: '#00C853', 
-      primaryText: '#fff', 
-      primaryStroke: '#000',
-      subBg: '#FFEB3B', 
-      subText: '#000',
+      type: 'bottom-dome', 
+      bg: '#FFE500', 
+      primaryText: '#D32F2F', 
+      primaryStroke: 'transparent',
+      subBg: '#fff', 
+      subText: '#1E3A8A',
       subtitle: 'LUNETA PARK' 
     },
-    // 2: Ribbon Bottom (Mayon)
+    // 2: Gradient Text (Mayon)
     { 
-      type: 'ribbon', 
-      bg: '#FF3D00', 
-      primaryText: '#FFE500', 
-      primaryStroke: '#000',
-      subBg: '#FFE500', 
-      subText: '#D32F2F',
+      type: 'gradient-text', 
+      bg: '#000000', 
+      primaryText: 'transparent', 
+      primaryStroke: 'transparent',
+      subBg: '#000000', 
+      subText: '#86EFAC',
       subtitle: 'MAYON VOLCANO' 
     },
-    // 3: ZigZag Split (Kayangan)
+    // 3: Center Ellipse (Kayangan)
     { 
-      type: 'zigzag', 
-      bg: '#00E5FF', 
-      primaryText: '#0A192F', 
-      primaryStroke: '#fff',
-      subBg: '#0A192F', 
-      subText: '#00E5FF',
+      type: 'center-ellipse', 
+      bg: '#FFFFFF', 
+      primaryText: '#FF0000', 
+      primaryStroke: 'transparent',
+      subBg: '#FEF08A', 
+      subText: '#000000',
       subtitle: 'KAYANGAN LAKE' 
     },
-    // 4: Classic Arch (Chocolate Hills)
+    // 4: Shadow Arch (Chocolate Hills)
     { 
-      type: 'arch', 
-      bg: '#795548', 
-      primaryText: '#FFF8E7', 
-      primaryStroke: '#000',
-      subBg: '#FFF8E7', 
-      subText: '#795548',
+      type: 'shadow-arch', 
+      bg: '#7F1D1D', 
+      primaryText: '#FEF3C7', 
+      primaryStroke: 'transparent',
+      subBg: '#450A0A', 
+      subText: '#F59E0B',
       subtitle: 'CHOCO HILLS' 
     },
-    // 5: Slanted Splash (Mactan)
+    // 5: Split Hill (Mactan)
     { 
-      type: 'slanted', 
-      bg: '#EF4444', 
-      primaryText: '#fff', 
-      primaryStroke: '#000',
-      subBg: '#B45309', 
-      subText: '#fff',
-      subtitle: 'MACTAN SHRINE' 
+      type: 'split-hill', 
+      bg: '#DC2626', 
+      primaryText: '#FFFFFF', 
+      primaryStroke: '#000000',
+      subBg: '#FDE047', 
+      subText: '#000000',
+      subtitle: '~ MACTAN SHRINE ~' 
     },
-    // 6: Ribbon Bottom (Vigan)
+    // 6: Three Stripes (Vigan)
     { 
-      type: 'ribbon', 
-      bg: '#FF9100', 
-      primaryText: '#4E342E', 
-      primaryStroke: '#fff',
-      subBg: '#4E342E', 
-      subText: '#FF9100',
+      type: 'three-stripes', 
+      bg: '#FACC15', 
+      primaryText: '#DC2626', 
+      primaryStroke: 'transparent',
+      subBg: '#60A5FA', 
+      subText: '#000000',
       subtitle: 'VIGAN CITY' 
     },
-    // 7: ZigZag Split (Binondo)
+    // 7: Split Arch (Apo)
     { 
-      type: 'zigzag', 
-      bg: '#EF4444', 
-      primaryText: '#FCD34D', 
-      primaryStroke: '#000',
-      subBg: '#FCD34D', 
-      subText: '#EF4444',
-      subtitle: 'CHINATOWN' 
+      type: 'split-arch', 
+      bg: '#000000', 
+      primaryText: '#FFE500', 
+      primaryStroke: 'transparent',
+      subBg: '#000000', 
+      subText: '#D32F2F',
+      subtitle: 'MOUNT APO' 
     },
   ];
 
@@ -888,12 +871,97 @@ export const JeepneySignboard = ({
           
           {t.type === 'arch' && (
             <>
-              <path id={`arch-${index}`} d="M 10 38 Q 60 10 110 38" fill="transparent" />
-              <text fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="3" paintOrder="stroke fill" fontSize="18" fontWeight="900" textAnchor="middle" letterSpacing="1">
-                <textPath href={`#arch-${index}`} startOffset="50%">{levelName}</textPath>
+              {/* Inner Border */}
+              <rect x="3" y="3" width={w - 6} height={h - 6} fill="none" stroke="#fff" strokeWidth="1.5" rx="2" />
+              
+              {/* Corner Markers */}
+              <path d="M 7 12 L 7 7 L 12 7" fill="none" stroke="#fff" strokeWidth="1.5" />
+              <path d="M 113 12 L 113 7 L 108 7" fill="none" stroke="#fff" strokeWidth="1.5" />
+              <path d="M 7 44 L 7 49 L 12 49" fill="none" stroke="#fff" strokeWidth="1.5" />
+              <path d="M 113 44 L 113 49 L 108 49" fill="none" stroke="#fff" strokeWidth="1.5" />
+
+              {/* Center White Ellipse */}
+              <ellipse cx={w/2} cy="26" rx="50" ry="15" fill="#fff" />
+              
+              {/* Flat Primary Text */}
+              <text x={w/2} y="34" fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="3" paintOrder="stroke fill" fontSize="22" fontWeight="900" textAnchor="middle" letterSpacing="0.5">
+                {levelName}
               </text>
-              <rect x={w/2 - 40} y={h - 18} width={80} height={14} fill={t.subBg} stroke="#000" strokeWidth="1.5" />
-              <text x={w/2} y={h - 6} fill={t.subText} fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="0.5" style={{ fontFamily: "'Geist', sans-serif" }}>{t.subtitle}</text>
+              
+              {/* Subtitle at the bottom */}
+              <text x={w/2} y={h - 7} fill={t.subBg} fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="0.5" style={{ fontFamily: "'Geist', sans-serif" }}>
+                {t.subtitle}
+              </text>
+            </>
+          )}
+
+          {t.type === 'bottom-dome' && (
+            <>
+              {/* Bottom White Dome */}
+              <path d={`M 0 ${h} Q ${w/2} 18 ${w} ${h} Z`} fill={t.subBg} />
+              
+              {/* Primary Text (Straight) */}
+              <text x={w/2} y="28" fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="2" paintOrder="stroke fill" fontSize="26" fontWeight="900" textAnchor="middle" letterSpacing="0.5">
+                {levelName}
+              </text>
+              
+              {/* Subtitle (Arched along the dome) */}
+              <path id={`dome-sub-${index}`} d={`M 15 ${h - 3} Q ${w/2} ${h - 18} ${w - 15} ${h - 3}`} fill="transparent" />
+              <text fill={t.subText} fontSize="11" fontWeight="800" textAnchor="middle" letterSpacing="1">
+                <textPath href={`#dome-sub-${index}`} startOffset="50%">{t.subtitle}</textPath>
+              </text>
+            </>
+          )}
+
+          {t.type === 'gradient-text' && (
+            <>
+              <defs>
+                <linearGradient id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F97316" />
+                  <stop offset="50%" stopColor="#EAB308" />
+                  <stop offset="100%" stopColor="#4ADE80" />
+                </linearGradient>
+              </defs>
+              
+              {/* Subtitle at the top */}
+              <text x={w/2} y="16" fill={t.subText} fontSize="11" fontWeight="800" textAnchor="middle" letterSpacing="0.5">
+                {t.subtitle}
+              </text>
+
+              {/* Primary Text (Gradient) at the bottom */}
+              <g transform={`translate(${w/2}, 46) scale(1, 1.25)`}>
+                <text x="0" y="0" fill={`url(#grad-${index})`} fontSize="26" fontWeight="900" textAnchor="middle" letterSpacing="0.5">
+                  {levelName}
+                </text>
+              </g>
+            </>
+          )}
+
+          {t.type === 'center-ellipse' && (
+            <>
+              {/* Central Yellow Ellipse */}
+              <ellipse cx={w/2} cy="26" rx="46" ry="16" fill={t.subBg} />
+
+              {/* Primary Text (Slightly Arched) */}
+              <path id={`ellipse-arch-${index}`} d={`M 5 33 Q ${w/2} 18 ${w - 5} 33`} fill="transparent" />
+              <text fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="2" paintOrder="stroke fill" fontSize="24" fontWeight="900" textAnchor="middle" letterSpacing="0.5">
+                <textPath href={`#ellipse-arch-${index}`} startOffset="50%">{levelName}</textPath>
+              </text>
+              
+              {/* Ornaments (Left and Right stars) */}
+              <g transform={`translate(22, ${h - 10}) scale(0.6)`}>
+                <path d="M -20 0 L -4 -1 L 0 -6 L 4 -1 L 20 0 L 4 1 L 0 6 L -4 1 Z" fill={t.primaryText} />
+                <polygon points="0,-3 2,0 0,3 -2,0" fill="#000" />
+              </g>
+              <g transform={`translate(${w - 22}, ${h - 10}) scale(0.6)`}>
+                <path d="M -20 0 L -4 -1 L 0 -6 L 4 -1 L 20 0 L 4 1 L 0 6 L -4 1 Z" fill={t.primaryText} />
+                <polygon points="0,-3 2,0 0,3 -2,0" fill="#000" />
+              </g>
+              
+              {/* Subtitle at the bottom */}
+              <text x={w/2} y={h - 6} fill={t.subText} fontSize="11" fontWeight="800" fontStyle="italic" textAnchor="middle" letterSpacing="0">
+                {t.subtitle}
+              </text>
             </>
           )}
 
@@ -908,13 +976,41 @@ export const JeepneySignboard = ({
             </>
           )}
 
-          {t.type === 'ribbon' && (
+          {t.type === 'split-hill' && (
             <>
-              <text x={w/2} y={h/2 + 2} fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="3" paintOrder="stroke fill" fontSize="20" fontWeight="900" textAnchor="middle" letterSpacing="0.5">{levelName}</text>
-              <path d={`M 0 ${h-14} L ${w} ${h-14} L ${w} ${h} L 0 ${h} Z`} fill={t.subBg} stroke="#000" strokeWidth="2" />
-              <path d={`M 0 ${h-14} L 10 ${h-7} L 0 ${h} Z`} fill={t.bg} stroke="#000" strokeWidth="2" />
-              <path d={`M ${w} ${h-14} L ${w-10} ${h-7} L ${w} ${h} Z`} fill={t.bg} stroke="#000" strokeWidth="2" />
-              <text x={w/2} y={h - 4} fill={t.subText} fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1" style={{ fontFamily: "'Geist', sans-serif" }}>{t.subtitle}</text>
+              {/* Bottom Yellow Hill */}
+              <path d={`M 0 ${h} L 0 ${h - 22} Q ${w/2} ${h - 34} ${w} ${h - 22} L ${w} ${h} Z`} fill={t.subBg} />
+
+              {/* Primary Text (DALUBHASA) */}
+              <text x={w/2} y="32" fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="2.5" paintOrder="stroke fill" fontSize="22" fontWeight="900" textAnchor="middle" letterSpacing="0.5">
+                {levelName}
+              </text>
+              
+              {/* Subtitle (~ MACTAN SHRINE ~) */}
+              <text x={w/2} y={h - 6} fill={t.subText} fontSize="10" fontWeight="800" textAnchor="middle" letterSpacing="0" style={{ fontFamily: "'Geist', sans-serif" }}>
+                {t.subtitle}
+              </text>
+            </>
+          )}
+
+          {t.type === 'three-stripes' && (
+            <>
+              {/* Middle White Stripe */}
+              <rect x="0" y="18.67" width={w} height="18.67" fill="#FFFFFF" />
+              {/* Bottom Blue Stripe */}
+              <rect x="0" y="37.33" width={w} height="18.67" fill={t.subBg} />
+
+              {/* Primary Text (PANTAS) */}
+              <g transform={`translate(${w/2}, 42) scale(1, 1.5)`}>
+                <text x="0" y="0" fill={t.primaryText} fontSize="28" fontWeight="900" fontStyle="italic" textAnchor="middle" letterSpacing="0">
+                  {levelName}
+                </text>
+              </g>
+              
+              {/* Subtitle (VIGAN CITY) */}
+              <text x={w - 6} y={h - 4} fill={t.subText} fontSize="10" fontWeight="800" textAnchor="end" letterSpacing="0.5" style={{ fontFamily: "'Geist', sans-serif" }}>
+                {t.subtitle}
+              </text>
             </>
           )}
 
@@ -923,6 +1019,49 @@ export const JeepneySignboard = ({
               <path d={`M 0 ${h/2} L 30 ${h/2-8} L 60 ${h/2+8} L 90 ${h/2-8} L 120 ${h/2+8} L 120 ${h} L 0 ${h} Z`} fill={t.subBg} stroke="#000" strokeWidth="2" />
               <text x={w/2} y={22} fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="3" paintOrder="stroke fill" fontSize="16" fontWeight="900" textAnchor="middle" letterSpacing="1">{levelName}</text>
               <text x={w/2} y={h - 6} fill={t.subText} fontSize="11" fontWeight="800" textAnchor="middle" letterSpacing="1" style={{ fontFamily: "'Geist', sans-serif" }}>{t.subtitle}</text>
+            </>
+          )}
+
+          {t.type === 'split-arch' && (
+            <>
+              {/* Primary Text (ALAMAT) */}
+              <path id={`split-arch-top-${index}`} d={`M -5 32 Q ${w/2} 18 ${w + 5} 32`} fill="transparent" />
+              <text fill={t.primaryText} stroke={t.primaryStroke} strokeWidth="1" paintOrder="stroke fill" fontSize="30" fontWeight="900" textAnchor="middle" letterSpacing="0">
+                <textPath href={`#split-arch-top-${index}`} startOffset="50%">{levelName}</textPath>
+              </text>
+
+              {/* Subtitle (MOUNT APO) */}
+              <path id={`split-arch-bot-${index}`} d={`M -5 54 Q ${w/2} 40 ${w + 5} 54`} fill="transparent" />
+              <text fill={t.subText} fontSize="22" fontWeight="900" textAnchor="middle" letterSpacing="0">
+                <textPath href={`#split-arch-bot-${index}`} startOffset="50%">{t.subtitle}</textPath>
+              </text>
+            </>
+          )}
+
+          {t.type === 'shadow-arch' && (
+            <>
+              {/* Primary Text Path */}
+              <path id={`shadow-arch-top-${index}`} d={`M 2 34 Q ${w/2} 16 ${w - 2} 34`} fill="transparent" />
+              
+              {/* Drop Shadow for Primary Text */}
+              <g transform="translate(2.5, 2.5)">
+                <text fill={t.subBg} fontSize="26" fontWeight="900" textAnchor="middle" letterSpacing="0">
+                  <textPath href={`#shadow-arch-top-${index}`} startOffset="50%">{levelName}</textPath>
+                </text>
+              </g>
+              
+              {/* Primary Text (BATIKAN) */}
+              <text fill={t.primaryText} fontSize="26" fontWeight="900" textAnchor="middle" letterSpacing="0">
+                <textPath href={`#shadow-arch-top-${index}`} startOffset="50%">{levelName}</textPath>
+              </text>
+              
+              {/* Subtitle Path */}
+              <path id={`shadow-arch-bot-${index}`} d={`M 15 50 Q ${w/2} 36 ${w - 15} 50`} fill="transparent" />
+              
+              {/* Subtitle (CHOCO HILLS) */}
+              <text fill={t.subText} fontSize="14" fontWeight="900" textAnchor="middle" letterSpacing="0.5">
+                <textPath href={`#shadow-arch-bot-${index}`} startOffset="50%">{t.subtitle}</textPath>
+              </text>
             </>
           )}
         </svg>

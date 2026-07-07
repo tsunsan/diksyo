@@ -11,7 +11,7 @@ import {
   EnvChocolateHills,
   EnvMactan,
   EnvVigan,
-  EnvBinondo
+  EnvApo
 } from "@/components/jeepney-journey-assets";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -83,11 +83,11 @@ const ENVIRONMENTS = [
     Decorations: EnvVigan
   },
   {
-    id: "binondo",
-    skyGradient: "linear-gradient(180deg, #111827 0%, #1e1b4b 50%, #4c1d95 100%)",
+    id: "apo",
+    skyGradient: "linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
     roadColor: "#374151",
-    curbColor: "#991b1b",
-    Decorations: EnvBinondo
+    curbColor: "#1e293b",
+    Decorations: EnvApo
   },
 ];
 import {
@@ -730,9 +730,7 @@ export default function StatsDashboardClient({
                     )}
                   </div>
                 </div>
-                {/* Decorative blocks */}
-                <div className="absolute -z-10 top-4 -right-4 w-14 h-14 bg-[#7C3AED] border-[2px] border-black hidden sm:block" />
-                <div className="absolute -z-10 -bottom-3 -left-3 w-10 h-10 bg-[#FFE500] border-[2px] border-black hidden sm:block" />
+                {/* Decorative blocks removed to prevent z-index tab glitch */}
               </motion.div>
 
               {/* Yearly Activity Heatmap */}
