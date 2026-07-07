@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { 
   JeepneySVG, 
   JeepneySignboard,
@@ -260,6 +260,19 @@ export default function StatsDashboardClient({
   greeting: string;
 }) {
   const [activeTab, setActiveTab] = useState("MY PROGRESS");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [envScale, setEnvScale] = useState(1);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      // Scale down if container is smaller than our 800px design target
+      setEnvScale(Math.min(1, width / 800));
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // ── Data extraction with fallbacks ──
   const profile = stats?.profile || {
@@ -568,20 +581,33 @@ export default function StatsDashboardClient({
                     </div>
 
                     <div
-                      className="relative w-full transition-all duration-700 ease-in-out"
+                      ref={containerRef}
+                      className="relative w-full overflow-hidden transition-all duration-700 ease-in-out flex justify-center"
                       style={{
-                        height: '200px',
+                        height: `${200 * envScale}px`,
                         background: ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].skyGradient,
                         filter: currentEnvIndex > currentLevelIndex ? 'grayscale(100%) brightness(0.7)' : 'none',
                       }}
                     >
-                      {/* Environment Decorations */}
-                      {(() => {
-                        const EnvComponent = ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].Decorations;
-                        return <EnvComponent />;
-                      })()}
+                      {/* Entire Scene Diorama Wrapper */}
+                      <div 
+                        className="relative shrink-0"
+                        style={{
+                          width: envScale < 1 ? '800px' : '100%',
+                          height: '200px',
+                          transform: `scale(${envScale})`,
+                          transformOrigin: 'top center',
+                        }}
+                      >
+                        {/* Environment Decorations */}
+                        <div className="absolute inset-0 z-0 pointer-events-none">
+                          {(() => {
+                            const EnvComponent = ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].Decorations;
+                            return <EnvComponent />;
+                          })()}
+                        </div>
 
-                      {/* ── THE ROAD ── */}
+                        {/* ── THE ROAD ── */}
                       {/* Sidewalk / curb */}
                       <div className="absolute bottom-0 left-0 right-0 h-[16px] border-t-[3px] border-black transition-colors duration-700" style={{ background: ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].curbColor }} />
                       
@@ -659,6 +685,7 @@ export default function StatsDashboardClient({
                           </>
                         );
                       })()}
+                      </div>
                     </div>
                   </div>
 
