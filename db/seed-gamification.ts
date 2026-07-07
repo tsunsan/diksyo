@@ -14,11 +14,14 @@ const client = postgres(process.env.DATABASE_URL, { max: 1 });
 const db = drizzle(client, { schema });
 
 const SEED_LEVELS = [
-  { name: "BAGUHAN", minXp: 0, color: "#aaa" },
-  { name: "MAG-AARAL", minXp: 100, color: "#00C853" },
-  { name: "BATIKAN", minXp: 300, color: "#0057FF" },
-  { name: "GURO", minXp: 600, color: "#7C3AED" },
-  { name: "LAKAN", minXp: 1000, color: "#FFE500" },
+  { name: "BAGUHAN", minXp: 0, color: "#8B5E3C" },
+  { name: "SIBOL", minXp: 250, color: "#22C55E" },
+  { name: "SANAY", minXp: 1000, color: "#06B6D4" },
+  { name: "MAHUSAY", minXp: 2500, color: "#3B82F6" },
+  { name: "BATIKAN", minXp: 5000, color: "#8B5CF6" },
+  { name: "DALUBHASA", minXp: 10000, color: "#EC4899" },
+  { name: "PANTAS", minXp: 20000, color: "#F97316" },
+  { name: "ALAMAT", minXp: 50000, color: "#EAB308" },
 ];
 
 const SEED_ACHIEVEMENTS = [
@@ -31,7 +34,7 @@ const SEED_ACHIEVEMENTS = [
   { id: "perfect_score", icon: "🏆", title: "PERFECT SCORE", description: "Get 100% accuracy on a quiz", conditionType: "perfect_quizzes", conditionValue: 1 },
   { id: "early_bird", icon: "🌅", title: "EARLY BIRD", description: "Learn a word between 4 AM and 8 AM", conditionType: "time_of_day", conditionValue: 4 },
   { id: "night_owl", icon: "🦉", title: "NIGHT OWL", description: "Learn a word after midnight", conditionType: "time_of_day", conditionValue: 0 },
-  { id: "lakan", icon: "👑", title: "LAKAN", description: "Reach the max level", conditionType: "level", conditionValue: 5 },
+  { id: "alamat", icon: "👑", title: "ALAMAT", description: "Reach the max level", conditionType: "level", conditionValue: 8 },
 ];
 
 async function seed() {

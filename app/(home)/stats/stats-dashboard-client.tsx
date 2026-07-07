@@ -1,8 +1,22 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { 
+  JeepneySVG, 
+  JeepneySignboard,
+  EnvManila,
+  EnvLuneta,
+  EnvMayon,
+  EnvKayangan,
+  EnvChocolateHills,
+  EnvMactan,
+  EnvVigan,
+  EnvBinondo
+} from "@/components/jeepney-journey-assets";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  ChevronLeft,
+  ChevronRight,
   Flame,
   Star,
   TrendingUp,
@@ -17,6 +31,65 @@ import {
   Swords,
   GraduationCap,
 } from "lucide-react";
+
+const ENVIRONMENTS = [
+  {
+    id: "manila",
+    skyGradient: "linear-gradient(180deg, #e8f4fd 0%, #d4ecf7 40%, #c5e4f2 60%, #b8dded 100%)",
+    roadColor: "#555",
+    curbColor: "#c5b89d",
+    Decorations: EnvManila
+  },
+  {
+    id: "luneta",
+    skyGradient: "linear-gradient(180deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%)",
+    roadColor: "#374151",
+    curbColor: "#1f2937",
+    Decorations: EnvLuneta
+  },
+  {
+    id: "mayon",
+    skyGradient: "linear-gradient(180deg, #991b1b 0%, #b91c1c 30%, #ea580c 60%, #fb923c 100%)",
+    roadColor: "#555",
+    curbColor: "#a3a3a3",
+    Decorations: EnvMayon
+  },
+  {
+    id: "kayangan",
+    skyGradient: "linear-gradient(180deg, #38bdf8 0%, #7dd3fc 40%, #bae6fd 100%)",
+    roadColor: "#fde047",
+    curbColor: "#0284c7",
+    Decorations: EnvKayangan
+  },
+  {
+    id: "chocolate_hills",
+    skyGradient: "linear-gradient(180deg, #60a5fa 0%, #93c5fd 60%, #bfdbfe 100%)",
+    roadColor: "#78350f",
+    curbColor: "#4d7c0f",
+    Decorations: EnvChocolateHills
+  },
+  {
+    id: "banaue",
+    skyGradient: "linear-gradient(180deg, #a7f3d0 0%, #d9f99d 50%, #fef08a 100%)",
+    roadColor: "#4ade80",
+    curbColor: "#166534",
+    Decorations: EnvMactan
+  },
+  {
+    id: "vigan",
+    skyGradient: "linear-gradient(180deg, #fcd34d 0%, #fef3c7 50%, #fffbeb 100%)",
+    roadColor: "#78716c",
+    curbColor: "#44403c",
+    Decorations: EnvVigan
+  },
+  {
+    id: "binondo",
+    skyGradient: "linear-gradient(180deg, #111827 0%, #1e1b4b 50%, #4c1d95 100%)",
+    roadColor: "#374151",
+    curbColor: "#991b1b",
+    Decorations: EnvBinondo
+  },
+];
 import {
   BarChart,
   Bar,
@@ -38,7 +111,7 @@ const TABS = ["MY PROGRESS", "ACHIEVEMENTS", "LEADERBOARD"];
 const getLevelDetails = (xp: number, levels: any[]) => {
   if (!levels || levels.length === 0) {
     return {
-      current: { name: "BAGUHAN", minXp: 0, color: "#aaa" },
+      current: { name: "BAGUHAN", minXp: 0, color: "#8B5E3C" },
       next: { name: "MAG-AARAL", minXp: 100, color: "#00C853" },
     };
   }
@@ -222,6 +295,20 @@ export default function StatsDashboardClient({
 
   // ── Computed values ──
   const { current: CURRENT_LEVEL, next: NEXT_LEVEL } = getLevelDetails(profile.xp, dynamicLevels);
+  
+  const currentLevelIndex = useMemo(() => {
+    if (!dynamicLevels || dynamicLevels.length === 0) return 0;
+    const idx = dynamicLevels.findIndex((l: any) => l.name === CURRENT_LEVEL.name);
+    return idx >= 0 ? idx : 0;
+  }, [dynamicLevels, CURRENT_LEVEL]);
+
+  const [currentEnvIndex, setCurrentEnvIndex] = useState(0);
+
+  // Sync initial env index once dynamic levels are loaded
+  useEffect(() => {
+    setCurrentEnvIndex(currentLevelIndex);
+  }, [currentLevelIndex]);
+
   const XP_PROGRESS =
     NEXT_LEVEL.minXp > CURRENT_LEVEL.minXp
       ? ((profile.xp - CURRENT_LEVEL.minXp) / (NEXT_LEVEL.minXp - CURRENT_LEVEL.minXp)) * 100
@@ -250,15 +337,7 @@ export default function StatsDashboardClient({
   const activeXpLeaderboard = leaderboardScope === "ALL_TIME" ? topXp : weeklyTopXp;
   const medalEmojis = ["🥇", "🥈", "🥉"];
 
-  // ── Jeepney road position ──
-  const currentLevelIndex = dynamicLevels.findIndex(
-    (l: any) => l.name === CURRENT_LEVEL.name
-  );
-  const totalSegments = dynamicLevels.length - 1;
-  const jeepneyRoadPercent =
-    totalSegments > 0
-      ? ((currentLevelIndex + XP_PROGRESS / 100) / totalSegments) * 100
-      : 100;
+
 
   // ── Render ──
   return (
@@ -423,249 +502,178 @@ export default function StatsDashboardClient({
             <>
               {/* ═══ JEEPNEY ROAD JOURNEY ═══ */}
               <motion.div variants={itemVariants} className="relative">
-                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 sm:p-6 relative z-10">
+                <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] relative z-10 overflow-hidden">
                   {/* Header */}
-                  <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                      <Award className="w-5 h-5 text-[#7C3AED]" />
-                      <span
-                        className="text-sm uppercase tracking-[0.15em] text-black"
-                        style={{ fontWeight: 900 }}
-                      >
-                        YOUR JOURNEY
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 border-[2.5px] border-black flex items-center justify-center"
-                        style={{ background: CURRENT_LEVEL.color }}
-                      >
-                        <GraduationCap
-                          className="w-4 h-4"
-                          style={{
-                            color: CURRENT_LEVEL.color === "#FFE500" ? "#000" : "#fff",
-                          }}
-                        />
+                  <div className="p-5 sm:p-6 pb-0">
+                    <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-[#7C3AED] border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000]">
+                          <Award className="w-4 h-4 text-white" />
+                        </div>
+                        <span
+                          className="text-sm uppercase tracking-[0.15em] text-black"
+                          style={{ fontWeight: 900 }}
+                        >
+                          YOUR JOURNEY
+                        </span>
                       </div>
-                      <span
-                        className="text-sm uppercase tracking-tight"
-                        style={{ fontWeight: 900 }}
-                      >
-                        {CURRENT_LEVEL.name}
-                      </span>
+                      <div className="flex items-center gap-2 bg-[#f5f5f0] border-[2px] border-black px-3 py-1.5 shadow-[2px_2px_0_#000]">
+                        <div
+                          className="w-4 h-4 border-[2px] border-black"
+                          style={{ background: CURRENT_LEVEL.color }}
+                        />
+                        <span
+                          className="text-xs uppercase tracking-tight"
+                          style={{ fontWeight: 900 }}
+                        >
+                          {CURRENT_LEVEL.name}
+                        </span>
+                        {NEXT_LEVEL.name !== CURRENT_LEVEL.name && (
+                          <span className="text-[10px] text-[#888] uppercase" style={{ fontWeight: 700 }}>
+                            → {NEXT_LEVEL.name}
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    <p
+                      className="text-[10px] text-[#888] uppercase tracking-wider mb-4"
+                      style={{ fontWeight: 600 }}
+                    >
+                      RIDE THE JEEPNEY THROUGH YOUR TAGALOG LEVELS
+                    </p>
                   </div>
-                  <p
-                    className="text-[10px] text-[#888] uppercase tracking-wider mb-6"
-                    style={{ fontWeight: 600 }}
-                  >
-                    RIDE THE JEEPNEY THROUGH YOUR TAGALOG LEVELS
-                  </p>
 
-                  {/* Road Scene */}
-                  <div className="overflow-x-auto pb-2">
-                    <div className="relative" style={{ minWidth: `${dynamicLevels.length * 90}px`, height: '140px' }}>
+                  {/* ═══ ROAD SCENE ═══ */}
+                  <div className="relative overflow-hidden group">
+                    {/* Navigation Buttons */}
+                    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none z-30 flex justify-between items-center px-2 sm:px-4">
+                      {currentEnvIndex > 0 ? (
+                        <button 
+                          onClick={() => setCurrentEnvIndex(p => p - 1)}
+                          className="pointer-events-auto w-8 sm:w-10 h-14 sm:h-16 bg-white border-[3px] border-black shadow-[3px_3px_0_#000] flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_#000] transition-all"
+                          style={{ borderRadius: '50px' }}
+                        >
+                          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                        </button>
+                      ) : <div/>}
+                      {currentEnvIndex < dynamicLevels.length - 1 ? (
+                        <button 
+                          onClick={() => setCurrentEnvIndex(p => p + 1)}
+                          className="pointer-events-auto w-8 sm:w-10 h-14 sm:h-16 bg-white border-[3px] border-black shadow-[3px_3px_0_#000] flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_#000] transition-all"
+                          style={{ borderRadius: '50px' }}
+                        >
+                          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                        </button>
+                      ) : <div/>}
+                    </div>
 
-                      {/* Sky / background scenery line */}
-                      <div className="absolute bottom-[54px] left-0 right-0 h-[1px] bg-[#eee]" />
+                    <div
+                      className="relative w-full transition-all duration-700 ease-in-out"
+                      style={{
+                        height: '200px',
+                        background: ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].skyGradient,
+                        filter: currentEnvIndex > currentLevelIndex ? 'grayscale(100%) brightness(0.7)' : 'none',
+                      }}
+                    >
+                      {/* Environment Decorations */}
+                      {(() => {
+                        const EnvComponent = ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].Decorations;
+                        return <EnvComponent />;
+                      })()}
 
                       {/* ── THE ROAD ── */}
-                      {/* Road surface (gray base) */}
-                      <div
-                        className="absolute bottom-[30px] left-[40px] h-[14px] bg-[#ddd] border-[2px] border-black"
-                        style={{ right: '40px' }}
-                      />
-                      {/* Road dashed center line */}
-                      <div
-                        className="absolute bottom-[35px] left-[44px] h-[2px]"
-                        style={{
-                          right: '44px',
-                          backgroundImage: 'repeating-linear-gradient(to right, #888 0px, #888 8px, transparent 8px, transparent 16px)',
-                        }}
-                      />
-                      {/* Road filled portion (yellow) */}
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(jeepneyRoadPercent, 100)}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute bottom-[30px] left-[40px] h-[14px] bg-[#FFE500] border-[2px] border-black overflow-hidden"
-                        style={{ maxWidth: 'calc(100% - 80px)' }}
-                      >
-                        {/* Dashed line over filled road */}
+                      {/* Sidewalk / curb */}
+                      <div className="absolute bottom-0 left-0 right-0 h-[16px] border-t-[3px] border-black transition-colors duration-700" style={{ background: ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].curbColor }} />
+                      
+                      {/* Road surface */}
+                      <div className="absolute bottom-[16px] left-0 right-0 h-[40px] border-t-[3px] border-black transition-colors duration-700" style={{ background: ENVIRONMENTS[currentEnvIndex % ENVIRONMENTS.length].roadColor }}>
+                        {/* Dashed center line */}
                         <div
-                          className="absolute top-[3px] left-0 right-0 h-[2px]"
+                          className="absolute top-[17px] left-0 right-0 h-[3px]"
                           style={{
-                            backgroundImage: 'repeating-linear-gradient(to right, #000 0px, #000 8px, transparent 8px, transparent 16px)',
-                            opacity: 0.3,
+                            backgroundImage: 'repeating-linear-gradient(to right, #FFE500 0px, #FFE500 12px, transparent 12px, transparent 24px)',
                           }}
                         />
-                      </motion.div>
+                        {/* Progress fill */}
+                        {(currentEnvIndex <= currentLevelIndex) && (
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: currentEnvIndex === currentLevelIndex ? `${Math.min(XP_PROGRESS, 100)}%` : '100%' }}
+                            transition={{ duration: 1.8, ease: "easeOut" }}
+                            className="absolute inset-y-0 left-0 bg-[#FFE500]/30"
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Orange edge strip */}
+                      <div className="absolute bottom-[16px] left-0 right-0 h-[4px] bg-[#FF6D00]" />
 
-                      {/* ── LEVEL STOPS ── */}
-                      {dynamicLevels.map((lvl: any, i: number) => {
-                        const isCurrent = lvl.name === CURRENT_LEVEL.name;
-                        const isUnlocked = profile.xp >= lvl.minXp;
-                        const stopPercent =
-                          totalSegments > 0 ? (i / totalSegments) * 100 : 50;
+                      {/* ── LEVEL STOP & JEEPNEY ── */}
+                      {(() => {
+                        const renderedLevel = dynamicLevels[currentEnvIndex] || dynamicLevels[0];
+                        const isUnlocked = profile.xp >= renderedLevel.minXp || currentEnvIndex === 0;
+                        const isCurrent = currentEnvIndex === currentLevelIndex;
 
                         return (
-                          <div
-                            key={lvl.name}
-                            className="absolute flex flex-col items-center"
-                            style={{
-                              left: `calc(40px + (100% - 80px) * ${stopPercent / 100})`,
-                              bottom: '20px',
-                              transform: 'translateX(-50%)',
-                            }}
-                          >
-                            {/* Jeepney on current level */}
+                          <>
+                            {/* Jeepney driving towards next level */}
                             {isCurrent && (
                               <motion.div
-                                initial={{ x: -60, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 80,
-                                  damping: 14,
-                                  delay: 0.8,
-                                }}
-                                className="absolute bottom-[24px]"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.5 }}
+                                className="absolute bottom-[56px] z-20 -translate-x-1/2"
+                                style={{ left: `calc(50% + ${Math.min(XP_PROGRESS, 100) / 100 * 50}%)` }}
                               >
-                                {/* Inline SVG Jeepney */}
-                                <motion.svg
-                                  animate={{ y: [0, -2, 0] }}
-                                  transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                                  width="72"
-                                  height="42"
-                                  viewBox="0 0 72 42"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="drop-shadow-sm"
+                                <motion.div
+                                  animate={{ y: [0, -1.5, 0] }}
+                                  transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
                                 >
-                                  {/* Body */}
-                                  <rect x="2" y="12" width="56" height="20" fill="#FFE500" stroke="#000" strokeWidth="2.5" />
-                                  {/* Roof / luggage rack */}
-                                  <rect x="2" y="6" width="56" height="8" fill="#FF6D00" stroke="#000" strokeWidth="2.5" />
-                                  {/* Roof rails */}
-                                  <line x1="8" y1="6" x2="8" y2="3" stroke="#000" strokeWidth="2" />
-                                  <line x1="52" y1="6" x2="52" y2="3" stroke="#000" strokeWidth="2" />
-                                  <line x1="8" y1="3" x2="52" y2="3" stroke="#000" strokeWidth="2" />
-                                  {/* Windows */}
-                                  <rect x="6" y="15" width="9" height="7" fill="#fff" stroke="#000" strokeWidth="1.5" />
-                                  <rect x="18" y="15" width="9" height="7" fill="#fff" stroke="#000" strokeWidth="1.5" />
-                                  <rect x="30" y="15" width="9" height="7" fill="#fff" stroke="#000" strokeWidth="1.5" />
-                                  <rect x="42" y="15" width="9" height="7" fill="#fff" stroke="#000" strokeWidth="1.5" />
-                                  {/* Front cabin */}
-                                  <rect x="56" y="10" width="14" height="22" fill="#FFE500" stroke="#000" strokeWidth="2.5" />
-                                  {/* Front windshield */}
-                                  <rect x="59" y="13" width="8" height="8" fill="#C5F0FF" stroke="#000" strokeWidth="1.5" />
-                                  {/* Headlight */}
-                                  <rect x="68" y="24" width="3" height="4" fill="#fff" stroke="#000" strokeWidth="1" />
-                                  {/* Bumper */}
-                                  <rect x="58" y="30" width="14" height="3" fill="#333" stroke="#000" strokeWidth="1" />
-                                  {/* Back entrance */}
-                                  <rect x="2" y="17" width="1" height="12" fill="#000" />
-                                  {/* Wheels */}
-                                  <circle cx="18" cy="34" r="6" fill="#444" stroke="#000" strokeWidth="2.5" />
-                                  <circle cx="18" cy="34" r="2.5" fill="#888" />
-                                  <circle cx="54" cy="34" r="6" fill="#444" stroke="#000" strokeWidth="2.5" />
-                                  <circle cx="54" cy="34" r="2.5" fill="#888" />
-                                  {/* Exhaust puff */}
-                                  <motion.circle
-                                    animate={{ x: [-2, -8], opacity: [0.5, 0], r: [2, 5] }}
-                                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeOut" }}
-                                    cx="0"
-                                    cy="32"
-                                    r="2"
-                                    fill="#ccc"
-                                  />
-                                </motion.svg>
+                                  <JeepneySVG className="w-[70px] sm:w-[85px] h-auto" />
+                                </motion.div>
+                                {/* Exhaust smoke */}
+                                <motion.div
+                                  animate={{ x: [-2, -18], opacity: [0.6, 0], scale: [0.5, 1.5] }}
+                                  transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut" }}
+                                  className="absolute bottom-[6px] -left-2 w-3 h-3 bg-[#ccc] border-[1.5px] border-[#aaa] rounded-full"
+                                />
                               </motion.div>
                             )}
-
-                            {/* Stop marker */}
-                            <motion.div
-                              whileHover={isUnlocked ? { scale: 1.15 } : {}}
-                              className="relative z-10"
-                            >
-                              {/* Stop post (vertical line into road) */}
-                              <div
-                                className="w-[3px] h-[10px] mx-auto"
-                                style={{ background: isUnlocked ? '#000' : '#ccc' }}
-                              />
-                              {/* Stop sign */}
-                              <div
-                                className={`w-8 h-8 sm:w-9 sm:h-9 border-[2.5px] flex items-center justify-center ${
-                                  isUnlocked
-                                    ? 'border-black'
-                                    : 'border-[#ccc]'
-                                }`}
-                                style={{
-                                  background: isUnlocked ? lvl.color : '#f0f0f0',
-                                  ...(isCurrent
-                                    ? { boxShadow: '0 0 0 3px #000, 0 0 0 5px #FFE500' }
-                                    : {}),
-                                }}
-                              >
-                                {isUnlocked ? (
-                                  isCurrent ? (
-                                    <motion.div
-                                      animate={{ scale: [1, 1.2, 1] }}
-                                      transition={{ repeat: Infinity, duration: 2 }}
-                                    >
-                                      <Star
-                                        className="w-4 h-4"
-                                        style={{
-                                          color: lvl.color === '#FFE500' ? '#000' : '#fff',
-                                        }}
-                                        fill={lvl.color === '#FFE500' ? '#000' : '#fff'}
-                                      />
-                                    </motion.div>
-                                  ) : (
-                                    <span
-                                      style={{
-                                        fontWeight: 900,
-                                        fontSize: '11px',
-                                        color: lvl.color === '#FFE500' ? '#000' : '#fff',
-                                      }}
-                                    >
-                                      ✓
-                                    </span>
-                                  )
-                                ) : (
-                                  <span className="text-[#bbb] text-[10px]">🔒</span>
-                                )}
+                            
+                            {/* Level Signboard (Centered) */}
+                            <div className="absolute flex flex-col items-center z-10 left-[50%] bottom-[56px] -translate-x-1/2">
+                              <div className="flex flex-col items-center">
+                                <JeepneySignboard
+                                  levelName={renderedLevel.name}
+                                  isUnlocked={isUnlocked}
+                                  isCurrent={isCurrent}
+                                  index={currentEnvIndex}
+                                />
+                                {/* Post */}
+                                <div
+                                  className="w-[4px] h-[16px] -mt-1 z-[-1] relative"
+                                  style={{ background: isUnlocked ? '#333' : '#bbb' }}
+                                />
                               </div>
-                            </motion.div>
-
-                            {/* Level name below stop */}
-                            <span
-                              className="text-[7px] sm:text-[8px] uppercase tracking-wider whitespace-nowrap mt-1"
-                              style={{
-                                fontWeight: 800,
-                                color: isCurrent ? '#000' : isUnlocked ? '#666' : '#bbb',
-                              }}
-                            >
-                              {lvl.name}
-                            </span>
-                          </div>
+                            </div>
+                          </>
                         );
-                      })}
+                      })()}
                     </div>
                   </div>
 
-                  {/* XP Road Progress */}
-                  <div className="bg-[#FFFBF0] border-[2px] border-black p-3 sm:p-4 mt-2">
-                    <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+                  {/* ═══ XP PROGRESS BAR (below road) ═══ */}
+                  <div className="bg-[#FFFBF0] border-t-[3px] border-black p-4 sm:p-5">
+                    <div className="flex items-center justify-between mb-2.5 flex-wrap gap-1">
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-5 h-5 border-[2px] border-black flex items-center justify-center"
+                          className="w-6 h-6 border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000]"
                           style={{ background: CURRENT_LEVEL.color }}
                         >
                           <span
                             style={{
                               fontWeight: 900,
-                              fontSize: '8px',
+                              fontSize: '9px',
                               color: CURRENT_LEVEL.color === '#FFE500' ? '#000' : '#fff',
                             }}
                           >
@@ -680,7 +688,7 @@ export default function StatsDashboardClient({
                         </span>
                         {NEXT_LEVEL.name !== CURRENT_LEVEL.name && (
                           <span
-                            className="text-[#888] text-xs uppercase tracking-wider"
+                            className="text-[#888] text-xs uppercase tracking-wider hidden sm:inline"
                             style={{ fontWeight: 600 }}
                           >
                             → {NEXT_LEVEL.name}
@@ -696,25 +704,25 @@ export default function StatsDashboardClient({
                       </span>
                     </div>
                     {/* XP bar styled as road */}
-                    <div className="h-5 bg-[#ddd] border-[2px] border-black overflow-hidden relative">
+                    <div className="h-6 bg-[#ddd] border-[2.5px] border-black overflow-hidden relative shadow-[3px_3px_0_#000]">
                       {/* Road dashes on the bar */}
                       <div
-                        className="absolute inset-0"
+                        className="absolute inset-0 z-[1]"
                         style={{
-                          backgroundImage: 'repeating-linear-gradient(to right, transparent 0px, transparent 14px, rgba(0,0,0,0.08) 14px, rgba(0,0,0,0.08) 16px)',
+                          backgroundImage: 'repeating-linear-gradient(to right, transparent 0px, transparent 14px, rgba(0,0,0,0.06) 14px, rgba(0,0,0,0.06) 16px)',
                         }}
                       />
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${XP_PROGRESS}%` }}
                         transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
-                        className="h-full relative z-[1]"
+                        className="h-full relative z-[2]"
                         style={{ background: CURRENT_LEVEL.color }}
                       />
                     </div>
                     {NEXT_LEVEL.name !== CURRENT_LEVEL.name && (
                       <p
-                        className="text-[#888] text-[10px] sm:text-xs mt-2 uppercase tracking-wider"
+                        className="text-[#888] text-[10px] sm:text-xs mt-2.5 uppercase tracking-wider"
                         style={{ fontWeight: 600 }}
                       >
                         {NEXT_LEVEL.minXp - profile.xp} XP UNTIL NEXT STOP — {NEXT_LEVEL.name}
@@ -722,8 +730,9 @@ export default function StatsDashboardClient({
                     )}
                   </div>
                 </div>
-                {/* Decorative block */}
+                {/* Decorative blocks */}
                 <div className="absolute -z-10 top-4 -right-4 w-14 h-14 bg-[#7C3AED] border-[2px] border-black hidden sm:block" />
+                <div className="absolute -z-10 -bottom-3 -left-3 w-10 h-10 bg-[#FFE500] border-[2px] border-black hidden sm:block" />
               </motion.div>
 
               {/* Yearly Activity Heatmap */}
