@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { AlertCircle, ShieldAlert, TriangleAlert } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { createClient } from "@/utils/supabase/client"
 
 const initialState: AuthState = {
   error: undefined,
@@ -16,7 +17,7 @@ const initialState: AuthState = {
   success: undefined,
 }
 
-export function ProfileForm({ user }: { user: { username: string; email: string } }) {
+export function ProfileForm({ user }: { user: { username: string; email: string; displayName: string; showAvatar: boolean; isGoogleConnected: boolean } }) {
   const [updateState, updateAction, isUpdating] = useActionState(updateProfile, initialState)
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteAccount, initialState)
 
@@ -74,6 +75,18 @@ export function ProfileForm({ user }: { user: { username: string; email: string 
           )}
 
           <div className="grid gap-2">
+            <Label htmlFor="displayName" className="font-bold uppercase text-xs">Full Name</Label>
+            <Input
+              id="displayName"
+              name="displayName"
+              type="text"
+              defaultValue={user.displayName}
+              required
+              className="rounded-none border-2 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400"
+            />
+          </div>
+
+          <div className="grid gap-2">
             <Label htmlFor="username" className="font-bold uppercase text-xs">Username</Label>
             <Input
               id="username"
@@ -97,6 +110,21 @@ export function ProfileForm({ user }: { user: { username: string; email: string 
             />
           </div>
 
+          <div className="flex items-center gap-3 bg-zinc-50 border-2 border-black p-4">
+            <input 
+               type="checkbox" 
+               id="showAvatar" 
+               name="showAvatar" 
+               defaultChecked={user.showAvatar}
+               className="w-5 h-5 accent-yellow-400 border-2 border-black" 
+               disabled={!user.isGoogleConnected}
+            />
+            <Label htmlFor="showAvatar" className={`font-bold uppercase text-xs ${!user.isGoogleConnected ? 'text-zinc-400' : 'text-black'}`}>
+               Display Google Profile Picture
+               {!user.isGoogleConnected && " (Connect Google first)"}
+            </Label>
+          </div>
+
           <Button 
             type="submit" 
             disabled={isUpdating}
@@ -105,6 +133,43 @@ export function ProfileForm({ user }: { user: { username: string; email: string 
             {isUpdating ? "Saving..." : "Save Changes"}
           </Button>
         </form>
+      </section>
+
+      {/* Google Connect Section */}
+      <section className="border-4 border-black bg-blue-50 p-6 md:p-8 shadow-[8px_8px_0_0_#000]">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+          <div className="flex-1 text-center sm:text-left">
+             <h2 className="text-xl font-black uppercase tracking-tighter text-blue-700 mb-2">
+               Google Integration
+             </h2>
+             {user.isGoogleConnected ? (
+               <p className="font-bold text-sm text-blue-800 uppercase">
+                 You are connected to Google! Your profile picture is synced. Use the setting above to toggle its visibility.
+               </p>
+             ) : (
+               <p className="font-bold text-sm text-blue-800 uppercase">
+                 Connect your Google account to instantly sync your profile picture and personalize your dictionary experience!
+               </p>
+             )}
+          </div>
+          <div className="shrink-0 flex flex-col gap-2">
+             <Button
+               type="button"
+               disabled={user.isGoogleConnected}
+               onClick={async () => {
+                 const supabase = createClient()
+                 const { error } = await supabase.auth.linkIdentity({
+                     provider: 'google',
+                     options: { redirectTo: `${window.location.origin}/auth/callback` }
+                 })
+                 if (error) { toast.error("Could not connect to Google.", { unstyled: true, classNames: { toast: "border-4 border-black bg-red-400 p-4 text-black shadow-[8px_8px_0_0_#000]" } }) }
+               }}
+               className="rounded-none border-4 border-black bg-white text-black font-black uppercase shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-100 disabled:bg-green-400 disabled:text-black disabled:shadow-[4px_4px_0_0_#000]"
+             >
+               {user.isGoogleConnected ? "✓ Connected" : "Connect Google"}
+             </Button>
+          </div>
+        </div>
       </section>
 
       {/* Danger Zone Section */}

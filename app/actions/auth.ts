@@ -3,6 +3,9 @@
 import { createClient } from '@/utils/supabase/server'
 import { withExponentialBackoff } from "@/lib/db-utils"
 import { redirect } from 'next/navigation'
+import { db } from "@/db"
+import { userProfiles } from "@/db/schema"
+import { sql } from "drizzle-orm"
 
 
 export type AuthState = {
@@ -15,14 +18,28 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
     return withExponentialBackoff(async () => {
 
     const supabase = await createClient()
-    const email = formData.get('email') as string
+    const username = formData.get('username') as string
     const password = formData.get('password') as string
-    if (!email || !password) {
+    if (!username || !password) {
         return {
-            error: 'Email and password are required.',
+            error: 'Username and password are required.',
             errorTitle: 'ACCESS DENIED'
         }
     }
+
+    const res = await db.execute<{email: string}>(sql`
+        SELECT email FROM auth.users WHERE raw_user_meta_data->>'username' = ${username} LIMIT 1
+    `)
+    
+    if (!res || res.length === 0) {
+        return {
+            error: 'Invalid login credentials.',
+            errorTitle: 'ACCESS DENIED'
+        }
+    }
+    
+    const email = res[0].email
+
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
         if (error.message === "Email not confirmed") {
@@ -53,7 +70,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-
+    const fullName = formData.get('full-name') as string
     const confirmPassword = formData.get('confirm-password') as string
     const username = formData.get('username') as string
     if (!email || !password) {
@@ -74,12 +91,13 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
             errorTitle: 'VALIDATION FAILED'
         }
     }
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
             data: {
                 username: username,
+                full_name: fullName,
             },
         },
     })
@@ -94,6 +112,19 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
         return {
             error: error.message,
             errorTitle: 'SYSTEM ERROR'
+        }
+    }
+
+    if (data?.user) {
+        try {
+            await db.insert(userProfiles).values({
+                userId: data.user.id,
+                username: username,
+                displayName: fullName,
+            }).onConflictDoNothing()
+        } catch (dbError) {
+            console.error("Failed to insert user profile:", dbError)
+            // Even if profile creation fails, we allow the signup to proceed.
         }
     }
 

@@ -190,7 +190,7 @@ export default function StatsDashboardClient({
 
   // ── Data extraction with fallbacks ──
   const profile = stats?.profile || {
-    displayName: "JUAN DELA CRUZ",
+    username: "JUAN DELA CRUZ",
     userId: "",
     xp: 0,
     currentStreak: 0,
@@ -286,7 +286,7 @@ export default function StatsDashboardClient({
               lineHeight: 1.1,
             }}
           >
-            {profile.displayName}
+            {profile.username}
           </h1>
         </div>
 
@@ -1572,11 +1572,18 @@ export default function StatsDashboardClient({
                                   #{index + 1}
                                 </div>
                               )}
+                              <div className="w-8 h-8 rounded-full border-2 border-black bg-white flex items-center justify-center shrink-0 overflow-hidden">
+                                {user.showAvatar && user.avatarUrl ? (
+                                  <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-black"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                )}
+                              </div>
                               <span
                                 className="uppercase tracking-widest text-sm"
                                 style={{ fontWeight: 800 }}
                               >
-                                {user.displayName}
+                                {user.username}
                                 {isCurrentUser && (
                                   <span
                                     className="text-[9px] text-[#0057FF] ml-1.5"
@@ -1659,11 +1666,18 @@ export default function StatsDashboardClient({
                                 #{index + 1}
                               </div>
                             )}
+                            <div className="w-8 h-8 rounded-full border-2 border-black bg-white flex items-center justify-center shrink-0 overflow-hidden">
+                              {user.showAvatar && user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-black"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                              )}
+                            </div>
                             <span
                               className="uppercase tracking-widest text-sm"
                               style={{ fontWeight: 800 }}
                             >
-                              {user.displayName}
+                              {user.username}
                               {isCurrentUser && (
                                 <span
                                   className={`text-[9px] ml-1.5 ${index === 0 ? "text-white/80" : "text-[#0057FF]"}`}

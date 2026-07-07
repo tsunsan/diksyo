@@ -61,12 +61,12 @@ export function LoginForm({
                 )}
 
                 <div className="grid gap-2">
-                    <Label htmlFor="email" className="font-bold uppercase text-xs">Email Address</Label>
+                    <Label htmlFor="username" className="font-bold uppercase text-xs">Username</Label>
                     <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="lakan@diksyo.ph"
+                        id="username"
+                        name="username"
+                        type="text"
+                        placeholder="juandelacruz"
                         required
                         className="rounded-none border-2 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400"
                     />

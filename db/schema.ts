@@ -83,6 +83,8 @@ export const userProfiles = pgTable("user_profiles", {
     userId: uuid("user_id").primaryKey().notNull(),
     username: text("username"),
     displayName: text("display_name"),
+    avatarUrl: text("avatar_url"),
+    showAvatar: boolean("show_avatar").default(true),
     xp: integer("xp").default(0).notNull(),
     level: integer("level").default(1).notNull(),
     currentStreak: integer("current_streak").default(0).notNull(),

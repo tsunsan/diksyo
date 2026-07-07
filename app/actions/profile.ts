@@ -4,6 +4,9 @@ import { createClient } from '@/utils/supabase/server'
 import { withExponentialBackoff } from "@/lib/db-utils"
 import { redirect } from 'next/navigation'
 import { AuthState } from './auth'
+import { db } from "@/db"
+import { userProfiles } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
 export async function updateProfile(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
@@ -17,9 +20,11 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
 
     const username = formData.get('username') as string
     const email = formData.get('email') as string
+    const displayName = formData.get('displayName') as string
+    const showAvatar = formData.get('showAvatar') === 'on'
 
-    if (!username || !email) {
-        return { error: 'Username and Email are required.', errorTitle: 'VALIDATION FAILED' }
+    if (!username || !email || !displayName) {
+        return { error: 'Username, Full Name, and Email are required.', errorTitle: 'VALIDATION FAILED' }
     }
 
     let updates: any = {}
@@ -36,14 +41,21 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
         needsMetadataUpdate = true
     }
 
-    if (!needsEmailUpdate && !needsMetadataUpdate) {
-        return { error: 'No changes detected.', errorTitle: 'NO ACTION TAKEN' }
+    if (needsEmailUpdate || needsMetadataUpdate) {
+        const { error } = await supabase.auth.updateUser(updates)
+        if (error) {
+            return { error: error.message, errorTitle: 'UPDATE FAILED' }
+        }
     }
 
-    const { error } = await supabase.auth.updateUser(updates)
-
-    if (error) {
-        return { error: error.message, errorTitle: 'UPDATE FAILED' }
+    try {
+        await db.update(userProfiles).set({
+            username: username,
+            displayName: displayName,
+            showAvatar: showAvatar,
+        }).where(eq(userProfiles.userId, user.id))
+    } catch (e) {
+        return { error: 'Could not update profile information in database.', errorTitle: 'DB ERROR' }
     }
 
     if (needsEmailUpdate) {

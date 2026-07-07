@@ -8,8 +8,33 @@ export async function GET(request: Request) {
 
     if (code) {
         const supabase = await createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
+        const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error && data.user) {
+            try {
+                const { db } = await import('@/db');
+                const { userProfiles } = await import('@/db/schema');
+                const { eq } = await import('drizzle-orm');
+                
+                const existing = await db.select().from(userProfiles).where(eq(userProfiles.userId, data.user.id)).limit(1);
+                
+                if (existing.length === 0) {
+                    const meta = data.user.user_metadata || {};
+                    const avatar_url = meta.avatar_url || meta.picture || null;
+                    const full_name = meta.full_name || meta.name || null;
+                    
+                    const username = `user${Math.floor(Math.random() * 1000000)}`;
+                    
+                    await db.insert(userProfiles).values({
+                        userId: data.user.id,
+                        username: username,
+                        displayName: full_name || username,
+                        avatarUrl: avatar_url,
+                    }).onConflictDoNothing();
+                }
+            } catch (e) {
+                console.error("Error creating profile in auth callback:", e);
+            }
+
             const forwardedHost = request.headers.get('x-forwarded-host')
             const isLocalEnv = process.env.NODE_ENV === 'development'
             

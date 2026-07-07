@@ -22,11 +22,11 @@ export async function getUserStats() {
         });
 
         if (!profile) {
-            const displayName = user.user_metadata?.username || user.email?.split('@')[0] || "JUAN DELA CRUZ";
+            const defaultName = user.user_metadata?.username || user.email?.split('@')[0] || "JUAN DELA CRUZ";
             const [newProfile] = await db.insert(userProfiles).values({
                 userId: user.id,
-                username: displayName,
-                displayName: displayName,
+                username: defaultName,
+                displayName: defaultName,
                 xp: 0,
                 level: 1,
             }).returning();
@@ -174,9 +174,11 @@ export async function getLeaderboard() {
             limit: 10,
             columns: {
                 userId: true,
-                displayName: true,
+                username: true,
                 xp: true,
-                level: true
+                level: true,
+                avatarUrl: true,
+                showAvatar: true
             }
         });
 
@@ -186,9 +188,11 @@ export async function getLeaderboard() {
             limit: 10,
             columns: {
                 userId: true,
-                displayName: true,
+                username: true,
                 wordsMastered: true,
-                level: true
+                level: true,
+                avatarUrl: true,
+                showAvatar: true
             }
         });
 
@@ -202,10 +206,16 @@ export async function getLeaderboard() {
         });
 
         // Aggregate XP by user for the week
-        const userXpMap = new Map<string, { xp: number; displayName: string; level: number }>();
+        const userXpMap = new Map<string, { xp: number; username: string; level: number; avatarUrl: string | null; showAvatar: boolean | null }>();
         recentActivity.forEach(act => {
             if (act.profile) {
-                const existing = userXpMap.get(act.userId) || { xp: 0, displayName: act.profile.displayName || "Unknown", level: act.profile.level };
+                const existing = userXpMap.get(act.userId) || { 
+                    xp: 0, 
+                    username: act.profile.username || "Unknown", 
+                    level: act.profile.level,
+                    avatarUrl: act.profile.avatarUrl,
+                    showAvatar: act.profile.showAvatar
+                };
                 existing.xp += act.xpEarned;
                 userXpMap.set(act.userId, existing);
             }
