@@ -74,7 +74,7 @@ export function SignupForm({
               Create Account
             </CardTitle>
             <CardDescription className="text-sm font-bold text-zinc-500 uppercase">
-              Start your journey from Baguhan to Lakan.
+              Start your journey from Baguhan to Alamat.
             </CardDescription>
           </CardHeader>
           <CardContent>
