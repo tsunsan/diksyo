@@ -28,7 +28,7 @@ export function AppSidebar({
   user,
 }: {
   children: React.ReactNode;
-  user?: { username: string; email: string; avatar_url?: string | null };
+  user?: { username: string; email: string; avatar_url?: string | null; levelName?: string; levelColor?: string; levelIndex?: number };
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -107,12 +107,30 @@ export function AppSidebar({
                 )}
               </div>
               <div className="flex flex-col overflow-hidden">
-                <span className="font-bold text-sm uppercase tracking-tighter truncate text-black">
+                <span className="font-bold text-sm uppercase tracking-tighter truncate text-black leading-tight">
                   {user.username}
                 </span>
-                <span className="text-xs font-semibold text-zinc-500 truncate group-hover:text-black transition-colors">
-                  {user.email}
-                </span>
+                <div className="mt-1 flex items-center gap-1.5 bg-white border-2 border-black pl-0.5 pr-2 py-0.5 w-max shadow-[2px_2px_0_0_#000]">
+                  <div
+                    className="w-4 h-4 shrink-0 border-2 border-black flex items-center justify-center"
+                    style={{ background: user.levelColor || "#8B5E3C" }}
+                  >
+                    <span
+                      className="font-black leading-none"
+                      style={{
+                        fontSize: '9px',
+                        color: (user.levelColor === '#EAB308' || user.levelColor === '#FFE500') ? '#000' : '#fff',
+                      }}
+                    >
+                      {user.levelIndex || 1}
+                    </span>
+                  </div>
+                  <span
+                    className="text-black uppercase tracking-tighter truncate text-[10px] font-black"
+                  >
+                    {user.levelName || "BAGUHAN"}
+                  </span>
+                </div>
               </div>
             </Link>
           )}
