@@ -32,13 +32,26 @@ export default async function ProfilePage() {
   const isGoogleConnected = user.identities?.some(id => id.provider === 'google') || false
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col gap-8">
-      <header>
-        <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-2">Profile</h1>
-        <p className="font-bold text-zinc-500 uppercase">Manage your account settings</p>
-      </header>
+    <div className="relative min-h-screen">
+      {/* Background Pattern */}
+      <div 
+        className="fixed inset-0 z-0 opacity-[0.07] pointer-events-none"
+        style={{ 
+          backgroundImage: 'url("/images/Late for Class.svg"), url("/images/Meela Pantalones.svg"), url("/images/Polka Pup.svg"), url("/images/Runner.svg"), url("/images/Ecto Plasma.svg"), url("/images/Consumer.svg")',
+          backgroundSize: '400px, 350px, 300px, 450px, 350px, 400px',
+          backgroundPosition: '0px 0px, 200px 200px, 400px 50px, 100px 350px, 500px 150px, 300px 400px',
+          backgroundRepeat: 'repeat'
+        }}
+      />
       
-      <ProfileForm user={{ username, email, displayName, showAvatar, isGoogleConnected }} />
+      <div className="relative z-10 max-w-5xl mx-auto flex flex-col gap-8 px-4 sm:px-6 lg:px-8 py-8">
+        <header className="bg-white p-6 border-4 border-black shadow-[8px_8px_0_0_#000]">
+          <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-2">Profile</h1>
+          <p className="font-bold text-zinc-600 uppercase">Manage your account settings</p>
+        </header>
+        
+        <ProfileForm user={{ username, email, displayName, showAvatar, isGoogleConnected }} />
+      </div>
     </div>
   )
 }
