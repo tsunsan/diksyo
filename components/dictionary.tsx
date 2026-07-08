@@ -302,13 +302,6 @@ export default function DictionaryClient({
       toast.success("ACCOUNT CREATED", {
         description: signupState.success,
         duration: 3000,
-        unstyled: true,
-        classNames: {
-          toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-green-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
-          title: "text-lg font-black uppercase tracking-tighter",
-          description: "font-bold text-xs text-black/90 uppercase",
-          icon: "text-black w-6 h-6",
-        },
       });
       setShowAuthOverlay(false);
       setTourStep(0);
@@ -451,25 +444,11 @@ export default function DictionaryClient({
               toast.success("ADDED TO VAULT", {
                 description: `"${word?.word}" has been saved for review.`,
                 duration: 3000,
-                unstyled: true,
-                classNames: {
-                  toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-green-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
-                  title: "text-lg font-black uppercase tracking-tighter",
-                  description: "font-bold text-xs text-black/90 uppercase",
-                  icon: "text-black w-6 h-6",
-                },
               });
             } else {
               toast.success("REMOVED", {
                 description: `"${word?.word}" was removed from your vault.`,
                 duration: 3000,
-                unstyled: true,
-                classNames: {
-                  toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-yellow-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
-                  title: "text-lg font-black uppercase tracking-tighter",
-                  description: "font-bold text-xs text-black/90 uppercase",
-                  icon: "text-black w-6 h-6",
-                },
               });
             }
         } else {

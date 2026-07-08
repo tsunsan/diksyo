@@ -26,13 +26,6 @@ export function UpdatePasswordForm() {
             toast.success("PASSWORD UPDATED", {
                 description: state.success,
                 duration: 3000,
-                unstyled: true,
-                classNames: {
-                    toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-green-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
-                    title: "text-lg font-black uppercase tracking-tighter",
-                    description: "font-bold text-xs text-black/90 uppercase",
-                    icon: "text-black w-6 h-6",
-                },
             })
             const timer = setTimeout(() => router.push('/dictionary'), 2000)
             return () => clearTimeout(timer)

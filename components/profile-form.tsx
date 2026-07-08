@@ -36,13 +36,6 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
       toast.success("PROFILE UPDATED", {
         description: updateState.success,
         duration: 3000,
-        unstyled: true,
-        classNames: {
-          toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-green-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
-          title: "text-lg font-black uppercase tracking-tighter",
-          description: "font-bold text-xs text-black/90 uppercase",
-          icon: "text-black w-6 h-6",
-        },
       })
     }
   }, [updateState?.success])
@@ -52,13 +45,6 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
        toast.error(deleteState.errorTitle || "ERROR", {
         description: deleteState.error,
         duration: 4000,
-        unstyled: true,
-        classNames: {
-          toast: "flex items-center gap-4 w-full rounded-none border-4 border-black bg-red-400 p-4 text-black shadow-[8px_8px_0_0_#000]",
-          title: "text-lg font-black uppercase tracking-tighter",
-          description: "font-bold text-xs text-black/90 uppercase",
-          icon: "text-black w-6 h-6",
-        },
       })
     }
   }, [deleteState?.error])
@@ -206,7 +192,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                      provider: 'google',
                      options: { redirectTo: `${window.location.origin}/auth/callback` }
                  })
-                 if (error) { toast.error("Could not connect to Google.", { unstyled: true, classNames: { toast: "border-4 border-black bg-red-400 p-4 text-black shadow-[8px_8px_0_0_#000]" } }) }
+                 if (error) { toast.error("Could not connect to Google.") }
                }}
                className={`border-4 border-black font-black uppercase shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-100 disabled:shadow-[4px_4px_0_0_#000] flex items-center justify-center gap-2 ${user.isGoogleConnected ? 'rounded-full bg-green-400 text-black px-6' : 'rounded-none bg-white text-black'}`}
              >
