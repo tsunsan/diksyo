@@ -315,7 +315,20 @@ export default function ClozeQuizPage() {
                         <div>
                           <p className="font-black uppercase text-lg text-black">{res.word}</p>
                           <p className="text-xs uppercase font-bold text-gray-500 italic mt-1">&quot;{res.translationPrompt}&quot;</p>
-                          <p className="text-[10px] uppercase font-black text-black/60 mt-1">MASTERY: {res.newMastery}%</p>
+                          <div className="mt-3 w-full sm:w-[250px]">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-[9px] font-black tracking-widest text-black/60 uppercase">Mastery</span>
+                              <span className="text-[10px] font-black tracking-widest text-black uppercase">{res.newMastery}%</span>
+                            </div>
+                            <div className="w-full bg-white border-[2px] border-black h-2.5 shadow-[2px_2px_0_0_#000] overflow-hidden">
+                              <motion.div 
+                                className={`h-full border-r-[2px] border-black ${res.level === 'ADVANCED' ? 'bg-[#FF6D00]' : res.level === 'INTERMEDIATE' ? 'bg-[#FDE047]' : 'bg-[#00C853]'}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${res.newMastery}%` }}
+                                transition={{ duration: 1.2, ease: "easeOut", delay: index * 0.1 + 0.3 }}
+                              />
+                            </div>
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span className={`px-2 py-1 text-[10px] font-black uppercase shadow-[2px_2px_0_0_#000] border-2 border-black ${res.level === 'ADVANCED' ? 'bg-[#FF6D00] text-white' : res.level === 'INTERMEDIATE' ? 'bg-[#FDE047] text-black' : 'bg-[#00C853] text-black'}`}>{res.level}</span>

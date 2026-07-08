@@ -387,7 +387,20 @@ export default function QuizPage2() {
                                <span className="text-[#666] text-xs uppercase tracking-wider font-bold">
                                  EXPECTED: {w.answer}
                                </span>
-                               <div className="mt-2 text-[10px] font-black tracking-widest text-black/60 uppercase">MASTERY: {r.newMastery}%</div>
+                               <div className="mt-3 w-full sm:w-[250px]">
+                                 <div className="flex justify-between items-center mb-1">
+                                   <span className="text-[9px] font-black tracking-widest text-black/60 uppercase">Mastery</span>
+                                   <span className="text-[10px] font-black tracking-widest text-black uppercase">{r.newMastery}%</span>
+                                 </div>
+                                 <div className="w-full bg-white border-[2px] border-black h-2.5 shadow-[2px_2px_0_0_#000] overflow-hidden">
+                                   <motion.div 
+                                     className={`h-full border-r-[2px] border-black ${r.level === 'ADVANCED' ? 'bg-[#FF6D00]' : r.level === 'INTERMEDIATE' ? 'bg-[#FDE047]' : 'bg-[#00C853]'}`}
+                                     initial={{ width: 0 }}
+                                     animate={{ width: `${r.newMastery}%` }}
+                                     transition={{ duration: 1.2, ease: "easeOut", delay: i * 0.1 + 0.3 }}
+                                   />
+                                 </div>
+                               </div>
                              </div>
                           </div>
                           <div className="flex flex-col items-end shrink-0">
