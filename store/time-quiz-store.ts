@@ -22,6 +22,7 @@ interface TimeQuizState {
   results: TimeQuizResult[];
   quizDone: boolean;
   hasSubmittedOnce: boolean;
+  quizStartTime: number;
   
   startQuiz: (words: QuizWord[]) => void;
   setCurrentIndex: (index: number | ((prev: number) => number)) => void;
@@ -45,8 +46,9 @@ export const useTimeQuizStore = create<TimeQuizState>((set) => ({
   results: [],
   quizDone: false,
   hasSubmittedOnce: false,
+  quizStartTime: 0,
 
-  startQuiz: (words) => set({ deck: words, currentIndex: 0, feedback: "idle", totalXP: 0, streak: 0, maxStreak: 0, results: [], quizDone: false, hasSubmittedOnce: false }),
+  startQuiz: (words) => set({ deck: words, currentIndex: 0, feedback: "idle", totalXP: 0, streak: 0, maxStreak: 0, results: [], quizDone: false, hasSubmittedOnce: false, quizStartTime: Date.now() }),
   setCurrentIndex: (index) => set((state) => ({ currentIndex: typeof index === 'function' ? index(state.currentIndex) : index })),
   setFeedback: (feedback) => set({ feedback }),
   setTotalXP: (xp) => set((state) => ({ totalXP: typeof xp === 'function' ? xp(state.totalXP) : xp })),
@@ -64,5 +66,6 @@ export const useTimeQuizStore = create<TimeQuizState>((set) => ({
     results: [],
     quizDone: false,
     hasSubmittedOnce: false,
+    quizStartTime: 0,
   }),
 }));

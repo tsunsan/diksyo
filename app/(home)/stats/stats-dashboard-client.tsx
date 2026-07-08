@@ -264,15 +264,16 @@ export default function StatsDashboardClient({
   const [envScale, setEnvScale] = useState(1);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (activeTab !== "MY PROGRESS" || !containerRef.current) return;
     const observer = new ResizeObserver((entries) => {
       const { width } = entries[0].contentRect;
-      // Scale down if container is smaller than our 800px design target
-      setEnvScale(Math.min(1, width / 800));
+      if (width > 0) {
+        setEnvScale(Math.min(1, width / 800));
+      }
     });
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [activeTab]);
 
   // ── Data extraction with fallbacks ──
   const profile = stats?.profile || {

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef, useTransition } from "react";
 import { useQuizStore, QuizWord } from "@/store/quiz-store";
 import { getVaultWords } from "@/app/actions/vault";
-import { submitQuizAnswer } from "@/app/actions/quiz";
+import { submitQuizAnswer, submitQuizSession } from "@/app/actions/quiz";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Zap, 
@@ -40,7 +40,8 @@ export default function ClozeQuizPage() {
     startQuiz, 
     applyAnswerResult, 
     nextCard, 
-    resetQuiz 
+    resetQuiz,
+    quizStartTime 
   } = useQuizStore();
   
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,7 @@ export default function ClozeQuizPage() {
   const [showDetails, setShowDetails] = useState(false);
   
   const [isPending, startTransition] = useTransition();
+  const [sessionSubmitted, setSessionSubmitted] = useState(false);
 
   // --- Initializer ---
   const loadQuiz = useCallback(async () => {
@@ -105,6 +107,15 @@ export default function ClozeQuizPage() {
     if (status === 'idle') loadQuiz();
     else setLoading(false);
   }, [status, loadQuiz]);
+
+  useEffect(() => {
+    if (status === 'completed' && !sessionSubmitted && deck.length > 0) {
+      setSessionSubmitted(true);
+      const totalTimeMs = Date.now() - quizStartTime;
+      const isPerfect = correctCount === deck.length;
+      submitQuizSession({ isPerfect, timeTakenMs: totalTimeMs });
+    }
+  }, [status, sessionSubmitted, quizStartTime, correctCount, deck.length]);
 
   // --- Multiple Choice Generator ---
   useEffect(() => {
@@ -331,6 +342,7 @@ export default function ClozeQuizPage() {
                   setMaxStreak(0);
                   setResults([]);
                   setShowDetails(false);
+                  setSessionSubmitted(false);
                   loadQuiz(); 
                 }} 
                 className="flex-1 bg-[#FFE500] text-black border-[4px] border-black py-4 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-3 active:scale-95"
@@ -338,7 +350,7 @@ export default function ClozeQuizPage() {
                 <RefreshCw className="w-6 h-6" strokeWidth={3}/> Replay
               </button>
               <Link 
-                href="/dictionary" 
+                href="/quiz" 
                 className="flex-1 bg-white text-black border-[4px] border-black py-4 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
               >
                 Exit

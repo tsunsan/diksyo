@@ -63,9 +63,13 @@ export async function getUserStats() {
         let learning = 0;
         let reviewing = 0;
         let mastered = 0;
+        let reviewedCount = 0;
 
         progressRecords.forEach(record => {
-            totalMastery += record.mastery || 0;
+            if (record.lastReview) {
+                totalMastery += record.mastery || 0;
+                reviewedCount++;
+            }
             if (record.nextReview && new Date(record.nextReview) <= now) {
                 upcomingReviewsCount++;
             }
@@ -74,12 +78,13 @@ export async function getUserStats() {
             else mastered++;
         });
 
-        const retentionRate = progressRecords.length > 0 
-            ? Math.round(totalMastery / progressRecords.length) 
+        const retentionRate = reviewedCount > 0 
+            ? Math.round(totalMastery / reviewedCount) 
             : 0;
 
-        // Struggled Words
+        // Struggled Words (only words actually reviewed)
         const struggledWords = [...progressRecords]
+            .filter(r => r.lastReview !== null)
             .sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0))
             .slice(0, 5)
             .map(r => ({

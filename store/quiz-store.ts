@@ -23,6 +23,7 @@ interface QuizState {
     status: 'idle' | 'typing' | 'revealed' | 'completed';
     correctCount: number;
     questionStartTime: number;
+    quizStartTime: number;
 
     startQuiz: (words: QuizWord[]) => void;
     applyAnswerResult: (isCorrect: boolean) => void;
@@ -36,13 +37,15 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     status: 'idle',
     correctCount: 0,
     questionStartTime: 0,
+    quizStartTime: 0,
 
     startQuiz: (words) => set({
         deck: words,
         currentIndex: 0,
         status: 'typing',
         correctCount: 0,
-        questionStartTime: Date.now()
+        questionStartTime: Date.now(),
+        quizStartTime: Date.now()
     }),
 
     applyAnswerResult: (isCorrect) => set((state) => ({
@@ -62,5 +65,5 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         });
     },
 
-    resetQuiz: () => set({ deck: [], currentIndex: 0, status: 'idle', correctCount: 0, questionStartTime: 0 }),
+    resetQuiz: () => set({ deck: [], currentIndex: 0, status: 'idle', correctCount: 0, questionStartTime: 0, quizStartTime: 0 }),
 }));

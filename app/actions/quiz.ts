@@ -105,8 +105,14 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                 let newStreak = profile.currentStreak;
                 
                 if (lastActive) {
-                    const diffTime = Math.abs(now.getTime() - lastActive.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    const nowPHT = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+                    const lastActivePHT = new Date(lastActive.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+                    
+                    nowPHT.setHours(0, 0, 0, 0);
+                    lastActivePHT.setHours(0, 0, 0, 0);
+
+                    const diffTime = Math.abs(nowPHT.getTime() - lastActivePHT.getTime());
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
                     
                     if (diffDays === 1) {
                         // Played yesterday, increment streak
@@ -122,26 +128,13 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                 }
 
                 const newLongestStreak = Math.max(newStreak, profile.longestStreak);
-                
-                // Track fastest quiz if correct
-                let fastest = profile.fastestQuizMs;
-                if (isCorrect) {
-                    if (!fastest || timeTakenMs < fastest) {
-                        fastest = timeTakenMs;
-                    }
-                }
-
-                const perfectUpdate = isCorrect && timeTakenMs > 0 ? 1 : 0; // Simple approximation for now
 
                 await db.update(userProfiles)
                     .set({
                         xp: profile.xp + xpGained,
-                        quizzesCompleted: profile.quizzesCompleted + 1,
                         currentStreak: newStreak,
                         longestStreak: newLongestStreak,
                         lastActiveDate: now,
-                        fastestQuizMs: fastest,
-                        perfectQuizzes: profile.perfectQuizzes + perfectUpdate,
                         totalTimeLearningMs: profile.totalTimeLearningMs + timeTakenMs,
                     })
                     .where(eq(userProfiles.userId, user.id));
@@ -194,5 +187,38 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
     } catch (error) {
         console.error("Error submitting quiz answer:", error);
         return { success: false, error: "Failed to process answer" };
+    }
+}
+
+export async function submitQuizSession({ isPerfect, timeTakenMs }: { isPerfect: boolean, timeTakenMs: number }) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    try {
+        await withExponentialBackoff(async () => {
+            const profile = await db.query.userProfiles.findFirst({
+                where: eq(userProfiles.userId, user.id)
+            });
+
+            if (profile) {
+                let fastest = profile.fastestQuizMs;
+                if (!fastest || timeTakenMs < fastest) {
+                    fastest = timeTakenMs;
+                }
+
+                await db.update(userProfiles)
+                    .set({
+                        quizzesCompleted: profile.quizzesCompleted + 1,
+                        fastestQuizMs: fastest,
+                        perfectQuizzes: profile.perfectQuizzes + (isPerfect ? 1 : 0),
+                    })
+                    .where(eq(userProfiles.userId, user.id));
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error submitting quiz session:", error);
+        return { success: false, error: "Failed to process session" };
     }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react";
 import { getVaultWords } from "@/app/actions/vault";
-import { submitQuizAnswer } from "@/app/actions/quiz";
+import { submitQuizAnswer, submitQuizSession } from "@/app/actions/quiz";
 import {
   Zap,
   ChevronRight,
@@ -80,7 +80,8 @@ export default function QuizPage2() {
     hasSubmittedOnce,
     setHasSubmittedOnce,
     startQuiz,
-    resetQuiz
+    resetQuiz,
+    quizStartTime
   } = useTimeQuizStore();
 
   const [loading, setLoading] = useState(true);
@@ -90,10 +91,13 @@ export default function QuizPage2() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [showDetails, setShowDetails] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [sessionSubmitted, setSessionSubmitted] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
   const timerControls = useAnimation();
+
+  const correctCount = results.filter((r) => r.correct).length;
 
   const loadQuiz = useCallback(async () => {
     setLoading(true);
@@ -139,6 +143,15 @@ export default function QuizPage2() {
     if (deck.length === 0 && !error) loadQuiz();
     else if (deck.length > 0) setLoading(false);
   }, [deck.length, loadQuiz, error]);
+
+  useEffect(() => {
+    if (quizDone && !sessionSubmitted && deck.length > 0) {
+      setSessionSubmitted(true);
+      const totalTimeMs = Date.now() - quizStartTime;
+      const isPerfect = correctCount === deck.length;
+      submitQuizSession({ isPerfect, timeTakenMs: totalTimeMs });
+    }
+  }, [quizDone, sessionSubmitted, quizStartTime, correctCount, deck.length]);
 
   const current = deck[currentIndex];
 
@@ -282,9 +295,9 @@ export default function QuizPage2() {
     setFlipped(false);
     setTimeLeft(15);
     setShowDetails(false);
+    setSessionSubmitted(false);
   };
 
-  const correctCount = results.filter((r) => r.correct).length;
   const accuracy = results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0;
 
   const cardBg =
@@ -398,7 +411,7 @@ export default function QuizPage2() {
               <RefreshCw className="w-6 h-6 inline mr-2" /> TRY AGAIN
             </motion.button>
             <Link 
-              href="/dictionary" 
+              href="/quiz" 
               className="flex-1 bg-white text-black border-[4px] border-black py-6 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
             >
               Exit
@@ -448,7 +461,6 @@ export default function QuizPage2() {
           <motion.span key={currentIndex} initial={{ y: 5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-black">WORD {currentIndex + 1} / {deck.length}</motion.span>
           <span className="text-2xl uppercase tracking-tighter text-black font-black">{Math.round(((currentIndex) / deck.length) * 100)}%</span>
         </div>
-        {/* FIX APPLIED HERE: ADDED `relative` */}
         <div className="relative w-full h-2 bg-white border-[3px] border-black overflow-hidden shadow-[2px_2px_0_#000]">
           <motion.div className="h-full bg-[#FFE500] border-r-[3px] border-black" initial={{ width: 0 }} animate={{ width: `${((currentIndex) / deck.length) * 100}%` }} transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }} />
           <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="absolute inset-y-0 w-20 bg-white/30 skew-x-[-20deg]" />
