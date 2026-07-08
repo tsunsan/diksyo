@@ -260,7 +260,7 @@ export function QuizModeClient() {
       </div>
 
       {/* ── Two Column Layout ── */}
-      <div className="flex flex-col md:flex-row gap-10 items-start">
+      <div className="flex flex-col md:flex-row gap-10 items-start pb-28 md:pb-0">
         
         {/* ── Left Column: Modes Selection (65%) ── */}
         <div className="w-full md:w-[65%] flex flex-col gap-12">
@@ -379,7 +379,7 @@ export function QuizModeClient() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="border-[4px] border-black p-6 flex flex-col w-full aspect-square relative bg-white shadow-[6px_6px_0_#000]"
+            className="hidden md:flex border-[4px] border-black p-6 flex-col w-full aspect-square relative bg-white shadow-[6px_6px_0_#000]"
           >
             <div className="flex justify-between items-center border-b-[3px] border-black pb-3 mb-6">
               <span className="uppercase tracking-widest text-xs" style={{ fontWeight: 900 }}>
@@ -404,15 +404,19 @@ export function QuizModeClient() {
           </motion.div>
 
           {/* Start Button */}
-          <button 
-            disabled={!selectedMode}
-            onClick={handleStartTraining}
-            className={`group w-full flex items-center justify-center gap-3 py-5 border-[4px] border-black uppercase tracking-widest transition-all ${!selectedMode ? 'bg-[#ddd] text-[#999] cursor-not-allowed shadow-none translate-x-1.5 translate-y-1.5' : 'bg-[#7C3AED] text-white hover:bg-[#6D28D9] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none shadow-[6px_6px_0_#000]'}`} 
-            style={{ fontWeight: 900, fontSize: "1.05rem" }}
-          >
-            START TRAINING
-            <ArrowRight className={`w-5 h-5 ${selectedMode && 'group-hover:translate-x-1'} transition-transform`} />
-          </button>
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t-[4px] border-black z-[60] md:static md:p-0 md:bg-transparent md:border-none md:z-auto shadow-[0_-4px_0_rgba(0,0,0,0.05)] md:shadow-none flex justify-center">
+            <div className="w-full max-w-md md:max-w-none">
+              <button 
+                disabled={!selectedMode}
+                onClick={handleStartTraining}
+                className={`group w-full flex items-center justify-center gap-3 py-5 border-[4px] border-black uppercase tracking-widest transition-all ${!selectedMode ? 'bg-[#ddd] text-[#999] cursor-not-allowed shadow-none md:translate-x-1.5 md:translate-y-1.5' : 'bg-[#7C3AED] text-white hover:bg-[#6D28D9] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none shadow-[6px_6px_0_#000]'}`} 
+                style={{ fontWeight: 900, fontSize: "1.05rem" }}
+              >
+                START TRAINING
+                <ArrowRight className={`w-5 h-5 ${selectedMode && 'group-hover:translate-x-1'} transition-transform`} />
+              </button>
+            </div>
+          </div>
 
         </div>
       </div>
