@@ -19,7 +19,7 @@ export default function ContactUsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#FFFBF0] font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#FFFBF0] font-sans relative">
       {/* Decorative background dots */}
       <div 
         className="fixed inset-0 pointer-events-none opacity-10"
