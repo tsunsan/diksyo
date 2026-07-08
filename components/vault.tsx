@@ -350,7 +350,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
             >
               {/* Modal header */}
               <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
-                <div>
+                <div className="min-w-0 break-words flex-1">
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span
                       className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest text-white shadow-[2px_2px_0_#000]"

@@ -677,8 +677,8 @@ export default function DictionaryClient({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
-                <div className="min-w-0 break-words flex-1 w-full">
+              <div className="flex items-start justify-between gap-4 p-6 border-b-[3px] border-black bg-[#FFFBF0]">
+                <div className="min-w-0 break-words flex-1">
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span
                       className="px-2.5 py-1 border-[2px] border-black text-[10px] uppercase tracking-widest text-white shadow-[2px_2px_0_#000]"
@@ -721,7 +721,7 @@ export default function DictionaryClient({
                       </p>
                   )}
                 </div>
-                <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto justify-end sm:justify-start">
+                <div className="flex gap-2 flex-shrink-0">
                   <button
                     onClick={() => setModalWord(null)}
                     className="w-10 h-10 bg-black border-[2px] border-black flex items-center justify-center hover:bg-[#333] transition-colors"
@@ -1010,7 +1010,7 @@ export default function DictionaryClient({
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     {activeFilterCount > 0 ? "NO WORDS MATCH YOUR FILTERS." : "NO WORDS FOUND."}
                 </div>
-            ) : (search ? filteredWords.slice(0, 12) : filteredWords).map((w) => {
+            ) : (search ? filteredWords.slice(0, 12) : filteredWords.slice(0, 2)).map((w) => {
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
@@ -1090,7 +1090,7 @@ export default function DictionaryClient({
           </div>
           
         {!search && (
-  <div className="text-center mt-2">
+  <div className="text-center mt-0.5">
     <span 
       className="inline-flex items-center justify-center gap-1 text-[10px] text-[#aaa] uppercase tracking-widest" 
       style={{ fontWeight: 600 }}
@@ -1102,7 +1102,7 @@ export default function DictionaryClient({
 
           {/* Word of the Day Gradient Card */}
           {wordOfTheDay && !search && (
-            <div className="mt-4 bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 relative overflow-hidden flex flex-col justify-between cursor-pointer group active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all" onClick={() => setSelectedId(wordOfTheDay.id)}>
+            <div className="hidden lg:flex mt-4 bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 relative overflow-hidden flex-col justify-between cursor-pointer group active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all" onClick={() => setSelectedId(wordOfTheDay.id)}>
               {/* Decorative background shape */}
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#7C3AED] rounded-full opacity-30 blur-2xl group-hover:bg-[#FF6D00] transition-colors duration-700"></div>
               <div className="absolute -left-8 -bottom-8 w-24 h-24 bg-[#FDE047] rounded-full opacity-40 blur-xl group-hover:bg-[#0057FF] transition-colors duration-700"></div>
@@ -1132,7 +1132,7 @@ export default function DictionaryClient({
 
           {/* Suggest a Word Card */}
           {(!search || (!isLoading && search && words.length === 0)) && (
-            <div className="mt-4 bg-[#E8F0FF] border-[3px] border-black shadow-[6px_6px_0_#000] p-5 flex flex-col items-center text-center group transition-all">
+            <div className="hidden lg:flex mt-4 bg-[#E8F0FF] border-[3px] border-black shadow-[6px_6px_0_#000] p-5 flex-col items-center text-center group transition-all">
               <div className="w-10 h-10 bg-[#FF007F] border-[2px] border-black flex items-center justify-center rounded-full mb-3 shadow-[2px_2px_0_#000] group-hover:bg-[#7C3AED] transition-colors">
                 <span className="text-white font-black text-lg">?</span>
               </div>
@@ -1466,6 +1466,59 @@ export default function DictionaryClient({
                 </div>
               )}
             </>
+          )}
+
+          {/* Word of the Day Gradient Card (Mobile Only) */}
+          {wordOfTheDay && !search && (
+            <div className="flex lg:hidden mt-4 bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 relative overflow-hidden flex-col justify-between cursor-pointer group active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all" onClick={() => setSelectedId(wordOfTheDay.id)}>
+              {/* Decorative background shape */}
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#7C3AED] rounded-full opacity-30 blur-2xl group-hover:bg-[#FF6D00] transition-colors duration-700"></div>
+              <div className="absolute -left-8 -bottom-8 w-24 h-24 bg-[#FDE047] rounded-full opacity-40 blur-xl group-hover:bg-[#0057FF] transition-colors duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <Flame className="w-4 h-4 text-black" style={{ fill: "#FF6D00" }} />
+                  <span className="text-xs font-black uppercase tracking-widest text-black">WORD OF THE DAY</span>
+                </div>
+                
+                <h3 className="text-black uppercase mb-1" style={{ fontWeight: 900, fontSize: "2rem", lineHeight: 1, letterSpacing: "-0.02em" }}>
+                  {wordOfTheDay.word}
+                </h3>
+                
+                <p className="text-[#333] text-xs uppercase tracking-wider mb-4" style={{ fontWeight: 600 }}>
+                  {wordOfTheDay.partOfSpeech}
+                </p>
+                
+                <div className="h-[2px] bg-black w-full mb-3 opacity-20"></div>
+                
+                <p className="text-[#555] text-sm leading-relaxed overflow-hidden break-words hyphens-auto" style={{ fontWeight: 500 }}>
+                  {wordOfTheDay.meaningFilipino || wordOfTheDay.translation || "Tuklasin ang kahulugan ng salitang ito."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Suggest a Word Card (Mobile Only) */}
+          {(!search || (!isLoading && search && words.length === 0)) && (
+            <div className="flex lg:hidden mt-4 bg-[#E8F0FF] border-[3px] border-black shadow-[6px_6px_0_#000] p-5 flex-col items-center text-center group transition-all">
+              <div className="w-10 h-10 bg-[#FF007F] border-[2px] border-black flex items-center justify-center rounded-full mb-3 shadow-[2px_2px_0_#000] group-hover:bg-[#7C3AED] transition-colors">
+                <span className="text-white font-black text-lg">?</span>
+              </div>
+              <h3 className="text-black uppercase mb-2" style={{ fontWeight: 900, fontSize: "1.2rem", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+                MISSING A WORD?
+              </h3>
+              <p className="text-[#555] text-xs uppercase mb-4 leading-relaxed" style={{ fontWeight: 700 }}>
+                Can't find what you're looking for? Help us grow our dictionary!
+              </p>
+              <button 
+                className="w-full bg-[#0057FF] border-[2px] border-black py-3 text-white text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] relative group/btn transition-all hover:bg-black cursor-not-allowed" style={{ fontWeight: 900 }}
+              >
+                SUGGEST A WORD
+                <span className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover/btn:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                  Coming Soon
+                </span>
+              </button>
+            </div>
           )}
         </div>
       </div>
