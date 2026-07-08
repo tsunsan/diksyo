@@ -11,7 +11,7 @@ This document serves as the primary source of truth for AI agents working on the
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS 4, shadcn/ui, next-themes, lucide-react, tw-animate-css (Note: Tailwind v4 uses CSS-based configuration located in `app/globals.css` or `app/index.css`, not `tailwind.config.js`).
+- **Styling:** Tailwind CSS 4, shadcn/ui, next-themes, lucide-react, tw-animate-css, framer-motion (Note: Tailwind v4 uses CSS-based configuration located in `app/globals.css` or `app/index.css`, not `tailwind.config.js`).
 - **Database:** PostgreSQL (via Supabase)
 - **ORM:** Drizzle ORM
 - **Authentication:** Supabase Auth (@supabase/ssr)
@@ -154,7 +154,8 @@ The project uses OKLCH-based colors with a focus on high contrast.
 
 ## Animations
 
-- Powered by `tw-animate-css`.
+- Powered by `tw-animate-css` and `framer-motion`.
 - Use subtle transitions for hover states to maintain the "rigid" feel while providing tactile feedback.
+- When using `framer-motion`, ensure animations remain rigid and mechanical (e.g., using fast springs or hard easings) to preserve the Neobrutalist aesthetic.
 
 <!-- END:nextjs-agent-rules -->
