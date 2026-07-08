@@ -67,9 +67,10 @@ type FilterDropdownProps = {
   value: string;
   onChange: (val: string) => void;
   accentColor: string;
+  dropdownAlign?: "left" | "right";
 };
 
-function FilterDropdown({ label, icon, options, value, onChange, accentColor }: FilterDropdownProps) {
+function FilterDropdown({ label, icon, options, value, onChange, accentColor, dropdownAlign = "left" }: FilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -89,21 +90,23 @@ function FilterDropdown({ label, icon, options, value, onChange, accentColor }: 
     <div className="relative" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 pl-3 pr-2.5 py-2 border-[2.5px] border-black text-xs uppercase tracking-widest transition-all ${
+        className={`flex items-center justify-between gap-1.5 px-2.5 py-2 w-full border-[2.5px] border-black text-xs uppercase tracking-widest transition-all ${
           isActive
             ? `text-white shadow-[3px_3px_0_#000]`
             : "bg-white text-black shadow-[2px_2px_0_transparent] hover:shadow-[3px_3px_0_#000]"
         } hover:-translate-y-0.5`}
         style={isActive ? { background: accentColor, fontWeight: 900 } : { fontWeight: 700 }}
       >
-        {icon}
-        <span className="hidden sm:inline">{label}:</span>
-        <span style={{ fontWeight: 900 }}>{value}</span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <div className="flex items-center gap-1.5 min-w-0">
+          {icon}
+          <span className="hidden sm:inline shrink-0">{label}:</span>
+          <span className="truncate" style={{ fontWeight: 900 }}>{value}</span>
+        </div>
+        <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 min-w-[180px] bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] z-50 flex flex-col max-h-[280px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+        <div className={`absolute top-full mt-2 ${dropdownAlign === 'right' ? 'right-0' : 'left-0'} min-w-[140px] sm:min-w-[160px] bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] z-[60] flex flex-col max-h-[280px] overflow-y-auto`} style={{ scrollbarWidth: "thin" }}>
           {options.map((option) => (
             <button
               key={option}
@@ -491,7 +494,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 <Plus className="w-4 h-4" />
                 ADD WORD
               </DialogTrigger>
-            <DialogContent className="border-[3px] border-black rounded-none shadow-[8px_8px_0_#000] p-6 max-w-md w-full">
+            <DialogContent className="border-[3px] border-black rounded-none shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] p-4 sm:p-6 max-w-md w-[92vw] sm:w-full mx-auto">
               <DialogHeader>
                 <DialogTitle className="uppercase font-black text-xl tracking-tighter italic">
                   SEARCH & ADD WORDS
@@ -510,7 +513,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                   {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-[#888]" />}
                 </div>
 
-                <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                <div className="flex flex-col gap-2 max-h-[50vh] sm:max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
                   {dialogResults.length === 0 && debouncedDialogQuery && !isSearching && (
                      <div className="p-4 text-center text-xs font-bold uppercase text-[#888] border-[2.5px] border-dashed border-[#ccc]">
                        NO WORDS FOUND
@@ -545,17 +548,17 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
 
         {/* Search & Sort */}
         <div className="flex flex-col sm:flex-row gap-4 h-auto sm:h-12">
-          <div className="relative flex-1 h-12 sm:h-full">
+          <div className="relative flex-1 h-14 sm:h-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
             <input
               type="text"
               value={vaultSearch}
               onChange={(e) => setVaultSearch(e.target.value)}
               placeholder="SEARCH YOUR VAULT..."
-              className="w-full h-full pl-11 pr-4 py-0 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow uppercase text-sm font-bold"
+              className="w-full h-full pl-11 pr-4 py-3 sm:py-0 bg-white border-[2.5px] border-black outline-none focus:shadow-[4px_4px_0_#000] transition-shadow uppercase text-sm font-bold"
             />
           </div>
-          <div className="flex shrink-0 h-12 sm:h-full w-full sm:w-auto">
+          <div className="flex shrink-0 h-14 sm:h-full w-full sm:w-auto">
             <div className="relative flex-1 sm:flex-initial sm:w-[220px] h-full" ref={sortRef}>
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
@@ -603,79 +606,85 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
 
         {/* Filter Bar */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-2 flex-wrap w-full">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 mr-1">
-                <Filter className="w-4 h-4 text-[#888]" />
-                <span className="text-[10px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>FILTERS</span>
-                {activeFilterCount > 0 && (
-                  <span className="flex items-center justify-center w-5 h-5 bg-[#7C3AED] text-white text-[10px] border-[1.5px] border-black" style={{ fontWeight: 900 }}>
-                    {activeFilterCount}
-                  </span>
-                )}
-              </div>
-              
-              <FilterDropdown
-                label="ROOT"
-                icon={<Gem className="w-3.5 h-3.5" />}
-                options={rootOptions}
-                value={activeRoot}
-                onChange={setActiveRoot}
-                accentColor="#FF007F"
-              />
-
-              <FilterDropdown
-                label="POS"
-                icon={<Type className="w-3.5 h-3.5" />}
-                options={uniquePOS}
-                value={activePOS}
-                onChange={setActivePOS}
-                accentColor="#FF1744"
-              />
-
-              <FilterDropdown
-                label="LEVEL"
-                icon={<Layers className="w-3.5 h-3.5" />}
-                options={uniqueLevels}
-                value={activeLevel}
-                onChange={setActiveLevel}
-                accentColor="#0057FF"
-              />
-
-              <FilterDropdown
-                label="FREQ"
-                icon={<Zap className="w-3.5 h-3.5" />}
-                options={uniqueFrequencies}
-                value={activeFrequency}
-                onChange={setActiveFrequency}
-                accentColor="#FF6D00"
-              />
-
+          {/* Header Row: Filters Label and Maximize Button */}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Filter className="w-4 h-4 text-[#888]" />
+              <span className="text-[10px] uppercase tracking-widest text-[#888]" style={{ fontWeight: 800 }}>FILTERS</span>
               {activeFilterCount > 0 && (
-                <button
-                  onClick={() => {
-                    setActiveRoot("ALL");
-                    setActiveLevel("ALL");
-                    setActiveFrequency("ALL");
-                    setActivePOS("ALL");
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 border-[2.5px] border-black bg-[#EF4444] text-white text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
-                  style={{ fontWeight: 900 }}
-                >
-                  <X className="w-3.5 h-3.5" />
-                  CLEAR
-                </button>
+                <span className="flex items-center justify-center w-5 h-5 bg-[#7C3AED] text-white text-[10px] border-[1.5px] border-black" style={{ fontWeight: 900 }}>
+                  {activeFilterCount}
+                </span>
               )}
             </div>
 
             <button
               onClick={() => setIsCompactMode(!isCompactMode)}
-              className="flex items-center gap-1.5 px-3 py-2 border-[2.5px] border-black bg-white text-black text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[2px_2px_0_transparent] hover:shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 border-[2px] border-black bg-white text-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[2px_2px_0_transparent] hover:shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none shrink-0"
               style={{ fontWeight: 900 }}
             >
               {isCompactMode ? <Maximize className="w-3.5 h-3.5" /> : <Minimize className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isCompactMode ? "MAXIMIZE" : "MINIMIZE"}</span>
+              <span>{isCompactMode ? "MAXIMIZE" : "MINIMIZE"}</span>
             </button>
+          </div>
+
+          {/* Filters Grid */}
+          <div className="grid grid-cols-2 lg:flex lg:flex-wrap lg:items-center gap-2 w-full">
+            <FilterDropdown
+              label="ROOT"
+              icon={<Gem className="w-3.5 h-3.5" />}
+              options={rootOptions}
+              value={activeRoot}
+              onChange={setActiveRoot}
+              accentColor="#FF007F"
+              dropdownAlign="left"
+            />
+
+            <FilterDropdown
+              label="POS"
+              icon={<Type className="w-3.5 h-3.5" />}
+              options={uniquePOS}
+              value={activePOS}
+              onChange={setActivePOS}
+              accentColor="#FF1744"
+              dropdownAlign="right"
+            />
+
+            <FilterDropdown
+              label="LEVEL"
+              icon={<Layers className="w-3.5 h-3.5" />}
+              options={uniqueLevels}
+              value={activeLevel}
+              onChange={setActiveLevel}
+              accentColor="#0057FF"
+              dropdownAlign="left"
+            />
+
+            <FilterDropdown
+              label="FREQ"
+              icon={<Zap className="w-3.5 h-3.5" />}
+              options={uniqueFrequencies}
+              value={activeFrequency}
+              onChange={setActiveFrequency}
+              accentColor="#FF6D00"
+              dropdownAlign="right"
+            />
+
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => {
+                  setActiveRoot("ALL");
+                  setActiveLevel("ALL");
+                  setActiveFrequency("ALL");
+                  setActivePOS("ALL");
+                }}
+                className="flex items-center justify-center col-span-2 lg:col-span-1 gap-1.5 px-3 py-2 border-[2.5px] border-black bg-[#EF4444] text-white text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+                style={{ fontWeight: 900 }}
+              >
+                <X className="w-3.5 h-3.5" />
+                CLEAR
+              </button>
+            )}
           </div>
         </div>
 
