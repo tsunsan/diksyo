@@ -625,7 +625,7 @@ export default function StatsDashboardClient({
                         {(currentEnvIndex <= currentLevelIndex) && (
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: currentEnvIndex === currentLevelIndex ? `${Math.min(XP_PROGRESS, 100)}%` : '100%' }}
+                            animate={{ width: currentEnvIndex === currentLevelIndex ? `calc(50% + ${Math.min(XP_PROGRESS, 100) / 100 * 50}%)` : '100%' }}
                             transition={{ duration: 1.8, ease: "easeOut" }}
                             className="absolute inset-y-0 left-0 bg-[#FFE500]/30"
                           />

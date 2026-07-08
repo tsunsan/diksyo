@@ -136,47 +136,31 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
             </div>
           </div>
 
-          <Label 
-            htmlFor="showAvatar" 
-            className={`flex items-center gap-4 border-2 border-black p-4 group cursor-pointer transition-colors ${
-              !user.isGoogleConnected 
-                ? 'bg-zinc-100 opacity-75 cursor-not-allowed' 
-                : 'bg-yellow-50 hover:bg-yellow-100'
-            }`}
-          >
-            <div className="relative flex items-center justify-center">
-              <input 
-                 type="checkbox" 
-                 id="showAvatar" 
-                 name="showAvatar" 
-                 defaultChecked={user.showAvatar}
-                 className="peer w-6 h-6 appearance-none border-2 border-black bg-white checked:bg-yellow-400 transition-colors disabled:cursor-not-allowed" 
-                 disabled={!user.isGoogleConnected}
-              />
-              <svg 
-                className="absolute w-4 h-4 text-black opacity-0 peer-checked:opacity-100 pointer-events-none" 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="4" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className={`font-black uppercase text-sm ${!user.isGoogleConnected ? 'text-zinc-500' : 'text-black'}`}>
-                 Display Google Profile Picture
+          <div className={`border-4 border-black p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-[4px_4px_0_0_#000] ${!user.isGoogleConnected ? 'bg-zinc-100 opacity-75' : 'bg-white hover:bg-yellow-50'}`}>
+            <div className="flex flex-col gap-1.5">
+              <span className={`font-black uppercase text-sm tracking-tight ${!user.isGoogleConnected ? 'text-zinc-500' : 'text-black'}`}>
+                 Google Profile Picture
               </span>
-              {!user.isGoogleConnected && (
-                <span className="font-bold text-[10px] text-zinc-500 uppercase">
-                  (Connect Google first)
-                </span>
-              )}
+              <p className={`font-bold text-xs uppercase leading-tight ${!user.isGoogleConnected ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                {user.isGoogleConnected 
+                  ? "Show your Google avatar instead of the default icon"
+                  : "Connect your Google account first to use this feature"}
+              </p>
             </div>
-          </Label>
+            
+            <Label htmlFor="showAvatar" className={`relative flex items-center shrink-0 ${user.isGoogleConnected ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+              <input 
+                type="checkbox" 
+                id="showAvatar" 
+                name="showAvatar" 
+                defaultChecked={user.showAvatar}
+                className="sr-only peer" 
+                disabled={!user.isGoogleConnected}
+              />
+              <div className="w-16 h-8 bg-zinc-200 border-4 border-black rounded-full peer-checked:bg-green-400 transition-colors shadow-[2px_2px_0_0_#000] peer-disabled:bg-zinc-200 peer-disabled:opacity-50"></div>
+              <div className="absolute left-[4px] top-[4px] w-6 h-6 bg-white border-4 border-black rounded-full transition-transform peer-checked:translate-x-8 peer-disabled:bg-zinc-100"></div>
+            </Label>
+          </div>
 
           <div className="mt-auto pt-4">
             <Button 
@@ -212,7 +196,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                </p>
              )}
           </div>
-          <div className="shrink-0 flex flex-col gap-2">
+          <div className="shrink-0 flex flex-col gap-2 mt-6">
              <Button
                type="button"
                disabled={user.isGoogleConnected}

@@ -205,6 +205,7 @@ export default function PrivacyPage() {
           </p>
           <Link
             href="/terms"
+            replace
             className="text-purple-600 text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1 font-black"
           >
             VIEW TERMS OF SERVICE →

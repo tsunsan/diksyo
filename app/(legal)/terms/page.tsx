@@ -172,6 +172,7 @@ export default function TermsPage() {
           </p>
           <Link
             href="/privacy"
+            replace
             className="text-yellow-400 text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1 font-black"
           >
             VIEW PRIVACY POLICY →

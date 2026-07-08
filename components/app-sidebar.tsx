@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Flame,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
@@ -72,77 +73,93 @@ export function AppSidebar({
         </nav>
 
         {/* Bottom */}
-        <div className="px-4 pb-6 border-t-4 border-black pt-6 flex flex-col gap-4">
-          {user && (
-            <Link
-              href="/profile"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 p-2 hover:bg-yellow-100 hover:translate-x-[2px] transition-all border-4 border-transparent hover:border-black group"
-            >
-              <div className="w-10 h-10 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center shrink-0 overflow-hidden">
-                {user.avatar_url ? (
-                  <Image 
-                    src={user.avatar_url} 
-                    alt={user.username} 
-                    width={40} 
-                    height={40} 
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-black"
-                  >
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                )}
-              </div>
-              <div className="flex flex-col overflow-hidden">
-                <span className="font-bold text-sm uppercase tracking-tighter truncate text-black leading-tight">
-                  {user.username}
-                </span>
-                <div className="mt-1 flex items-center gap-1.5 bg-white border-2 border-black pl-0.5 pr-2 py-0.5 w-max shadow-[2px_2px_0_0_#000]">
-                  <div
-                    className="w-4 h-4 shrink-0 border-2 border-black flex items-center justify-center"
-                    style={{ background: user.levelColor || "#8B5E3C" }}
-                  >
-                    <span
-                      className="font-black leading-none"
-                      style={{
-                        fontSize: '9px',
-                        color: (user.levelColor === '#EAB308' || user.levelColor === '#FFE500') ? '#000' : '#fff',
-                      }}
+        <div className="px-4 pb-6 border-t-4 border-black pt-6">
+          <div className="flex flex-col border-4 border-black bg-white shadow-[4px_4px_0_0_#000]">
+            {user && (
+              <div className="flex items-center gap-3 p-3 border-b-4 border-black bg-[#f4f1ea]">
+                <div className="w-10 h-10 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center shrink-0 overflow-hidden">
+                  {user.avatar_url ? (
+                    <Image 
+                      src={user.avatar_url} 
+                      alt={user.username} 
+                      width={40} 
+                      height={40} 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-black"
                     >
-                      {user.levelIndex || 1}
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="font-bold text-sm uppercase tracking-tighter truncate text-black leading-tight">
+                    {user.username}
+                  </span>
+                  <div className="mt-1 flex items-center gap-1.5 bg-white border-2 border-black rounded-full pl-0.5 pr-2.5 py-0.5 w-max shadow-[2px_2px_0_0_#000]">
+                    <div
+                      className="w-4 h-4 shrink-0 rounded-full border-2 border-black flex items-center justify-center"
+                      style={{ background: user.levelColor || "#8B5E3C" }}
+                    >
+                      <span
+                        className="font-black leading-none"
+                        style={{
+                          fontSize: '9px',
+                          color: (user.levelColor === '#EAB308' || user.levelColor === '#FFE500') ? '#000' : '#fff',
+                        }}
+                      >
+                        {user.levelIndex || 1}
+                      </span>
+                    </div>
+                    <span
+                      className="text-black uppercase tracking-tighter truncate text-[10px] font-black"
+                    >
+                      {user.levelName || "BAGUHAN"}
                     </span>
                   </div>
-                  <span
-                    className="text-black uppercase tracking-tighter truncate text-[10px] font-black"
-                  >
-                    {user.levelName || "BAGUHAN"}
-                  </span>
                 </div>
               </div>
-            </Link>
-          )}
-          <form action={logout}>
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-4 border-black bg-[#f4f1ea] hover:bg-red-400 hover:text-black transition-all uppercase tracking-tighter text-sm font-bold text-black"
-            >
-              <LogOut className="w-5 h-5" />
-              LOGOUT
-            </button>
-          </form>
+            )}
+
+            <div className="flex bg-white">
+              <Link
+                href="/profile"
+                onClick={() => setMobileOpen(false)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 px-1 border-r-4 border-black hover:bg-yellow-400 transition-colors group"
+                title="Profile & Settings"
+              >
+                <Settings className="w-4 h-4 text-black group-hover:rotate-90 transition-transform duration-300 shrink-0" />
+                <span className="uppercase tracking-tighter text-xs font-bold text-black">
+                  SETTINGS
+                </span>
+              </Link>
+              
+              <form action={logout} className="flex-1 flex">
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-1.5 py-3 px-1 hover:bg-red-400 transition-colors group"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4 text-black group-hover:translate-x-1 transition-transform duration-300 shrink-0" />
+                  <span className="uppercase tracking-tighter text-xs font-bold text-black">
+                    LOGOUT
+                  </span>
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </aside>
 
