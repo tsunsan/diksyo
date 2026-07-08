@@ -11,12 +11,12 @@ export default function LandingMarquee() {
             <div
                 className="flex gap-8 whitespace-nowrap pl-8"
                 style={{
-                    animation: "marquee-scroll 20s linear infinite",
+                    animation: "marquee-scroll 40s linear infinite",
                     width: "max-content",
                 }}
             >
-                {/* Only duplicate 2x — CSS handles the infinite loop */}
-                {[...words, ...words].map((word, i) => (
+                {/* Duplicate enough times so it seamlessly loops on ultrawide monitors */}
+                {Array.from({ length: 10 }).flatMap(() => words).map((word, i) => (
                     <div key={i} className="flex items-center gap-8">
                         <span className="text-3xl font-black uppercase italic tracking-tighter sm:text-4xl text-black">
                             {word}

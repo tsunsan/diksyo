@@ -109,7 +109,7 @@ export default function SearchBar() {
 
             {/* Neo-brutalist Autocomplete Dropdown */}
             {isOpen && results.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-2 flex flex-col border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                <div className="absolute z-50 left-0 right-0 top-full mt-2 flex flex-col border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[300px] overflow-y-auto">
                     {results.slice(0, 5).map((result) => (
                         <Link
                             key={result.id || result.word}

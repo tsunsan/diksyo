@@ -118,8 +118,10 @@ export default async function LandingPage() {
                             Your ultimate <span className="text-yellow-300">Tagalog dictionary</span> (<em>diksyonaryo</em>). Type any word to uncover its meaning, roots, and real-life context.
                         </h2>
 
-                        <div className="hero-element w-full max-w-2xl transform transition-transform hover:scale-[1.02]">
-                            <SearchBar />
+                        <div className="hero-element w-full max-w-2xl">
+                            <div className="transform transition-transform hover:scale-[1.02]">
+                                <SearchBar />
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -127,7 +129,19 @@ export default async function LandingPage() {
                 {/* Marquee — Client Island (CSS animation) */}
                 <LandingMarquee />
 
-                <div className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
+                <div className="relative w-full overflow-hidden bg-zinc-50">
+                    {/* SVG Background Layer */}
+                    <div 
+                        className="absolute inset-0 pointer-events-none z-0 opacity-[0.07] will-change-transform transform-gpu"
+                        style={{
+                            backgroundImage: 'url("/images/Chaotic Good.svg"), url("/images/Chillin.svg"), url("/images/Chilly.svg"), url("/images/Consumer.svg"), url("/images/Ecto Plasma.svg"), url("/images/Feliz.svg"), url("/images/Late for Class.svg"), url("/images/Meela Pantalones.svg"), url("/images/New Beginnings.svg"), url("/images/Wont Stop.svg")',
+                            backgroundSize: '400px, 350px, 300px, 450px, 350px, 400px, 300px, 450px, 350px, 400px',
+                            backgroundPosition: '0px 0px, 400px 200px, 800px 50px, 150px 500px, 600px 650px, 950px 450px, 250px 900px, 700px 1050px, 1100px 800px, -100px 300px',
+                            backgroundRepeat: 'repeat'
+                        }}
+                    />
+
+                    <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
 
                     {/* =========================================
                         SOCIAL PROOF STATS BANNER
@@ -393,7 +407,7 @@ export default async function LandingPage() {
                                 <div className="mb-4 sm:mb-6 inline-block border-4 border-black bg-purple-400 p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                                     <List className="h-6 w-6 sm:h-8 sm:w-8 text-black" />
                                 </div>
-                                <h3 className="mb-2 sm:mb-4 text-xl sm:text-2xl font-black uppercase">Custom Vaults</h3>
+                                <h3 className="mb-2 sm:mb-4 text-xl sm:text-2xl font-black uppercase">Personal Vaults</h3>
                                 <p className="text-base sm:text-lg font-medium">
                                     Build your own skill tree. Curate personalized vocabulary lists for your job, school, or daily life.
                                 </p>
@@ -428,6 +442,7 @@ export default async function LandingPage() {
                             </div>
                         </div>
                     </section>
+                    </div>
                 </div>
             </LandingHero>
 
