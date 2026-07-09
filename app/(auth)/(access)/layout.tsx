@@ -68,7 +68,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
                         {/* Stickers */}
                         <div className="absolute -top-5 -left-8 border-4 border-black bg-white px-4 py-2 font-black text-black shadow-[4px_4px_0_0_#000] -rotate-3 uppercase flex items-center gap-2">
-                            <Target className="h-5 w-5 text-purple-500" /> Rank: Lakan
+                            <Target className="h-5 w-5 text-purple-500" /> Rank: Alamat
                         </div>
                         <div className="absolute -bottom-5 -right-6 border-4 border-black bg-white px-5 py-2 font-black text-black shadow-[4px_4px_0_0_#000] rotate-2 uppercase flex items-center gap-2">
                             <Flame className="h-5 w-5 text-red-500 fill-red-500" /> 12 Day Streak

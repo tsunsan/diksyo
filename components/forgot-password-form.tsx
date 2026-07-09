@@ -46,7 +46,7 @@ export function ForgotPasswordForm() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="lakan@diksyo.com"
+                    placeholder="alamat@diksyo.com"
                     required
                     className="border-4 border-black rounded-none shadow-[4px_4px_0_0_#000] focus-visible:ring-0 focus-visible:shadow-[2px_2px_0_0_#000] focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                 />
