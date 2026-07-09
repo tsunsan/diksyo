@@ -1010,7 +1010,7 @@ export default function DictionaryClient({
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     {activeFilterCount > 0 ? "NO WORDS MATCH YOUR FILTERS." : "NO WORDS FOUND."}
                 </div>
-            ) : (search ? filteredWords.slice(0, 12) : filteredWords.slice(0, 2)).map((w) => {
+            ) : (search ? filteredWords.slice(0, 12) : filteredWords.slice(0, 3)).map((w, idx) => {
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
@@ -1026,7 +1026,7 @@ export default function DictionaryClient({
                     }
                   }}
                   {...(filteredWords.indexOf(w) === 0 ? { "data-tour-wordcard": true } : {})}
-                  className={`flex items-start gap-3 p-4 text-left border-[2.5px] transition-all cursor-pointer ${
+                  className={`${(!search && idx >= 2) ? 'hidden lg:flex' : 'flex'} items-start gap-3 p-4 text-left border-[2.5px] transition-all cursor-pointer ${
                     selectedId === w.id
                       ? "bg-[#FDE047] border-black shadow-[4px_4px_0_#000]"
                       : "bg-white border-black hover:shadow-[3px_3px_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px]"
