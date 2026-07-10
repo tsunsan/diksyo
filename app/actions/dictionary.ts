@@ -175,19 +175,17 @@ export async function getRandomDiscoverWords() {
 export async function getWordOfTheDay() {
     return withExponentialBackoff(async () => {
 
-    const allWords = await db.query.words.findMany({
-        columns: { id: true, word: true },
-        orderBy: (words, { asc }) => [asc(words.word)]
-    });
+    const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
+    const count = countResult[0]?.count ?? 0;
     
-    if (allWords.length === 0) return null;
+    if (count === 0) return null;
 
     const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-    const stableIndex = daysSinceEpoch % allWords.length;
+    const stableIndex = daysSinceEpoch % count;
     
-    const wordId = allWords[stableIndex].id;
     return db.query.words.findFirst({
-        where: eq(words.id, wordId),
+        orderBy: (words, { asc }) => [asc(words.word)],
+        offset: stableIndex,
         with: { rootWord: true }
     });
     });

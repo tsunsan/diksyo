@@ -2,8 +2,8 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { db } from '@/db'
-import { userProfiles, userAchievements, dailyActivity, achievementsConfig, levels, userProgress } from '@/db/schema'
-import { eq, desc, and, gte } from 'drizzle-orm'
+import { userProfiles, userAchievements, dailyActivity, achievementsConfig, levels, userProgress, words } from '@/db/schema'
+import { eq, desc, and, gte, sql, inArray } from 'drizzle-orm'
 import { withExponentialBackoff } from '@/lib/db-utils'
 import { getPHTDate } from '@/lib/date-utils'
 
@@ -53,8 +53,7 @@ export async function getUserStats() {
 
 // Fetch FSRS Insights
         const progressRecords = await db.query.userProgress.findMany({
-            where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)),
-            with: { word: true }
+            where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))
         });
 
         const now = new Date();
@@ -83,16 +82,25 @@ export async function getUserStats() {
             : 0;
 
         // Struggled Words (only words actually reviewed)
-        const struggledWords = [...progressRecords]
+        const topStruggled = [...progressRecords]
             .filter(r => r.lastReview !== null)
             .sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0))
-            .slice(0, 5)
-            .map(r => ({
-                word: r.word?.word,
-                translation: r.word?.translation,
+            .slice(0, 5);
+
+        const struggledWordIds = topStruggled.map(r => r.wordId).filter(Boolean) as string[];
+        const struggledWordsData = struggledWordIds.length > 0 
+            ? await db.query.words.findMany({ where: inArray(words.id, struggledWordIds) })
+            : [];
+
+        const struggledWords = topStruggled.map(r => {
+            const w = struggledWordsData.find(wd => wd.id === r.wordId);
+            return {
+                word: w?.word,
+                translation: w?.translation,
                 difficulty: r.difficulty,
                 mastery: r.mastery
-            }));
+            };
+        });
 
         // Fetch activity for heatmap (last 365 days)
         const oneYearAgo = getPHTDate();
@@ -201,35 +209,40 @@ export async function getLeaderboard() {
             }
         });
 
-        // Fetch Weekly Leaderboard
+        // Fetch Weekly Leaderboard via DB aggregation
         const sevenDaysAgo = getPHTDate();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const recentActivity = await db.query.dailyActivity.findMany({
-            where: gte(dailyActivity.date, sevenDaysAgo),
-            with: { profile: true }
-        });
+        const weeklyTopXpRaw = await db
+            .select({
+                userId: dailyActivity.userId,
+                username: userProfiles.username,
+                level: userProfiles.level,
+                avatarUrl: userProfiles.avatarUrl,
+                showAvatar: userProfiles.showAvatar,
+                xp: sql<number>`sum(${dailyActivity.xpEarned})::int`
+            })
+            .from(dailyActivity)
+            .leftJoin(userProfiles, eq(dailyActivity.userId, userProfiles.userId))
+            .where(gte(dailyActivity.date, sevenDaysAgo))
+            .groupBy(
+                dailyActivity.userId,
+                userProfiles.username,
+                userProfiles.level,
+                userProfiles.avatarUrl,
+                userProfiles.showAvatar
+            )
+            .orderBy(desc(sql`sum(${dailyActivity.xpEarned})`))
+            .limit(10);
 
-        // Aggregate XP by user for the week
-        const userXpMap = new Map<string, { xp: number; username: string; level: number; avatarUrl: string | null; showAvatar: boolean | null }>();
-        recentActivity.forEach(act => {
-            if (act.profile) {
-                const existing = userXpMap.get(act.userId) || { 
-                    xp: 0, 
-                    username: act.profile.username || "Unknown", 
-                    level: act.profile.level,
-                    avatarUrl: act.profile.avatarUrl,
-                    showAvatar: act.profile.showAvatar
-                };
-                existing.xp += act.xpEarned;
-                userXpMap.set(act.userId, existing);
-            }
-        });
-
-        const weeklyTopXp = Array.from(userXpMap.entries())
-            .map(([userId, data]) => ({ userId, ...data }))
-            .sort((a, b) => b.xp - a.xp)
-            .slice(0, 10);
+        const weeklyTopXp = weeklyTopXpRaw.map(row => ({
+            userId: row.userId,
+            username: row.username || "Unknown",
+            level: row.level || 1,
+            avatarUrl: row.avatarUrl,
+            showAvatar: row.showAvatar,
+            xp: row.xp
+        }));
 
         return { topXp, topWords, weeklyTopXp };
     });

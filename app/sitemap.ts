@@ -4,6 +4,8 @@ import { getSiteUrl } from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
 
+export const revalidate = 86400; // Cache sitemap for 24 hours
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await db.query.words.findMany({
     columns: {
