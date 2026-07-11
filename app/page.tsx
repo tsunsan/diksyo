@@ -303,15 +303,19 @@ export default async function LandingPage() {
                     <section className="scroll-section mb-24 grid gap-8 lg:grid-cols-2">
 
                         {/* Dynamic Word of the Day Banner */}
-                        <div className="relative flex flex-col overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                            {/* Header Area */}
-                            <div className="flex items-center gap-2 border-b-4 border-black bg-cyan-300 px-6 py-4 sm:px-8">
-                                <Flame className="h-6 w-6 shrink-0 fill-red-500 text-red-500" />
-                                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black">Word of the Day</h2>
-                            </div>
+                        <div className="group relative flex flex-col overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+                            {/* Decorative background shape (Gradient style) */}
+                            <div className="absolute -right-8 -top-8 w-48 h-48 bg-[#7C3AED] rounded-full opacity-30 blur-2xl group-hover:bg-[#FF6D00] transition-colors duration-700 pointer-events-none"></div>
+                            <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-[#FDE047] rounded-full opacity-40 blur-xl group-hover:bg-[#0057FF] transition-colors duration-700 pointer-events-none"></div>
 
                             {/* Content Area */}
                             <div className="relative z-10 flex flex-1 flex-col p-6 sm:p-8">
+                                {/* Header Area */}
+                                <div className="mb-6 flex items-center gap-2">
+                                    <Flame className="h-6 w-6 shrink-0 fill-red-500 text-red-500" />
+                                    <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black">Word of the Day</h2>
+                                </div>
+
                                 <div className="mb-6 flex flex-wrap items-baseline gap-3 sm:gap-4">
                                     <span className="text-4xl font-black text-black sm:text-5xl lg:text-6xl">{wotd.word}</span>
                                     {wotd.partOfSpeech && (
@@ -331,15 +335,12 @@ export default async function LandingPage() {
                                 <div className="mt-auto">
                                     <Link
                                         href={`/salita/${wotd.slug}`}
-                                        className="group flex w-fit items-center gap-3 border-4 border-black bg-yellow-400 px-6 py-4 text-lg font-black uppercase text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none"
+                                        className="group/btn flex w-fit items-center gap-3 border-4 border-black bg-yellow-400 px-6 py-4 text-lg font-black uppercase text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none"
                                     >
-                                        View Context <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
+                                        View Context <ArrowRight className="h-6 w-6 transition-transform group-hover/btn:translate-x-2" />
                                     </Link>
                                 </div>
                             </div>
-
-                            {/* Geometric Decoration */}
-                            <div className="absolute -bottom-16 -right-16 h-48 w-48 rounded-full border-4 border-black bg-pink-400 opacity-20 pointer-events-none"></div>
                         </div>
 
                         {/* Random Word Card */}

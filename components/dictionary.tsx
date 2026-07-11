@@ -824,7 +824,11 @@ export default function DictionaryClient({
           >
             {/* Search Input Row */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
+              {isLoading ? (
+                <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888] animate-spin" />
+              ) : (
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888]" />
+              )}
               <input
                 type="text"
                 value={search}
@@ -1014,7 +1018,10 @@ export default function DictionaryClient({
               const posText = w.partOfSpeech || 'UNKNOWN';
               const ps = POS_COLORS[posText.toUpperCase()] || { bg: "#333", text: "#fff" };
               return (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: idx * 0.05 }}
                   key={w.id}
                   onClick={() => setSelectedId(w.id)}
                   role="button"
@@ -1084,7 +1091,7 @@ export default function DictionaryClient({
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
-                </div>
+                </motion.div>
               );
             })}
           </div>

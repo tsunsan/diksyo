@@ -45,8 +45,8 @@ const LEARNING_MODES = [
 ];
 
 const MASTERY_MODES = [
-  { id: "time", title: "Time Attack", desc: "Race against the clock in this high-speed typing challenge.", icon: Timer, customBg: "#0057FF", customText: "#fff" },
-  { id: "cloze", title: "Cloze Deletion", desc: "Test your comprehension by filling in the missing words.", icon: Puzzle, customBg: "#FF6D00", customText: "#fff" },
+  { id: "time", title: "Time Attack", desc: "Race against the clock in this high-speed typing challenge.", icon: Timer, customBg: "#FF6D00", customText: "#fff" },
+  { id: "cloze", title: "Cloze Deletion", desc: "Test your comprehension by filling in the missing words.", icon: Puzzle, customBg: "#0057FF", customText: "#fff" },
 ];
 
 const ALL_MODES = [...LEARNING_MODES, ...MASTERY_MODES];

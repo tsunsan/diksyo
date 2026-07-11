@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback, useTransition } from "react";
 import { getVaultWords } from "@/app/actions/vault";
 import { submitQuizAnswer, submitQuizSession } from "@/app/actions/quiz";
 import {
-  Zap,
   ChevronRight,
   RotateCcw,
   Check,
@@ -340,7 +339,7 @@ export default function QuizPage2() {
           {/* Boxed Icon & QUIZ COMPLETE! from Time Attack */}
           <div className="text-center mb-3 sm:mb-8">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }} className="inline-block p-2 sm:p-4 bg-[#FFE500] border-[2px] sm:border-[4px] border-black shadow-[2px_2px_0_#000] sm:shadow-[8px_8px_0_#000] mb-2 sm:mb-6">
-              <Zap className="w-6 h-6 sm:w-12 sm:h-12 text-black" />
+              <TimerIcon className="w-6 h-6 sm:w-12 sm:h-12 text-black" />
             </motion.div>
             <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="uppercase tracking-tighter text-black text-3xl sm:text-[3.5rem] leading-[0.9]" style={{ fontWeight: 900 }}>
               QUIZ<br/>COMPLETE!
@@ -460,7 +459,7 @@ export default function QuizPage2() {
         <motion.div initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
           <div className="flex items-center gap-2 sm:gap-4 mb-1 sm:mb-2">
             <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="w-8 h-8 sm:w-10 sm:h-10 bg-[#FFE500] border-[2px] sm:border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_#000]">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+              <TimerIcon className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </motion.div>
             <h1 className="uppercase tracking-tighter text-black font-black text-xl sm:text-[2rem]">TIME ATTACK </h1>
           </div>
