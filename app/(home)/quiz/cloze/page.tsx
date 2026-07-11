@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef, useTransition } from "react";
 import { useQuizStore, QuizWord } from "@/store/quiz-store";
 import { getVaultWords } from "@/app/actions/vault";
 import { submitQuizAnswer, submitQuizSession } from "@/app/actions/quiz";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { 
   Zap, 
   RefreshCw, 
@@ -15,9 +15,51 @@ import {
   Keyboard,
   Star,
   Flame,
-  ChevronDown
+  ChevronDown,
+  Check,
+  X,
 } from "lucide-react";
+import { POS_COLORS } from "@/lib/utils";
 import Link from "next/link";
+
+const DIFF_COLORS: Record<string, string> = {
+  BEGINNER: "#00C853",
+  INTERMEDIATE: "#FDE047",
+  ADVANCED: "#FF6D00",
+};
+
+// Creative Confetti Component
+const CreativeConfetti = () => {
+  const [pieces] = useState(() => Array.from({ length: 80 }).map((_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 5,
+    duration: 3 + Math.random() * 2,
+    color: ["#FFE500", "#FF1744", "#00C853", "#0057FF", "#7C3AED"][Math.floor(Math.random() * 5)],
+    shape: i % 3 === 0 ? "polygon(50% 0%, 0% 100%, 100% 100%)" : i % 3 === 1 ? "circle(50% at 50% 50%)" : "none"
+  })));
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {pieces.map((p) => (
+        <motion.div
+          key={p.id}
+          initial={{ top: "110%", scale: 0, rotate: 0 }}
+          animate={{ top: "-10%", scale: [0, 1, 1, 0.5, 0], rotate: 720 }}
+          transition={{ duration: p.duration, repeat: Infinity, ease: "easeOut", delay: p.delay }}
+          style={{
+            position: "absolute",
+            left: p.left,
+            width: "12px",
+            height: "12px",
+            backgroundColor: p.color,
+            clipPath: p.shape,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 // Animated Number Component
 const AnimatedNumber = ({ value }: { value: number | string }) => (
@@ -57,6 +99,7 @@ export default function ClozeQuizPage() {
   
   const [isPending, startTransition] = useTransition();
   const [sessionSubmitted, setSessionSubmitted] = useState(false);
+  const controls = useAnimation();
 
   // --- Initializer ---
   const loadQuiz = useCallback(async () => {
@@ -170,6 +213,7 @@ export default function ClozeQuizPage() {
         });
       } else {
         setStreak(0);
+        await controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
       }
       
       setResults(prev => [...prev, {
@@ -182,7 +226,7 @@ export default function ClozeQuizPage() {
         level: res.level || "BEGINNER"
       }]);
     });
-  }, [status, isPending, questionStartTime, deck, currentIndex, applyAnswerResult]);
+  }, [status, isPending, questionStartTime, deck, currentIndex, applyAnswerResult, controls]);
 
   const handleNext = useCallback(() => {
     if (status !== 'revealed') return;
@@ -218,9 +262,9 @@ export default function ClozeQuizPage() {
          <motion.div 
             animate={{ rotate: 360 }} 
             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-            className="w-16 h-16 bg-[#FFE500] border-4 border-black shadow-[4px_4px_0_0_#000] flex items-center justify-center"
+            className="w-16 h-16 bg-[#4361EE] border-4 border-black shadow-[4px_4px_0_0_#000] flex items-center justify-center"
           >
-            <RefreshCw className="w-8 h-8 text-black" strokeWidth={3} />
+            <RefreshCw className="w-8 h-8 text-white" strokeWidth={3} />
          </motion.div>
       </div>
     );
@@ -252,26 +296,34 @@ export default function ClozeQuizPage() {
   if (status === 'completed') {
     const accuracy = Math.round((correctCount / deck.length) * 100);
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative overflow-hidden min-h-[85vh] sm:min-h-[600px] flex items-center justify-center py-4">
-        <div className="absolute inset-0 -z-10">
-          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 10, repeat: Infinity }} className="absolute -top-20 -left-20 w-64 h-64 bg-[#FFE500]/10 rounded-full blur-3xl" />
-          <motion.div animate={{ scale: [1, 1.5, 1], rotate: [0, -90, 0] }} transition={{ duration: 15, repeat: Infinity }} className="absolute -bottom-20 -right-20 w-96 h-96 bg-[#0057FF]/10 rounded-full blur-3xl" />
-        </div>
+      <>
+        {accuracy === 100 && <CreativeConfetti />}
+        {/* Background Pattern */}
+        <div 
+          className="fixed inset-0 z-0 opacity-[0.07] pointer-events-none"
+          style={{ 
+            backgroundImage: 'url("/images/Late for Class.svg"), url("/images/Meela Pantalones.svg"), url("/images/Polka Pup.svg"), url("/images/Runner.svg"), url("/images/Ecto Plasma.svg"), url("/images/Consumer.svg")',
+            backgroundSize: '400px, 350px, 300px, 450px, 350px, 400px',
+            backgroundPosition: '0px 0px, 200px 200px, 400px 50px, 100px 350px, 500px 150px, 300px 400px',
+            backgroundRepeat: 'repeat'
+          }}
+        />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative z-10 min-h-[85vh] sm:min-h-[600px] flex items-center justify-center py-4">
         
         <div className="max-w-xl w-full mx-auto p-4 flex flex-col items-center text-center">
-          {/* Boxed Icon & QUIZ COMPLETE! from Time Attack */}
+          {/* Boxed Icon & QUIZ COMPLETE! */}
           <div className="text-center mb-3 sm:mb-8">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }} className="inline-block p-2 sm:p-4 bg-[#FFE500] border-[2px] sm:border-[4px] border-black shadow-[2px_2px_0_#000] sm:shadow-[8px_8px_0_#000] mb-2 sm:mb-6">
-              <Zap className="w-6 h-6 sm:w-12 sm:h-12 text-black" />
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }} className="inline-block p-2 sm:p-4 bg-[#4361EE] border-[2px] sm:border-[4px] border-black shadow-[2px_2px_0_#000] sm:shadow-[8px_8px_0_#000] mb-2 sm:mb-6">
+              <Puzzle className="w-6 h-6 sm:w-12 sm:h-12 text-white" />
             </motion.div>
             <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="uppercase tracking-tighter text-black text-3xl sm:text-[3.5rem] leading-[0.9]" style={{ fontWeight: 900 }}>
               QUIZ<br/>COMPLETE!
             </motion.h1>
           </div>
 
-          {/* Stats Box from Cloze Mode */}
-          <div className="bg-black text-white p-4 sm:p-10 border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#FFE500] sm:shadow-[12px_12px_0_#FFE500] w-full transform -rotate-1 hover:rotate-0 transition-transform mb-3 sm:mb-8">
-             <div className="text-5xl sm:text-7xl md:text-8xl font-black mb-0 italic tracking-tighter text-[#FFE500]">
+          {/* Stats Box */}
+          <div className="bg-black text-white p-4 sm:p-10 border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#4361EE] sm:shadow-[12px_12px_0_#4361EE] w-full transform -rotate-1 hover:rotate-0 transition-transform mb-3 sm:mb-8">
+             <div className="text-5xl sm:text-7xl md:text-8xl font-black mb-0 italic tracking-tighter text-[#4361EE]">
                {accuracy}<span className="text-3xl sm:text-4xl md:text-5xl">%</span>
              </div>
              <p className="font-bold uppercase tracking-[0.3em] text-[10px] sm:text-sm text-gray-400 mb-3 sm:mb-6">Overall Accuracy</p>
@@ -294,7 +346,7 @@ export default function ClozeQuizPage() {
              </div>
           </div>
 
-          {/* Detailed Results (Cloze style) */}
+          {/* Detailed Results */}
           <div className="w-full mb-3 sm:mb-8">
             <button
               onClick={() => setShowDetails(!showDetails)}
@@ -363,7 +415,7 @@ export default function ClozeQuizPage() {
                 setSessionSubmitted(false);
                 loadQuiz(); 
               }} 
-              className="flex-1 bg-[#FFE500] text-black border-[2px] sm:border-[4px] border-black py-2 sm:py-5 font-black text-sm sm:text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-95"
+              className="flex-1 bg-[#4361EE] text-white border-[2px] sm:border-[4px] border-black py-2 sm:py-5 font-black text-sm sm:text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-95"
             >
               <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={3} /> Replay
             </button>
@@ -376,6 +428,7 @@ export default function ClozeQuizPage() {
           </div>
         </div>
       </motion.div>
+      </>
     );
   }
 
@@ -398,193 +451,340 @@ export default function ClozeQuizPage() {
   const isCorrect = status === 'revealed' && selectedOption.trim().toLowerCase() === currentWord.word.toLowerCase();
   
   // Dynamic styling based on status
-  const cardBg = status === 'revealed' ? (isCorrect ? 'bg-[#F0FDF4]' : 'bg-[#FFF1F2]') : 'bg-white';
-  const cardShake = status === 'revealed' && !isCorrect ? { x: [-10, 10, -10, 10, 0] } : {};
+  const cardBg = '#fff';
+  const cardTextColor = '#000';
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 pt-4">
+    <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="max-w-3xl mx-auto px-4 py-2 sm:py-8">
       
-      {/* Header Info */}
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#4361EE] border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_#000] transform -rotate-6">
-            <Puzzle className="w-7 h-7 text-white" strokeWidth={2.5} />
-          </div>
-          <div>
-            <h2 className="uppercase font-black text-2xl md:text-3xl italic tracking-tighter leading-none text-black">Cloze Deletion</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <Keyboard className="w-4 h-4 text-gray-500" />
-              <p className="text-[10px] md:text-xs uppercase font-bold tracking-widest text-gray-500">Press 1-4 to select</p>
+      {/* HUD Header */}
+      <div className="flex items-center justify-between mb-3 sm:mb-8 flex-wrap gap-3 sm:gap-6">
+        <motion.div initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
+          <div className="flex items-center gap-2 sm:gap-4 mb-1 sm:mb-2">
+            <motion.div 
+              animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} 
+              transition={{ duration: 4, repeat: Infinity }} 
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-[#4361EE] border-[2px] sm:border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_#000]"
+            >
+              <Puzzle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </motion.div>
+            <div>
+              <h1 className="uppercase tracking-tighter text-black font-black text-xl sm:text-[2rem] leading-none">CLOZE DELETION</h1>
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-1.5">
+                <Keyboard className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+                <p className="text-[8px] sm:text-[10px] uppercase font-black tracking-widest text-gray-500">Press 1-4 to select</p>
+              </div>
             </div>
           </div>
-        </div>
+          {/* Per-question dot progress indicators */}
+          <div className="flex gap-2 ml-10 sm:ml-14">
+            {deck.map((_, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ scale: 0 }} 
+                animate={{ scale: 1 }} 
+                transition={{ delay: i * 0.1 }} 
+                className="w-2 h-2 border-[1.5px] border-black" 
+                style={{ 
+                  background: i < results.length 
+                    ? (results[i].correct ? "#00C853" : "#FF1744") 
+                    : (i === currentIndex ? "#4361EE" : "#ddd") 
+                }} 
+              />
+            ))}
+          </div>
+        </motion.div>
         
-        <div className="flex gap-4">
-          <div className="bg-[#FFE500] text-black border-[3px] border-black px-5 py-3 shadow-[4px_4px_0_#000] flex items-center justify-center font-black italic text-xl">
+        <div className="flex gap-2 sm:gap-4 flex-wrap">
+          <div className="bg-[#4361EE] text-white border-[2px] sm:border-[3px] border-black px-3 sm:px-5 py-2 sm:py-3 shadow-[4px_4px_0_#000] flex items-center justify-center font-black italic text-base sm:text-xl">
             {currentIndex + 1} / {deck.length}
           </div>
-          <div className="bg-black border-[3px] border-black px-5 py-3 flex items-center gap-3 shadow-[4px_4px_0_#FFE500] hidden sm:flex">
-            <Star className="w-5 h-5 text-[#FFE500]" />
-            <span className="text-[#FFE500] uppercase text-lg font-black"><AnimatedNumber value={totalXP} /></span>
+          <div className="bg-black border-[2px] sm:border-[3px] border-black px-3 sm:px-5 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-[4px_4px_0_#FFE500]">
+            <Star className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFE500]" />
+            <span className="text-[#FFE500] uppercase text-base sm:text-lg font-black"><AnimatedNumber value={totalXP} /></span>
           </div>
-          <div className="bg-[#FF6D00] border-[3px] border-black px-5 py-3 flex items-center gap-3 shadow-[4px_4px_0_#000] hidden sm:flex">
-            <Flame className="w-5 h-5 text-white" />
-            <span className="text-white uppercase text-lg font-black"><AnimatedNumber value={streak} /></span>
+          <div className="bg-[#FF6D00] border-[2px] sm:border-[3px] border-black px-3 sm:px-5 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-[4px_4px_0_#000]">
+            <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <span className="text-white uppercase text-base sm:text-lg font-black"><AnimatedNumber value={streak} /></span>
           </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full bg-white h-4 border-[3px] border-black mb-10 shadow-[4px_4px_0_#000] overflow-hidden">
-        <motion.div 
-          className="h-full bg-black" 
-          initial={{ width: 0 }}
-          animate={{ width: `${((currentIndex) / deck.length) * 100}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        />
+      {/* Progress Bar with shimmer */}
+      <div className="mb-4 sm:mb-10">
+        <div className="flex items-end justify-between mb-1 sm:mb-3">
+          <motion.span key={currentIndex} initial={{ y: 5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[#888] font-black">
+            WORD {currentIndex + 1} / {deck.length}
+          </motion.span>
+          <span className="text-2xl uppercase tracking-tighter text-black font-black">
+            {Math.round(((currentIndex) / deck.length) * 100)}%
+          </span>
+        </div>
+        <div className="relative w-full h-2 bg-white border-[3px] border-black overflow-hidden shadow-[2px_2px_0_#000]">
+          <motion.div 
+            className="h-full bg-[#4361EE] border-r-[3px] border-black" 
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentIndex) / deck.length) * 100}%` }}
+            transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
+          />
+          <motion.div 
+            animate={{ x: ["-100%", "200%"] }} 
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }} 
+            className="absolute inset-y-0 w-20 bg-white/30 skew-x-[-20deg]" 
+          />
+        </div>
       </div>
 
       {/* Main Flashcard */}
-      <AnimatePresence mode="wait">
-        <motion.div
-           key={currentWord.id}
-           initial={{ opacity: 0, scale: 0.95, y: 20 }}
-           animate={{ ...cardShake, opacity: 1, scale: 1, y: 0 }}
-           exit={{ opacity: 0, scale: 0.95, y: -20 }}
-           transition={{ duration: 0.3 }}
-           className={`${cardBg} border-[4px] border-black shadow-[12px_12px_0_#000] p-6 md:p-12 mb-10 relative transition-colors duration-300`}
-        >
-           <div className="absolute -top-4 -right-4 bg-black text-white px-4 py-1 border-[3px] border-white font-black text-xs uppercase tracking-widest shadow-[4px_4px_0_#FFE500]">
-              {currentWord.partOfSpeech}
-           </div>
+      <div className="relative">
+        <motion.div animate={controls}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentWord.id}
+              initial={{ y: 50, opacity: 0, rotateX: 20, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+              exit={{ y: -50, opacity: 0, rotateX: -20, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[15px_15px_0_#000] p-4 sm:p-12 mb-3 sm:mb-8 relative overflow-hidden min-h-[180px] sm:min-h-[320px] flex flex-col justify-center transition-colors duration-300"
+              style={{ background: cardBg, perspective: "1000px", transformStyle: "preserve-3d" }}
+            >
+              {/* Dot pattern overlay */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "20px 20px" }} />
 
-           {/* The Sentence */}
-           <div className="min-h-[140px] flex items-center justify-center text-center my-8">
-              <h3 className="text-2xl md:text-4xl font-black leading-snug text-black">
-                 {sentenceParts.map((part, i) => {
-                    // Even indices are regular text, odd indices are the cloze word
-                    if (i % 2 === 0) return <span key={i}>{part}</span>;
-                    
-                    if (status === 'typing') {
+              {/* POS + Level badges */}
+              <div className="absolute top-3 sm:top-6 left-3 sm:left-6 right-3 sm:right-6 flex items-center justify-between">
+                <span 
+                  className="px-2 sm:px-4 py-1 sm:py-2 border-[2px] sm:border-[2.5px] border-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] sm:shadow-[4px_4px_0_#000] font-black" 
+                  style={{ 
+                    background: POS_COLORS[currentWord.partOfSpeech]?.bg || "#333", 
+                    color: POS_COLORS[currentWord.partOfSpeech]?.text || "#fff" 
+                  }}
+                >
+                  {currentWord.partOfSpeech}
+                </span>
+                <span 
+                  className="px-2 sm:px-4 py-1 sm:py-2 border-[2px] sm:border-[2.5px] border-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[2px_2px_0_#000] sm:shadow-[4px_4px_0_#000] font-black"
+                  style={{ 
+                    background: DIFF_COLORS[currentWord.level || "BEGINNER"] || "#00C853", 
+                    color: (currentWord.level === "ADVANCED") ? "#fff" : "#000" 
+                  }}
+                >
+                  {currentWord.level || "BEGINNER"}
+                </span>
+              </div>
+
+              {/* The Sentence */}
+              <div className="min-h-[100px] sm:min-h-[140px] flex items-center justify-center text-center my-8 sm:my-10 mt-14 sm:mt-16">
+                <h3 className="text-xl sm:text-2xl md:text-4xl font-black leading-snug text-black">
+                   {sentenceParts.map((part, i) => {
+                      if (i % 2 === 0) return <span key={i}>{part}</span>;
+                      
+                      if (status === 'typing') {
+                        return (
+                          <motion.span 
+                            key={`typing-${i}`} 
+                            animate={{ borderColor: ["#4361EE", "#7C3AED", "#4361EE"] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="inline-block mx-1 sm:mx-3 px-3 sm:px-6 py-1 bg-[#4361EE]/10 border-b-[4px] sm:border-b-[6px] border-[#4361EE] rounded-sm align-middle min-w-[80px] sm:min-w-[120px]"
+                          >
+                             &nbsp;
+                          </motion.span>
+                        );
+                      }
+                      
                       return (
-                        <span key={i} className="inline-block mx-3 px-6 py-1 bg-gray-200 border-b-[6px] border-black rounded-sm align-middle min-w-[120px]">
-                           &nbsp;
-                        </span>
+                        <motion.span 
+                          key={`revealed-${i}`} 
+                          initial={{ scale: 0, rotate: -10 }}
+                          animate={{ scale: 1, rotate: -2, borderColor: "#000" }}
+                          transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                          className={`inline-block mx-1 sm:mx-3 px-2 sm:px-4 py-1 border-[3px] border-black shadow-[4px_4px_0_0_#000] ${
+                            isCorrect ? 'bg-[#00C853] text-white' : 'bg-[#FF1744] text-white'
+                          }`}
+                        >
+                           {currentWord.word}
+                        </motion.span>
                       );
-                    }
-                    
-                    return (
-                      <span 
-                        key={i} 
-                        className={`inline-block mx-3 px-4 py-1 border-[3px] border-black shadow-[4px_4px_0_0_#000] transform -rotate-2 ${
-                          isCorrect ? 'bg-[#00C853] text-black' : 'bg-[#FF1744] text-white'
-                        }`}
-                      >
-                         {currentWord.word}
-                      </span>
-                    );
-                 })}
-              </h3>
-           </div>
-           
-           {/* Hint Footer */}
-           <div className="flex justify-center">
-             <div className="bg-white border-[3px] border-black px-6 py-3 shadow-[4px_4px_0_#000] transform rotate-1 inline-block">
-                <p className="uppercase text-[10px] font-black tracking-[0.2em] text-gray-400 mb-1">Target Translation</p>
-                <p className="italic text-black font-bold text-lg">"{translationHint}"</p>
-             </div>
-           </div>
+                   })}
+                </h3>
+              </div>
+              
+              {/* Hint Footer */}
+              {status === 'typing' && (
+                <div className="flex justify-center">
+                  <div className="bg-white border-[2px] sm:border-[3px] border-black px-3 sm:px-6 py-2 sm:py-3 shadow-[2px_2px_0_#000] sm:shadow-[4px_4px_0_#000] transform rotate-1 inline-block">
+                     <p className="uppercase text-[8px] sm:text-[10px] font-black tracking-[0.2em] text-gray-400 mb-1">Target Translation</p>
+                     <p className="italic text-black font-bold text-sm sm:text-lg">&quot;{translationHint}&quot;</p>
+                  </div>
+                </div>
+              )}
+
+
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
-      </AnimatePresence>
+
+        {/* Floating decorative star */}
+        <motion.div 
+          animate={{ y: [0, -20, 0], rotate: [0, 360] }} 
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }} 
+          className="absolute -right-12 top-1/2 -z-10 opacity-10"
+        >
+          <Star className="w-32 h-32 text-black" />
+        </motion.div>
+      </div>
 
       {/* Multiple Choice Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-32">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5 mb-4 sm:mb-8">
         {options.map((option, idx) => {
           const isCorrectOption = option.toLowerCase() === currentWord.word.toLowerCase();
           const isSelected = option === selectedOption;
           
-          let btnStateClasses = "bg-white text-black hover:bg-[#FFE500] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none cursor-pointer group";
-          let badgeStateClasses = "bg-black text-[#FFE500] group-hover:bg-white group-hover:text-black";
+          let btnBg = "#fff";
+          let btnTextColor = "#000";
+          let btnShadow = "8px 8px 0 #000";
+          let btnTranslate = "";
+          let btnCursor = "pointer";
+          let btnOpacity = "1";
+          let badgeBg = "#FFE500";
+          let badgeText = "#000";
+          let extraClasses = "hover:bg-[#4361EE] hover:text-white hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none group";
+          let badgeExtraClasses = "group-hover:bg-black group-hover:text-[#FFE500] shadow-[2px_2px_0_#000] sm:shadow-[3px_3px_0_#000]";
           
           if (status === 'revealed') {
             if (isCorrectOption) {
-               btnStateClasses = "bg-[#00C853] text-black translate-x-[4px] translate-y-[4px] shadow-none z-10 scale-[1.02]";
-               badgeStateClasses = "bg-white text-black";
+              btnBg = "#00C853";
+              btnTextColor = "#000";
+              btnTranslate = "translate-x-[4px] translate-y-[4px]";
+              btnShadow = "none";
+              extraClasses = "z-10 scale-[1.02]";
+              badgeBg = "#fff";
+              badgeText = "#000";
+              badgeExtraClasses = "shadow-[2px_2px_0_#000] sm:shadow-[3px_3px_0_#000]";
             } else if (isSelected && !isCorrectOption) {
-               btnStateClasses = "bg-[#FF1744] text-white translate-x-[4px] translate-y-[4px] shadow-none";
-               badgeStateClasses = "bg-black text-white border-white";
+              btnBg = "#FF1744";
+              btnTextColor = "#fff";
+              btnTranslate = "translate-x-[4px] translate-y-[4px]";
+              btnShadow = "none";
+              extraClasses = "";
+              badgeBg = "#000";
+              badgeText = "#fff";
+              badgeExtraClasses = "border-white shadow-[2px_2px_0_#fff] sm:shadow-[3px_3px_0_#fff]";
             } else {
-               btnStateClasses = "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed";
-               badgeStateClasses = "bg-gray-300 text-gray-500 border-gray-400";
+              btnBg = "#f3f4f6";
+              btnTextColor = "#9ca3af";
+              btnOpacity = "0.6";
+              btnCursor = "not-allowed";
+              extraClasses = "";
+              badgeBg = "#d1d5db";
+              badgeText = "#6b7280";
+              badgeExtraClasses = "border-gray-400 shadow-[2px_2px_0_#9ca3af] sm:shadow-[3px_3px_0_#9ca3af]";
             }
           }
 
           if (isPending && isSelected) {
-             btnStateClasses = "bg-[#FFE500] text-black translate-x-[4px] translate-y-[4px] shadow-none cursor-wait animate-pulse";
-             badgeStateClasses = "bg-white text-black";
+            btnBg = "#4361EE";
+            btnTextColor = "#fff";
+            btnTranslate = "translate-x-[4px] translate-y-[4px]";
+            btnShadow = "none";
+            btnCursor = "wait";
+            extraClasses = "animate-pulse";
+            badgeBg = "#fff";
+            badgeText = "#000";
+            badgeExtraClasses = "shadow-[2px_2px_0_#000] sm:shadow-[3px_3px_0_#000]";
           } else if (isPending) {
-             btnStateClasses = "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed";
-             badgeStateClasses = "bg-gray-300 text-gray-500 border-gray-400";
+            btnBg = "#f3f4f6";
+            btnTextColor = "#9ca3af";
+            btnOpacity = "0.6";
+            btnCursor = "not-allowed";
+            extraClasses = "";
+            badgeBg = "#d1d5db";
+            badgeText = "#6b7280";
+            badgeExtraClasses = "border-gray-400 shadow-[2px_2px_0_#9ca3af] sm:shadow-[3px_3px_0_#9ca3af]";
           }
 
           return (
-            <button
+            <motion.button
               key={idx}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: idx * 0.05, type: "spring", stiffness: 400, damping: 25 }}
               disabled={status !== 'typing' || isPending}
               onClick={() => handleOptionClick(option)}
+              style={{ 
+                background: btnBg, 
+                color: btnTextColor, 
+                boxShadow: btnShadow, 
+                cursor: btnCursor, 
+                opacity: btnOpacity 
+              }}
               className={`
-                border-[4px] border-black p-4 md:p-6 text-xl md:text-2xl font-black shadow-[8px_8px_0_#000] 
-                transition-all duration-200 flex items-center gap-5 text-left w-full
+                border-[3px] sm:border-[4px] border-black p-3 sm:p-4 md:p-5 text-base sm:text-lg md:text-xl font-black 
+                transition-all duration-200 flex items-center gap-3 sm:gap-5 text-left w-full leading-tight
                 active:scale-95 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none
-                ${btnStateClasses}
+                ${btnTranslate} ${extraClasses}
               `}
             >
-              <span className={`w-12 h-12 flex items-center justify-center border-[3px] border-black flex-shrink-0 text-xl transition-colors ${badgeStateClasses}`}>
+              <span 
+                style={{ background: badgeBg, color: badgeText }}
+                className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center border-[2px] sm:border-[3px] border-black flex-shrink-0 text-base sm:text-lg transition-all ${badgeExtraClasses}`}
+              >
                 {LETTERS[idx]}
               </span>
-              <span className="uppercase truncate flex-1">{option}</span>
-              {isPending && isSelected && <RefreshCw className="w-6 h-6 animate-spin" />}
-            </button>
+              <span className="uppercase flex-1 break-words whitespace-normal">{option}</span>
+              {isPending && isSelected && <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin flex-shrink-0" />}
+            </motion.button>
           );
         })}
       </div>
 
-      {/* Results Banner (Fixed to Bottom for immediate access) */}
+      {/* Results Banner & Next Button */}
       <AnimatePresence>
         {status === 'revealed' && (
           <motion.div 
-            initial={{ y: 100, opacity: 0 }} 
+            initial={{ y: 30, opacity: 0 }} 
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-0 left-0 lg:left-64 right-0 z-50 p-4 pointer-events-none"
+            exit={{ y: 30, opacity: 0 }}
+            className="fixed bottom-0 left-0 right-0 z-[60] flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-6 bg-white border-t-[4px] sm:border-[4px] border-black shadow-[0_-8px_0_0_rgba(0,0,0,0.1)] sm:shadow-[8px_8px_0_#000] sm:mb-8 sm:static"
           >
-            <div className="max-w-4xl mx-auto pointer-events-auto flex flex-col sm:flex-row gap-6 items-center justify-between bg-black p-6 border-[4px] border-black shadow-[0_-8px_0_0_rgba(0,0,0,0.1)] w-full">
-               <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-4 text-white w-full sm:w-auto justify-center sm:justify-start">
-                  {isCorrect ? (
-                     <div className="bg-[#00C853] p-2 border-[3px] border-white flex-shrink-0">
-                       <CheckCircle2 className="w-8 h-8 text-black" strokeWidth={3} />
-                     </div>
-                  ) : (
-                     <div className="bg-[#FF1744] p-2 border-[3px] border-white flex-shrink-0">
-                       <AlertOctagon className="w-8 h-8 text-white" strokeWidth={3} />
-                     </div>
-                  )}
-                  <div className="flex flex-col items-center sm:items-start w-full mt-2 sm:mt-0">
-                     <p className="font-black italic uppercase text-3xl md:text-4xl tracking-tighter leading-none mb-2 mt-1 sm:mt-0">
-                       {isCorrect ? 'Flawless!' : 'Not Quite.'}
-                     </p>
-                     <p className="font-bold text-xs md:text-sm uppercase tracking-widest text-gray-400">
-                       {isCorrect ? `+${results[results.length-1]?.xpGained} XP` : `Target: ${currentWord.word}`}
-                     </p>
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
+               {isCorrect ? (
+                  <div className="bg-[#00C853] p-2 sm:p-3 border-[2px] sm:border-[3px] border-black flex-shrink-0">
+                     <Check className="w-6 h-6 sm:w-8 sm:h-8 text-black" strokeWidth={3} />
                   </div>
+               ) : (
+                  <div className="bg-[#FF1744] p-2 sm:p-3 border-[2px] sm:border-[3px] border-black flex-shrink-0">
+                     <X className="w-6 h-6 sm:w-8 sm:h-8 text-white" strokeWidth={3} />
+                  </div>
+               )}
+               <div className="flex flex-col">
+                  <h3 className="uppercase tracking-tighter font-black text-2xl sm:text-3xl leading-none">
+                     {isCorrect ? "FLAWLESS!" : "NOT QUITE!"}
+                  </h3>
+                  {isCorrect ? (
+                     <p className="text-[#00C853] font-black text-xs sm:text-sm uppercase tracking-widest mt-1">
+                        +{results[results.length-1]?.xpGained} XP
+                     </p>
+                  ) : (
+                     <p className="text-[#FF1744] font-black text-xs sm:text-sm uppercase tracking-widest mt-1">
+                        TARGET: {currentWord.word}
+                     </p>
+                  )}
                </div>
-               
-               <button 
+            </div>
+
+            <div className="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0 justify-center sm:justify-end">
+               <div className="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                 <Keyboard className="w-4 h-4" />
+                 <span>ENTER ↵</span>
+               </div>
+               <motion.button 
+                 whileHover={{ x: 5, y: 5, boxShadow: "none" }}
                  onClick={handleNext} 
-                 className="w-full sm:w-auto bg-white text-black border-[4px] border-black font-black uppercase text-xl px-10 py-5 flex items-center justify-center gap-3 hover:bg-[#FFE500] hover:-translate-y-1 transition-transform active:translate-y-2 flex-shrink-0"
+                 className="w-full sm:w-auto flex justify-center items-center gap-3 px-6 sm:px-10 py-3 sm:py-4 bg-[#4361EE] text-white border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[6px_6px_0_#000] uppercase font-black transition-all text-sm sm:text-base active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
                >
-                  Continue <ArrowRight className="w-6 h-6" strokeWidth={3} />
-               </button>
+                 {currentIndex < deck.length - 1 ? "NEXT" : "FINISH"} <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+               </motion.button>
             </div>
           </motion.div>
         )}

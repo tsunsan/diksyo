@@ -31,21 +31,30 @@ type FeedbackState = "idle" | "correct" | "incorrect" | "timeout";
 
 // Creative Confetti Component
 const CreativeConfetti = () => {
-  const pieces = Array.from({ length: 80 });
+  const [pieces] = useState(() => Array.from({ length: 80 }).map((_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 5,
+    duration: 3 + Math.random() * 2,
+    color: ["#FFE500", "#FF1744", "#00C853", "#0057FF", "#7C3AED"][Math.floor(Math.random() * 5)],
+    shape: i % 3 === 0 ? "polygon(50% 0%, 0% 100%, 100% 100%)" : i % 3 === 1 ? "circle(50% at 50% 50%)" : "none"
+  })));
+
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {pieces.map((_, i) => (
+      {pieces.map((p) => (
         <motion.div
-          key={i}
-          initial={{ y: "110%", x: `${50}%`, scale: 0, rotate: 0 }}
-          animate={{ y: "-10%", x: `${Math.random() * 100}%`, scale: [0, 1, 1, 0.5, 0], rotate: 720 }}
-          transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, ease: "easeOut", delay: Math.random() * 5 }}
+          key={p.id}
+          initial={{ top: "110%", scale: 0, rotate: 0 }}
+          animate={{ top: "-10%", scale: [0, 1, 1, 0.5, 0], rotate: 720 }}
+          transition={{ duration: p.duration, repeat: Infinity, ease: "easeOut", delay: p.delay }}
           style={{
             position: "absolute",
+            left: p.left,
             width: "12px",
             height: "12px",
-            backgroundColor: ["#FFE500", "#FF1744", "#00C853", "#0057FF", "#7C3AED"][Math.floor(Math.random() * 5)],
-            clipPath: i % 3 === 0 ? "polygon(50% 0%, 0% 100%, 100% 100%)" : i % 3 === 1 ? "circle(50% at 50% 50%)" : "none",
+            backgroundColor: p.color,
+            clipPath: p.shape,
           }}
         />
       ))}
@@ -313,12 +322,19 @@ export default function QuizPage2() {
   // Quiz Done screen
   if (quizDone) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative overflow-hidden min-h-[85vh] sm:min-h-[600px] flex items-center justify-center py-4">
-        {accuracy >= 80 && <CreativeConfetti />}
-        <div className="absolute inset-0 -z-10">
-          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 10, repeat: Infinity }} className="absolute -top-20 -left-20 w-64 h-64 bg-[#FFE500]/10 rounded-full blur-3xl" />
-          <motion.div animate={{ scale: [1, 1.5, 1], rotate: [0, -90, 0] }} transition={{ duration: 15, repeat: Infinity }} className="absolute -bottom-20 -right-20 w-96 h-96 bg-[#0057FF]/10 rounded-full blur-3xl" />
-        </div>
+      <>
+        {accuracy === 100 && <CreativeConfetti />}
+        {/* Background Pattern */}
+        <div 
+          className="fixed inset-0 z-0 opacity-[0.07] pointer-events-none"
+          style={{ 
+            backgroundImage: 'url("/images/Late for Class.svg"), url("/images/Meela Pantalones.svg"), url("/images/Polka Pup.svg"), url("/images/Runner.svg"), url("/images/Ecto Plasma.svg"), url("/images/Consumer.svg")',
+            backgroundSize: '400px, 350px, 300px, 450px, 350px, 400px',
+            backgroundPosition: '0px 0px, 200px 200px, 400px 50px, 100px 350px, 500px 150px, 300px 400px',
+            backgroundRepeat: 'repeat'
+          }}
+        />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative z-10 min-h-[85vh] sm:min-h-[600px] flex items-center justify-center py-4">
         
         <div className="max-w-xl w-full mx-auto p-4 flex flex-col items-center text-center">
           {/* Boxed Icon & QUIZ COMPLETE! from Time Attack */}
@@ -433,6 +449,7 @@ export default function QuizPage2() {
           </div>
         </div>
       </motion.div>
+      </>
     );
   }
 
@@ -564,9 +581,20 @@ export default function QuizPage2() {
         <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} onClick={() => setFlipped(!flipped)} className="w-full sm:w-auto flex justify-center items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><RotateCcw className={`w-5 h-5 transition-transform duration-500 ${flipped ? "rotate-180" : ""}`} />{flipped ? "HIDE MEANING" : "VIEW MEANING"}</motion.button>
         <AnimatePresence>
           {feedback !== "idle" && (
-            <motion.button initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 50, opacity: 0 }} whileHover={{ x: 10, backgroundColor: "#000", color: "#fff" }} onClick={handleNext} className="w-full sm:w-auto sm:ml-auto flex justify-center items-center gap-4 px-6 sm:px-10 py-4 bg-[#FFE500] text-black border-[4px] border-black shadow-[6px_6px_0_#000] uppercase font-black transition-all text-sm sm:text-base">
-              {currentIndex < deck.length - 1 ? "NEXT CHALLENGE" : "FINISH"} <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-            </motion.button>
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              className="fixed bottom-0 left-0 right-0 z-[60] p-4 bg-white border-t-[4px] border-black shadow-[0_-4px_0_rgba(0,0,0,0.1)] sm:p-0 sm:static sm:bg-transparent sm:border-none sm:shadow-none sm:z-auto sm:ml-auto flex justify-center w-full sm:w-auto"
+            >
+              <motion.button 
+                whileHover={{ x: 10, backgroundColor: "#000", color: "#fff" }} 
+                onClick={handleNext} 
+                className="w-full sm:w-auto flex justify-center items-center gap-4 px-6 sm:px-10 py-4 bg-[#FFE500] text-black border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[6px_6px_0_#000] uppercase font-black transition-all text-sm sm:text-base active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+              >
+                {currentIndex < deck.length - 1 ? "NEXT CHALLENGE" : "FINISH"} <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+              </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
