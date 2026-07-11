@@ -570,6 +570,16 @@ export default function QuizPage2() {
           )}
         </AnimatePresence>
       </div>
+      {process.env.NODE_ENV === 'development' && (
+        <button onClick={() => {
+          if (deck.length > 0 && results.length === 0) {
+            setResults([{ id: deck[0].id, correct: true, timeBonus: true, xpGained: 15, newMastery: 50, level: "BEGINNER" }]);
+          }
+          setQuizDone(true);
+        }} className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 text-xs sm:text-sm bg-red-500 text-white font-black px-4 py-2 uppercase border-[3px] border-black shadow-[4px_4px_0_#000] hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_#000] active:translate-x-0 active:translate-y-0 active:shadow-none transition-all">
+          Skip
+        </button>
+      )}
     </div>
   );
 }

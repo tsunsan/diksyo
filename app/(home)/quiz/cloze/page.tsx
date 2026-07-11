@@ -252,52 +252,57 @@ export default function ClozeQuizPage() {
   if (status === 'completed') {
     const accuracy = Math.round((correctCount / deck.length) * 100);
     return (
-      <div className="min-h-[600px] flex flex-col items-center justify-center py-12 px-4">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-xl w-full mx-auto flex flex-col items-center text-center"
-        >
-           <div className="relative">
-             <Zap className="w-20 h-20 text-[#FFE500] drop-shadow-[6px_6px_0_rgba(0,0,0,1)] mb-4 relative z-10" fill="#FFE500" />
-           </div>
-           
-           <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter text-black leading-none mb-6 drop-shadow-[4px_4px_0_rgba(255,229,0,1)]">
-              MISSION<br/>CLEARED
-           </h1>
-           
-           <div className="bg-black text-white p-6 md:p-10 border-[4px] border-black shadow-[12px_12px_0_#FFE500] w-full transform -rotate-1 hover:rotate-0 transition-transform mb-6">
-              <div className="text-7xl md:text-8xl font-black mb-0 italic tracking-tighter text-[#FFE500]">
-                {accuracy}<span className="text-4xl md:text-5xl">%</span>
-              </div>
-              <p className="font-bold uppercase tracking-[0.3em] text-sm text-gray-400 mb-6">Overall Accuracy</p>
-              
-              <div className="flex justify-around items-center border-t-[4px] border-dashed border-gray-700 pt-6">
-                <div className="flex flex-col items-center">
-                   <p className="text-3xl md:text-4xl font-black text-[#00C853]">{correctCount}</p>
-                   <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">Correct</p>
-                </div>
-                <div className="h-10 w-[4px] bg-gray-700"></div>
-                <div className="flex flex-col items-center">
-                   <p className="text-3xl md:text-4xl font-black text-[#FF6D00]">{maxStreak}</p>
-                   <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">Streak</p>
-                </div>
-                <div className="h-10 w-[4px] bg-gray-700"></div>
-                <div className="flex flex-col items-center">
-                   <p className="text-3xl md:text-4xl font-black text-[#FFE500]">{totalXP}</p>
-                   <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">XP</p>
-                </div>
-              </div>
-           </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="relative overflow-hidden min-h-[85vh] sm:min-h-[600px] flex items-center justify-center py-4">
+        <div className="absolute inset-0 -z-10">
+          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 10, repeat: Infinity }} className="absolute -top-20 -left-20 w-64 h-64 bg-[#FFE500]/10 rounded-full blur-3xl" />
+          <motion.div animate={{ scale: [1, 1.5, 1], rotate: [0, -90, 0] }} transition={{ duration: 15, repeat: Infinity }} className="absolute -bottom-20 -right-20 w-96 h-96 bg-[#0057FF]/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="max-w-xl w-full mx-auto p-4 flex flex-col items-center text-center">
+          {/* Boxed Icon & QUIZ COMPLETE! from Time Attack */}
+          <div className="text-center mb-3 sm:mb-8">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.6 }} className="inline-block p-2 sm:p-4 bg-[#FFE500] border-[2px] sm:border-[4px] border-black shadow-[2px_2px_0_#000] sm:shadow-[8px_8px_0_#000] mb-2 sm:mb-6">
+              <Zap className="w-6 h-6 sm:w-12 sm:h-12 text-black" />
+            </motion.div>
+            <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="uppercase tracking-tighter text-black text-3xl sm:text-[3.5rem] leading-[0.9]" style={{ fontWeight: 900 }}>
+              QUIZ<br/>COMPLETE!
+            </motion.h1>
+          </div>
 
-           <div className="w-full mb-6">
+          {/* Stats Box from Cloze Mode */}
+          <div className="bg-black text-white p-4 sm:p-10 border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#FFE500] sm:shadow-[12px_12px_0_#FFE500] w-full transform -rotate-1 hover:rotate-0 transition-transform mb-3 sm:mb-8">
+             <div className="text-5xl sm:text-7xl md:text-8xl font-black mb-0 italic tracking-tighter text-[#FFE500]">
+               {accuracy}<span className="text-3xl sm:text-4xl md:text-5xl">%</span>
+             </div>
+             <p className="font-bold uppercase tracking-[0.3em] text-[10px] sm:text-sm text-gray-400 mb-3 sm:mb-6">Overall Accuracy</p>
+             
+             <div className="flex justify-around items-center border-t-[2px] sm:border-t-[4px] border-dashed border-gray-700 pt-3 sm:pt-6">
+               <div className="flex flex-col items-center">
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#00C853]">{correctCount}</p>
+                  <p className="text-[8px] sm:text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">Correct</p>
+               </div>
+               <div className="h-6 sm:h-10 w-[2px] sm:w-[4px] bg-gray-700"></div>
+               <div className="flex flex-col items-center">
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#FF6D00]">{maxStreak}</p>
+                  <p className="text-[8px] sm:text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">Streak</p>
+               </div>
+               <div className="h-6 sm:h-10 w-[2px] sm:w-[4px] bg-gray-700"></div>
+               <div className="flex flex-col items-center">
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#FFE500]">{totalXP}</p>
+                  <p className="text-[8px] sm:text-[10px] md:text-xs uppercase font-bold text-gray-400 tracking-widest mt-1">XP</p>
+               </div>
+             </div>
+          </div>
+
+          {/* Detailed Results (Cloze style) */}
+          <div className="w-full mb-3 sm:mb-8">
             <button
               onClick={() => setShowDetails(!showDetails)}
-              className="w-full py-4 bg-white border-[4px] border-black shadow-[8px_8px_0_#000] uppercase font-black tracking-widest flex items-center justify-between px-6 transition-all hover:bg-gray-50 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+              className="w-full py-2 sm:py-4 bg-white border-[2px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] uppercase font-black tracking-widest flex items-center justify-between px-3 sm:px-6 transition-all hover:bg-gray-50 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none text-[10px] sm:text-base"
             >
               <span className="text-black">VIEW DETAILED RESULTS</span>
               <motion.div animate={{ rotate: showDetails ? 180 : 0 }}>
-                <ChevronDown className="w-6 h-6 text-black" />
+                <ChevronDown className="w-4 h-4 sm:w-6 sm:h-6 text-black" />
               </motion.div>
             </button>
 
@@ -309,7 +314,7 @@ export default function ClozeQuizPage() {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden mt-4"
                 >
-                  <div className="bg-white border-[4px] border-black shadow-[8px_8px_0_#000] text-left max-h-[250px] overflow-y-auto">
+                  <div className="bg-white border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] text-left max-h-[250px] overflow-y-auto">
                     {results.map((res, index) => (
                       <div key={index} className={`flex items-start justify-between p-4 border-b-[2px] border-black ${res.correct ? "bg-[#f0fdf4]" : "bg-[#fff1f2]"} last:border-b-0`}>
                         <div>
@@ -345,32 +350,32 @@ export default function ClozeQuizPage() {
               )}
             </AnimatePresence>
           </div>
-           
-           <div className="flex flex-col sm:flex-row gap-4 w-full mb-12">
-              <button 
-                onClick={() => { 
-                  resetQuiz(); 
-                  setTotalXP(0);
-                  setStreak(0);
-                  setMaxStreak(0);
-                  setResults([]);
-                  setShowDetails(false);
-                  setSessionSubmitted(false);
-                  loadQuiz(); 
-                }} 
-                className="flex-1 bg-[#FFE500] text-black border-[4px] border-black py-4 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-3 active:scale-95"
-              >
-                <RefreshCw className="w-6 h-6" strokeWidth={3}/> Replay
-              </button>
-              <Link 
-                href="/quiz" 
-                className="flex-1 bg-white text-black border-[4px] border-black py-4 font-black text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
-              >
-                Exit
-              </Link>
-           </div>
-        </motion.div>
-      </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full">
+            <button 
+              onClick={() => { 
+                resetQuiz(); 
+                setTotalXP(0);
+                setStreak(0);
+                setMaxStreak(0);
+                setResults([]);
+                setShowDetails(false);
+                setSessionSubmitted(false);
+                loadQuiz(); 
+              }} 
+              className="flex-1 bg-[#FFE500] text-black border-[2px] sm:border-[4px] border-black py-2 sm:py-5 font-black text-sm sm:text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-95"
+            >
+              <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={3} /> Replay
+            </button>
+            <Link 
+              href="/quiz" 
+              className="flex-1 bg-white text-black border-[2px] sm:border-[4px] border-black py-2 sm:py-5 font-black text-sm sm:text-xl uppercase tracking-widest hover:translate-x-[4px] hover:translate-y-[4px] shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] hover:shadow-none transition-all flex items-center justify-center active:scale-95"
+            >
+              Exit
+            </Link>
+          </div>
+        </div>
+      </motion.div>
     );
   }
 
@@ -585,6 +590,16 @@ export default function ClozeQuizPage() {
         )}
       </AnimatePresence>
 
+      {process.env.NODE_ENV === 'development' && (
+        <button onClick={() => {
+          if (deck.length > 0 && results.length === 0) {
+            setResults([{ id: deck[0].id, correct: true, word: deck[0].word, translationPrompt: deck[0].englishPrompt, xpGained: 15, newMastery: 50, level: "BEGINNER" }]);
+          }
+          useQuizStore.setState({ status: 'completed' });
+        }} className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 text-xs sm:text-sm bg-red-500 text-white font-black px-4 py-2 uppercase border-[3px] border-black shadow-[4px_4px_0_#000] hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_#000] active:translate-x-0 active:translate-y-0 active:shadow-none transition-all">
+          Skip
+        </button>
+      )}
     </div>
   );
 }
