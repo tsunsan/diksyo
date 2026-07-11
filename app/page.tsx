@@ -17,7 +17,7 @@ export const metadata: Metadata = {
         description:
             "Your ultimate Tagalog dictionary. Type any word to uncover its meaning, roots, and real-life context. Master Filipino with active recall and spaced repetition.",
         type: "website",
-        url: "https://diksyo.com",
+        url: "https://diksyo.app",
         siteName: "Diksyo",
     },
     twitter: {
@@ -57,13 +57,13 @@ export default async function LandingPage() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "Diksyo",
-        url: "https://diksyo.com",
+        url: "https://diksyo.app",
         description: "The Modern Tagalog Dictionary & Learning Engine",
         potentialAction: {
             "@type": "SearchAction",
             target: {
                 "@type": "EntryPoint",
-                urlTemplate: "https://diksyo.com/salita/{search_term_string}",
+                urlTemplate: "https://diksyo.app/salita/{search_term_string}",
             },
             "query-input": "required name=search_term_string",
         },
