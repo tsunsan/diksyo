@@ -554,7 +554,7 @@ export default function QuizPage2() {
                   <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 4, repeat: Infinity }} className="absolute -inset-1.5 sm:-inset-4 bg-[#FFE500] border-[2px] sm:border-[4px] border-black -z-10 shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000]" />
                   <div className="px-3 py-3 sm:px-10 sm:py-6 break-words">
                     <p className="text-[8px] sm:text-[10px] uppercase font-black text-black/40 mb-1 sm:mb-2">FILIPINO MEANING</p>
-                    <h2 className={`uppercase tracking-tighter text-black font-black leading-tight break-words ${current.rootWord?.length > 30 ? 'text-sm sm:text-lg md:text-2xl' : current.rootWord?.length > 15 ? 'text-base sm:text-2xl md:text-3xl' : 'text-lg sm:text-3xl md:text-4xl'}`}>{current.rootWord}</h2>
+                    <h2 className={`uppercase tracking-tighter text-black font-black leading-tight break-words ${(current.rootWord?.length ?? 0) > 30 ? 'text-sm sm:text-lg md:text-2xl' : (current.rootWord?.length ?? 0) > 15 ? 'text-base sm:text-2xl md:text-3xl' : 'text-lg sm:text-3xl md:text-4xl'}`}>{current.rootWord}</h2>
                   </div>
                 </div>
                 <p className="text-xs sm:text-xl text-black/70 uppercase tracking-wider sm:tracking-widest px-2 sm:px-10 mb-2 sm:mb-8 font-black leading-tight sm:leading-normal">{current.rootDefinition}</p>
