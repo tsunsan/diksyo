@@ -22,6 +22,9 @@ export const words = pgTable("words", {
     frequency: text("frequency"),
 }, (table) => [
     index("words_word_idx").on(table.word),
+    index("words_word_trgm_idx").using("gin", table.word.op("gin_trgm_ops")),
+    index("words_slug_trgm_idx").using("gin", table.slug.op("gin_trgm_ops")),
+    index("words_translation_trgm_idx").using("gin", table.translation.op("gin_trgm_ops")),
     pgPolicy("Allow public read access on words", {
         as: "permissive",
         for: "select",
