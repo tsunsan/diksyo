@@ -17,6 +17,16 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     const pos = word?.partOfSpeech || "";
     const definition = word?.translation || "Alamin ang kahulugan sa Diksyo";
 
+    // Dynamic font size for long words
+    const termFontSize = term.length > 18 ? 64 : term.length > 12 ? 84 : 120;
+
+    // Load fonts for sharp rendering
+    const [interBlack, interBoldItalic, interBold] = await Promise.all([
+        fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-900-normal.woff").then(r => r.arrayBuffer()),
+        fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-italic.woff").then(r => r.arrayBuffer()),
+        fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff").then(r => r.arrayBuffer())
+    ]);
+
     return new ImageResponse(
         (
             <div
@@ -29,7 +39,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                     justifyContent: "center",
                     padding: "80px",
                     border: "16px solid black",
-                    fontFamily: "sans-serif",
+                    fontFamily: "Inter, sans-serif",
                 }}
             >
                 {/* Brand Badge */}
@@ -52,17 +62,19 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                 </div>
 
                 {/* Word & Part of Speech */}
-                <div style={{ display: "flex", alignItems: "baseline", gap: "24px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "24px", flexWrap: "wrap", maxWidth: "100%" }}>
                     <div
                         style={{
                             display: "flex",
-                            fontSize: 120,
+                            fontSize: termFontSize,
                             fontWeight: 900,
                             margin: 0,
                             textTransform: "uppercase",
                             letterSpacing: "-0.05em",
-                            lineHeight: 1,
+                            lineHeight: 1.1,
                             color: "#000",
+                            maxWidth: "100%",
+                            wordBreak: "break-word",
                         }}
                     >
                         {term}
@@ -73,7 +85,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                                 display: "flex",
                                 fontSize: 48,
                                 fontStyle: "italic",
-                                fontWeight: "bold",
+                                fontWeight: 700,
                                 color: "#333",
                             }}
                         >
@@ -87,7 +99,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                     style={{
                         display: "flex",
                         fontSize: 48,
-                        fontWeight: "bold",
+                        fontWeight: 700,
                         marginTop: "40px",
                         maxWidth: "1000px",
                         lineHeight: 1.3,
@@ -101,6 +113,26 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         ),
         {
             ...size,
+            fonts: [
+                {
+                    name: 'Inter',
+                    data: interBlack,
+                    weight: 900,
+                    style: 'normal',
+                },
+                {
+                    name: 'Inter',
+                    data: interBoldItalic,
+                    weight: 700,
+                    style: 'italic',
+                },
+                {
+                    name: 'Inter',
+                    data: interBold,
+                    weight: 700,
+                    style: 'normal',
+                }
+            ],
         }
     );
 }
