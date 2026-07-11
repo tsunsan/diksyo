@@ -27,7 +27,7 @@ import {
   User,
   MousePointerClick,
   Sparkles,
-  Share2,
+  Send,
   Copy,
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
@@ -817,8 +817,8 @@ export default function DictionaryClient({
             >
               <div className="bg-[#FDE047] border-b-[4px] border-black px-6 py-5 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-[#7C3AED] border-[3px] border-black flex items-center justify-center shadow-[3px_3px_0_#000] rounded-full">
-                    <Share2 className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 bg-[#0057FF] border-[3px] border-black flex items-center justify-center shadow-[3px_3px_0_#000] rounded-full">
+                    <Send className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h2 className="text-base font-black uppercase tracking-tight text-black leading-none">
@@ -1329,10 +1329,10 @@ export default function DictionaryClient({
                   <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
                     <button
                       onClick={() => setShareWord(word)}
-                      className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                      className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center hover:bg-[#0057FF] hover:text-white transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                       aria-label="Share word"
                     >
-                      <Share2 className="w-5 h-5" />
+                      <Send className="w-5 h-5" />
                     </button>
                     <button
                       className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
