@@ -45,9 +45,12 @@ export default async function ProfilePage() {
       />
       
       <div className="relative z-10 max-w-5xl mx-auto flex flex-col gap-8 px-4 sm:px-6 lg:px-8 py-8">
-        <header className="bg-white p-6 border-4 border-black shadow-[8px_8px_0_0_#000]">
-          <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-2">Profile</h1>
-          <p className="font-bold text-zinc-600 uppercase">Manage your account settings</p>
+        <header className="bg-white p-6 md:p-8 border-4 border-black shadow-[8px_8px_0_0_#000] relative overflow-hidden">
+          {/* Neo-brutalistic circle accent */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FF007F] border-4 border-black rounded-full shadow-[inset_4px_4px_0_0_#000] pointer-events-none" />
+          
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic mb-2 relative z-10 text-black">Profile</h1>
+          <p className="font-bold text-zinc-600 uppercase text-sm md:text-base relative z-10">Manage your account settings</p>
         </header>
         
         <ProfileForm user={{ username, email, displayName, showAvatar, isGoogleConnected }} />

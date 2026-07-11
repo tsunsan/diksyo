@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { AlertCircle, ShieldAlert, TriangleAlert, Pencil, UserRoundPen, Link2 } from "lucide-react"
+import { AlertCircle, ShieldAlert, TriangleAlert, Pencil, UserRoundPen, Link2, Lock } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { createClient } from "@/utils/supabase/client"
 import {
@@ -64,7 +64,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
             Update Information
           </h2>
 
-        <form action={updateAction} className="flex flex-col gap-6 flex-1">
+        <form id="profile-update-form" action={updateAction} className="flex flex-col gap-6 flex-1">
           {updateState?.error && (
             <Alert className="rounded-none border-2 border-black shadow-[4px_4px_0_0_#000] bg-orange-400 text-black mb-2">
               <TriangleAlert className="h-4 w-4 stroke-black" />
@@ -86,7 +86,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                 type="text"
                 defaultValue={user.displayName}
                 required
-                className="rounded-none border-2 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400 pr-10 hover:bg-zinc-50 transition-colors"
+                className="rounded-none border-4 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400 pr-10 hover:bg-zinc-50 transition-colors shadow-[4px_4px_0_0_#000] focus-visible:shadow-none focus-visible:translate-x-[2px] focus-visible:translate-y-[2px]"
               />
               <Pencil className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40 group-hover/input:text-black group-focus-within/input:text-yellow-600 transition-colors pointer-events-none" />
             </div>
@@ -101,7 +101,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                 type="text"
                 defaultValue={user.username}
                 required
-                className="rounded-none border-2 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400 pr-10 hover:bg-zinc-50 transition-colors"
+                className="rounded-none border-4 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400 pr-10 hover:bg-zinc-50 transition-colors shadow-[4px_4px_0_0_#000] focus-visible:shadow-none focus-visible:translate-x-[2px] focus-visible:translate-y-[2px]"
               />
               <Pencil className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40 group-hover/input:text-black group-focus-within/input:text-yellow-600 transition-colors pointer-events-none" />
             </div>
@@ -116,36 +116,36 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                 type="email"
                 defaultValue={user.email}
                 required
-                className="rounded-none border-2 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400 pr-10 hover:bg-zinc-50 transition-colors"
+                className="rounded-none border-4 border-black focus-visible:ring-0 focus-visible:bg-yellow-100 placeholder:text-zinc-400 pr-10 hover:bg-zinc-50 transition-colors shadow-[4px_4px_0_0_#000] focus-visible:shadow-none focus-visible:translate-x-[2px] focus-visible:translate-y-[2px]"
               />
               <Pencil className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40 group-hover/input:text-black group-focus-within/input:text-yellow-600 transition-colors pointer-events-none" />
             </div>
           </div>
 
-          <div className={`border-4 border-black p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-[4px_4px_0_0_#000] ${!user.isGoogleConnected ? 'bg-zinc-100 opacity-75' : 'bg-white hover:bg-yellow-50'}`}>
-            <div className="flex flex-col gap-1.5">
-              <span className={`font-black uppercase text-sm tracking-tight ${!user.isGoogleConnected ? 'text-zinc-500' : 'text-black'}`}>
-                 Google Profile Picture
+          <div className="border-4 border-black p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-[8px_8px_0_0_#000] bg-zinc-100 relative overflow-hidden">
+            {/* Under Construction Stripes Background */}
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_10px,#e4e4e7_10px,#e4e4e7_20px)] opacity-50 pointer-events-none" />
+            
+            {/* Coming Soon Badge */}
+            <div className="absolute top-3 right-3 bg-yellow-400 border-4 border-black px-4 py-1.5 font-black uppercase text-[12px] tracking-tighter rotate-12 shadow-[4px_4px_0_0_#000] z-10">
+              Coming Soon
+            </div>
+
+            <div className="flex flex-col gap-1.5 w-full sm:w-auto relative z-10">
+              <span className="font-black uppercase text-sm tracking-tight text-zinc-600 flex items-center gap-2">
+                 <Lock className="w-4 h-4 text-zinc-500" /> Timezone (UTC)
               </span>
-              <p className={`font-bold text-xs uppercase leading-tight ${!user.isGoogleConnected ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                {user.isGoogleConnected 
-                  ? "Show your Google avatar instead of the default icon"
-                  : "Connect your Google account first to use this feature"}
+              <p className="font-bold text-xs uppercase leading-tight text-zinc-500 max-w-sm bg-white/50 p-1.5 rounded-sm backdrop-blur-sm border-l-4 border-zinc-400">
+                Change your preferred timezone. Currently, all stats are calculated in Philippine Time (UTC+8).
               </p>
             </div>
             
-            <Label htmlFor="showAvatar" className={`relative flex items-center shrink-0 ${user.isGoogleConnected ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-              <input 
-                type="checkbox" 
-                id="showAvatar" 
-                name="showAvatar" 
-                defaultChecked={user.showAvatar}
-                className="sr-only peer" 
-                disabled={!user.isGoogleConnected}
-              />
-              <div className="w-16 h-8 bg-zinc-200 border-4 border-black rounded-full peer-checked:bg-green-400 transition-colors shadow-[2px_2px_0_0_#000] peer-disabled:bg-zinc-200 peer-disabled:opacity-50"></div>
-              <div className="absolute left-[4px] top-[4px] w-6 h-6 bg-white border-4 border-black rounded-full transition-transform peer-checked:translate-x-8 peer-disabled:bg-zinc-100"></div>
-            </Label>
+            <div className="shrink-0 w-full sm:w-auto opacity-40 cursor-not-allowed pointer-events-none mt-2 sm:mt-0 relative z-10">
+              <div className="border-4 border-black bg-white p-2 px-4 flex items-center justify-between gap-4 font-bold text-sm text-zinc-400 shadow-[2px_2px_0_0_#000]">
+                <span>Asia/Manila (UTC+8)</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
           </div>
 
           <div className="mt-auto pt-4">
@@ -174,7 +174,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
             </div>
              {user.isGoogleConnected ? (
                <p className="font-bold text-sm text-blue-800 uppercase">
-                 You are connected to Google! Your profile picture is synced. Use the setting above to toggle its visibility.
+                 You are connected to Google! Your profile picture is synced. Use the setting below to toggle its visibility.
                </p>
              ) : (
                <p className="font-bold text-sm text-blue-800 uppercase">
@@ -182,6 +182,34 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                </p>
              )}
           </div>
+
+          <div className={`mt-6 border-4 border-black p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-[4px_4px_0_0_#000] group ${!user.isGoogleConnected ? 'bg-white opacity-60' : 'bg-white hover:bg-yellow-100 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000]'}`}>
+            <div className="flex flex-col gap-1.5">
+              <span className={`font-black uppercase text-sm tracking-tight ${!user.isGoogleConnected ? 'text-zinc-500' : 'text-black group-hover:text-yellow-900'}`}>
+                 Google Profile Picture
+              </span>
+              <p className={`font-bold text-xs uppercase leading-tight ${!user.isGoogleConnected ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                {user.isGoogleConnected 
+                  ? "Show your Google avatar instead of the default icon"
+                  : "Connect your Google account first to use this feature"}
+              </p>
+            </div>
+            
+            <Label htmlFor="showAvatar" className={`relative flex items-center shrink-0 ${user.isGoogleConnected ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+              <input 
+                form="profile-update-form"
+                type="checkbox" 
+                id="showAvatar" 
+                name="showAvatar" 
+                defaultChecked={user.showAvatar}
+                className="sr-only peer" 
+                disabled={!user.isGoogleConnected}
+              />
+              <div className="w-16 h-8 bg-zinc-300 border-4 border-black rounded-full peer-checked:bg-green-400 transition-colors shadow-[2px_2px_0_0_#000] peer-disabled:bg-zinc-200 peer-disabled:opacity-50 group-hover:peer-not-disabled:bg-zinc-400 peer-checked:group-hover:peer-not-disabled:bg-green-500"></div>
+              <div className="absolute left-[4px] top-[4px] w-6 h-6 bg-white border-4 border-black rounded-full transition-transform peer-checked:translate-x-8 peer-disabled:bg-zinc-100 group-hover:peer-not-disabled:scale-110"></div>
+            </Label>
+          </div>
+
           <div className="shrink-0 flex flex-col gap-2 mt-6">
              <Button
                type="button"
