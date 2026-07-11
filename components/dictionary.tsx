@@ -27,6 +27,8 @@ import {
   User,
   MousePointerClick,
   Sparkles,
+  Share2,
+  Copy,
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
 import { login, signup, type AuthState } from "@/app/actions/auth";
@@ -282,6 +284,8 @@ export default function DictionaryClient({
   const [search, setSearch] = useState(initialSearch || "");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
+  const [shareWord, setShareWord] = useState<any | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   /* ─── Filter State ─── */
   const [showFilters, setShowFilters] = useState(false);
@@ -794,6 +798,97 @@ export default function DictionaryClient({
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {shareWord && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShareWord(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="w-full max-w-[540px] bg-white border-[4px] border-black shadow-[10px_10px_0_#000] rounded-3xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-[#FDE047] border-b-[4px] border-black px-6 py-5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[#7C3AED] border-[3px] border-black flex items-center justify-center shadow-[3px_3px_0_#000] rounded-full">
+                    <Share2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black uppercase tracking-tight text-black leading-none">
+                      SHARE WORD
+                    </h2>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-black/70 mt-1">
+                      Spread the knowledge
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShareWord(null)}
+                  className="w-10 h-10 flex items-center justify-center bg-[#FF007F] border-[3px] border-black hover:bg-black transition-colors shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none rounded-full"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              <div className="p-6 flex flex-col gap-6 bg-[#FFFBF0]">
+                {/* Opengraph Image Preview */}
+                <div className="flex flex-col gap-3">
+                  <p className="text-center text-[11px] font-black uppercase tracking-widest text-black bg-white border-[2px] border-black shadow-[2px_2px_0_#000] py-1.5 px-4 self-center rounded-full">
+                    LINK PREVIEW
+                  </p>
+                  <div className="w-full aspect-[1200/630] bg-[radial-gradient(circle_at_center,_#000_2px,_transparent_2px)] bg-[size:16px_16px] bg-[#FFE500]/20 border-[4px] border-black flex items-center justify-center relative shadow-[6px_6px_0_#000] rounded-3xl p-4 sm:p-6">
+                    <div className="w-full h-full rounded-2xl overflow-hidden border-[3px] border-black shadow-[4px_4px_0_#000] relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}/opengraph-image`} 
+                        alt="Opengraph Preview" 
+                        className="absolute inset-0 w-full h-full object-cover scale-[1.06]" 
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="w-full flex gap-3">
+                  <div className="flex-1 bg-white border-[3px] border-black px-4 py-3 text-sm font-bold text-black truncate flex items-center shadow-[4px_4px_0_#000] rounded-xl">
+                    {`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}`}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/salita/${shareWord.slug}`);
+                      setIsCopied(true);
+                      setTimeout(() => setIsCopied(false), 2000);
+                      toast.success("LINK COPIED", { description: "Link has been copied to your clipboard.", duration: 3000 });
+                    }}
+                    className={`shrink-0 px-5 py-3 border-[3px] border-black text-white font-black uppercase tracking-widest text-sm shadow-[4px_4px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all flex items-center justify-center gap-2 rounded-xl w-[140px] ${
+                      isCopied ? "bg-[#00C853]" : "bg-[#7C3AED]"
+                    }`}
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        COPIED!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-5 h-5" />
+                        COPY
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
@@ -1232,6 +1327,13 @@ export default function DictionaryClient({
                   </div>
 
                   <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
+                    <button
+                      onClick={() => setShareWord(word)}
+                      className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center hover:bg-black hover:text-[#FDE047] transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                      aria-label="Share word"
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </button>
                     <button
                       className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
                       aria-label="Listen (Coming Soon)"
