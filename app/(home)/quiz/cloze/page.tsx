@@ -102,6 +102,8 @@ export default function ClozeQuizPage() {
   const [isPending, startTransition] = useTransition();
   const [sessionSubmitted, setSessionSubmitted] = useState(false);
   const [showPracticeDialog, setShowPracticeDialog] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const pendingRequestsRef = useRef<Promise<any>[]>([]);
   const controls = useAnimation();
 
   // --- Initializer ---
@@ -196,61 +198,78 @@ export default function ClozeQuizPage() {
 
   // --- Handlers ---
   const handleOptionClick = useCallback((option: string) => {
-    if (status !== 'typing' || isPending || showPracticeDialog) return;
+    if (status !== 'typing' || isFinalizing || showPracticeDialog) return;
     
     setSelectedOption(option);
     
-    startTransition(async () => {
-      const timeTakenMs = Date.now() - questionStartTime;
-      const currentWord = deck[currentIndex];
-      
-      const res = await submitQuizAnswer({
-        wordId: currentWord.id,
-        userAnswer: option,
-        gameMode: "cloze",
-        timeTakenMs,
-        countsForStats
-      });
-      
-      const isCorrect = res.success ? (res.correct || false) : false;
-      
-      applyAnswerResult(isCorrect);
+    const timeTakenMs = Date.now() - questionStartTime;
+    const currentWord = deck[currentIndex];
+    const isCorrect = option === currentWord.word;
+    
+    applyAnswerResult(isCorrect);
 
-      if (isCorrect) {
-        const xp = res.xpGained || 10;
-        setTotalXP(prev => prev + xp);
-        setStreak(prev => {
-          const newStreak = prev + 1;
-          setMaxStreak(max => (newStreak > max ? newStreak : max));
-          return newStreak;
-        });
-      } else {
-        setStreak(0);
-        await controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
-      }
-      
+    if (isCorrect) {
+      const optimisticXP = currentWord.level === 'ADVANCED' ? 30 : currentWord.level === 'INTERMEDIATE' ? 20 : 10;
+      setTotalXP(prev => prev + optimisticXP);
+      setStreak(prev => {
+        const newStreak = prev + 1;
+        setMaxStreak(max => (newStreak > max ? newStreak : max));
+        return newStreak;
+      });
+    } else {
+      setStreak(0);
+      controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
+    }
+    
+    const promise = submitQuizAnswer({
+      wordId: currentWord.id,
+      userAnswer: option,
+      gameMode: "cloze",
+      timeTakenMs,
+      countsForStats
+    }).then(res => {
+      setResults(prev => [...prev, {
+        id: currentWord.id,
+        word: currentWord.word,
+        translationPrompt: currentWord.englishPrompt,
+        correct: res.success ? (res.correct || false) : false,
+        xpGained: res.xpGained || 0,
+        newMastery: res.newMastery || 0,
+        level: res.level || "BEGINNER"
+      }]);
+    }).catch(err => {
       setResults(prev => [...prev, {
         id: currentWord.id,
         word: currentWord.word,
         translationPrompt: currentWord.englishPrompt,
         correct: isCorrect,
-        xpGained: res.xpGained || 0,
-        newMastery: res.newMastery || 0,
-        level: res.level || "BEGINNER"
+        xpGained: 0,
+        newMastery: 0,
+        level: "BEGINNER"
       }]);
     });
-  }, [status, isPending, questionStartTime, deck, currentIndex, applyAnswerResult, controls]);
 
-  const handleNext = useCallback(() => {
+    pendingRequestsRef.current.push(promise);
+  }, [status, isFinalizing, questionStartTime, deck, currentIndex, applyAnswerResult, controls, countsForStats, setTotalXP, setStreak, setMaxStreak, setResults, showPracticeDialog]);
+
+  const handleNext = useCallback(async () => {
     if (status !== 'revealed') return;
     setSelectedOption("");
-    nextCard();
-  }, [status, nextCard]);
+    
+    if (currentIndex < deck.length - 1) {
+      nextCard();
+    } else {
+      setIsFinalizing(true);
+      await Promise.all(pendingRequestsRef.current);
+      setIsFinalizing(false);
+      nextCard();
+    }
+  }, [status, currentIndex, deck.length, nextCard]);
 
   // --- Keyboard Shortcuts ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (status === 'revealed' && e.key === "Enter") {
+      if (status === 'revealed' && e.key === "Enter" && !isFinalizing) {
         e.preventDefault();
         handleNext();
       }
@@ -839,9 +858,19 @@ export default function ClozeQuizPage() {
                <motion.button 
                  whileHover={{ x: 5, y: 5, boxShadow: "none" }}
                  onClick={handleNext} 
-                 className="w-full sm:w-auto flex justify-center items-center gap-3 px-6 sm:px-10 py-3 sm:py-4 bg-[#4361EE] text-white border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[6px_6px_0_#000] uppercase font-black transition-all text-sm sm:text-base active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                 disabled={isFinalizing}
+                 className="w-full sm:w-auto flex justify-center items-center gap-3 px-6 sm:px-10 py-3 sm:py-4 bg-[#4361EE] text-white border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[6px_6px_0_#000] uppercase font-black transition-all text-sm sm:text-base active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-70"
                >
-                 {currentIndex < deck.length - 1 ? "NEXT" : "FINISH"} <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                 {isFinalizing ? (
+                   <>
+                     <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" strokeWidth={3} />
+                     SAVING...
+                   </>
+                 ) : (
+                   <>
+                     {currentIndex < deck.length - 1 ? "NEXT" : "FINISH"} <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                   </>
+                 )}
                </motion.button>
             </div>
           </motion.div>

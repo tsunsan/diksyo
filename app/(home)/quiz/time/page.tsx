@@ -103,6 +103,8 @@ export default function QuizPage2() {
   const [isPending, startTransition] = useTransition();
   const [sessionSubmitted, setSessionSubmitted] = useState(false);
   const [showPracticeDialog, setShowPracticeDialog] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const pendingRequestsRef = useRef<Promise<any>[]>([]);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
@@ -175,7 +177,7 @@ export default function QuizPage2() {
 
   const current = deck[currentIndex];
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (currentIndex < deck.length - 1) {
       setCurrentIndex((i: number) => i + 1);
       setAnswer("");
@@ -183,6 +185,9 @@ export default function QuizPage2() {
       setFlipped(false);
       setTimeLeft(15);
     } else {
+      setIsFinalizing(true);
+      await Promise.all(pendingRequestsRef.current);
+      setIsFinalizing(false);
       setQuizDone(true);
     }
   }, [currentIndex, deck.length, setCurrentIndex, setFeedback, setQuizDone]);
@@ -195,17 +200,16 @@ export default function QuizPage2() {
       setFeedback("timeout");
       
       if (!hasSubmittedOnce) setHasSubmittedOnce(true);
+      setStreak(0);
 
-      startTransition(async () => {
-        const res = await submitQuizAnswer({
-          wordId: current.id,
-          userAnswer: "",
-          gameMode: "time",
-          timeTakenMs: 15000,
-          acceptedAnswers: current.acceptedAnswers,
-          countsForStats
-        });
-
+      const promise = submitQuizAnswer({
+        wordId: current.id,
+        userAnswer: "",
+        gameMode: "time",
+        timeTakenMs: 15000,
+        acceptedAnswers: current.acceptedAnswers,
+        countsForStats
+      }).then(res => {
         setResults((prev) => [...prev, { 
           id: current.id, 
           correct: false, 
@@ -214,9 +218,13 @@ export default function QuizPage2() {
           newMastery: res.success ? (res.newMastery || 0) : 0, 
           level: current.level || "BEGINNER" 
         }]);
+      }).catch(err => {
+        setResults((prev) => [...prev, { 
+          id: current.id, correct: false, timeBonus: false, xpGained: 0, newMastery: 0, level: current.level || "BEGINNER" 
+        }]);
       });
 
-      setStreak(0);
+      pendingRequestsRef.current.push(promise);
       return;
     }
 
@@ -250,7 +258,7 @@ export default function QuizPage2() {
   // --- Enter to Next Challenge ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && feedback !== "idle" && !quizDone) {
+      if (e.key === "Enter" && feedback !== "idle" && !quizDone && !isFinalizing) {
         e.preventDefault();
         handleNext();
       }
@@ -314,52 +322,62 @@ export default function QuizPage2() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!answer.trim() || feedback !== "idle" || isPending) return;
+    if (!answer.trim() || feedback !== "idle" || isFinalizing) return;
 
     if (!hasSubmittedOnce) setHasSubmittedOnce(true);
 
-    startTransition(async () => {
-      const timeTakenMs = (15 - timeLeft) * 1000;
-      const res = await submitQuizAnswer({
-         wordId: current.id,
-         userAnswer: answer,
-         gameMode: "time",
-         timeTakenMs,
-         acceptedAnswers: current.acceptedAnswers,
-         countsForStats
+    const typed = answer.trim().toLowerCase();
+    const expected = (current.answer || "").toLowerCase();
+    const accepted = (current.acceptedAnswers || []).map((a: string) => a.toLowerCase());
+    const isCorrect = typed === expected || accepted.includes(typed);
+
+    const timeBonus = isCorrect && timeLeft > 10;
+    setFeedback(isCorrect ? "correct" : "incorrect");
+
+    if (isCorrect) {
+      const optimisticXP = current.xp || 10;
+      setTotalXP(prev => prev + optimisticXP);
+      setStreak(prev => {
+        const newStreak = prev + 1;
+        setMaxStreak(max => (newStreak > max ? newStreak : max));
+        return newStreak;
       });
+    } else {
+      setStreak(0);
+      controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
+    }
 
-      if (res.success) {
-         const isCorrect = res.correct || false;
-         const timeBonus = isCorrect && timeLeft > 10;
-         setFeedback(isCorrect ? "correct" : "incorrect");
-         
-         setResults(prev => [...prev, {
-            id: current.id,
-            correct: isCorrect,
-            timeBonus,
-            xpGained: res.xpGained || 0,
-            level: res.level || "BEGINNER",
-            newMastery: res.newMastery || 0
-         }]);
-
-         if (isCorrect) {
-            setTotalXP(prev => prev + (res.xpGained || 0));
-            setStreak(prev => {
-              const newStreak = prev + 1;
-              setMaxStreak(max => (newStreak > max ? newStreak : max));
-              return newStreak;
-            });
-         } else {
-            setStreak(0);
-            await controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
-         }
-      } else {
-         setFeedback("incorrect");
-         setStreak(0);
-         await controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
-      }
+    const timeTakenMs = (15 - timeLeft) * 1000;
+    
+    const promise = submitQuizAnswer({
+       wordId: current.id,
+       userAnswer: answer,
+       gameMode: "time",
+       timeTakenMs,
+       acceptedAnswers: current.acceptedAnswers,
+       countsForStats
+    }).then(res => {
+       if (res.success) {
+          setResults(prev => [...prev, {
+             id: current.id,
+             correct: res.correct || false,
+             timeBonus,
+             xpGained: res.xpGained || 0,
+             level: res.level || "BEGINNER",
+             newMastery: res.newMastery || 0
+          }]);
+       } else {
+          setResults(prev => [...prev, {
+             id: current.id, correct: isCorrect, timeBonus, xpGained: 0, level: current.level || "BEGINNER", newMastery: 0
+          }]);
+       }
+    }).catch(err => {
+       setResults(prev => [...prev, {
+          id: current.id, correct: isCorrect, timeBonus, xpGained: 0, level: current.level || "BEGINNER", newMastery: 0
+       }]);
     });
+
+    pendingRequestsRef.current.push(promise);
   };
 
   const handleRestart = () => {
@@ -647,10 +665,10 @@ export default function QuizPage2() {
 
       <form onSubmit={handleSubmit} className="mb-4 sm:mb-8 relative">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle" || isPending} placeholder={feedback !== "idle" || isPending ? "" : "TYPE IN TAGALOG..."} className={`flex-1 px-4 sm:px-8 py-3 sm:py-6 bg-white border-[3px] sm:border-[4px] border-black outline-none shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] focus:shadow-[6px_6px_0_#000] sm:focus:shadow-[12px_12px_0_#000] transition-all uppercase text-base sm:text-xl placeholder:text-[#ccc] font-black ${isPending ? 'bg-gray-100 opacity-60 animate-pulse' : ''} disabled:bg-[#eee]`} />
-          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim() || isPending} className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-6 bg-black text-[#FFE500] border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#FFE500] sm:shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
-            {isPending ? <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <span className="text-base sm:text-xl">CHECK</span>}
-            {!isPending && <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-[1.5px] sm:border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none hidden sm:inline-block">ENTER ↵</kbd>}
+          <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle" || isFinalizing} placeholder={feedback !== "idle" || isFinalizing ? "" : "TYPE IN TAGALOG..."} className={`flex-1 px-4 sm:px-8 py-3 sm:py-6 bg-white border-[3px] sm:border-[4px] border-black outline-none shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] focus:shadow-[6px_6px_0_#000] sm:focus:shadow-[12px_12px_0_#000] transition-all uppercase text-base sm:text-xl placeholder:text-[#ccc] font-black ${isFinalizing ? 'bg-gray-100 opacity-60 animate-pulse' : ''} disabled:bg-[#eee]`} />
+          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim() || isFinalizing} className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-6 bg-black text-[#FFE500] border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#FFE500] sm:shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+            {isFinalizing ? <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <span className="text-base sm:text-xl">CHECK</span>}
+            {!isFinalizing && <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-[1.5px] sm:border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none hidden sm:inline-block">ENTER ↵</kbd>}
           </motion.button>
         </div>
       </form>
@@ -659,19 +677,26 @@ export default function QuizPage2() {
         <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} onClick={() => setFlipped(!flipped)} className="w-full sm:w-auto flex justify-center items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><RotateCcw className={`w-5 h-5 transition-transform duration-500 ${flipped ? "rotate-180" : ""}`} />{flipped ? "HIDE MEANING" : "VIEW MEANING"}</motion.button>
         <AnimatePresence>
           {feedback !== "idle" && (
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="fixed bottom-0 left-0 right-0 z-[60] p-4 bg-white border-t-[4px] border-black shadow-[0_-4px_0_rgba(0,0,0,0.1)] sm:p-0 sm:static sm:bg-transparent sm:border-none sm:shadow-none sm:z-auto sm:ml-auto flex justify-center w-full sm:w-auto"
-            >
-              <motion.button 
-                whileHover={{ x: 10, backgroundColor: "#000", color: "#fff" }} 
-                onClick={handleNext} 
-                className="w-full sm:w-auto flex justify-center items-center gap-4 px-6 sm:px-10 py-4 bg-[#FFE500] text-black border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[6px_6px_0_#000] uppercase font-black transition-all text-sm sm:text-base active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-8">
+              <button
+                onClick={handleNext}
+                disabled={isFinalizing}
+                className={`w-full font-black uppercase text-2xl py-6 border-[4px] border-black shadow-[8px_8px_0_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 flex items-center justify-center gap-3 ${
+                  feedback === "correct" ? "bg-[#00E676] text-black" : "bg-white text-black"
+                }`}
               >
-                {currentIndex < deck.length - 1 ? "NEXT CHALLENGE" : "FINISH"} <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-              </motion.button>
+                {isFinalizing ? (
+                  <>
+                    <RefreshCw className="w-8 h-8 animate-spin" strokeWidth={3} />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    {currentIndex < deck.length - 1 ? "Next Card" : "Finish Quiz"}
+                    <ArrowRight className="w-8 h-8" strokeWidth={3} />
+                  </>
+                )}
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
