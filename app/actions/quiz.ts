@@ -14,6 +14,7 @@ export interface QuizSubmission {
     gameMode: "cloze" | "time";
     timeTakenMs: number;
     acceptedAnswers?: string[];
+    countsForStats?: boolean;
 }
 
 const LEVEL_XP_MAP: Record<string, number> = {
@@ -23,8 +24,8 @@ const LEVEL_XP_MAP: Record<string, number> = {
 };
 
 const calculateMastery = (stability: number): number => {
-    // Stability of 90 days equates to 100% mastery
-    return Math.min(100, Math.round((stability / 90) * 100));
+    // Stability of 30 days equates to 100% mastery
+    return Math.min(100, Math.round((stability / 30) * 100));
 };
 
 export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTakenMs, acceptedAnswers }: QuizSubmission) {
@@ -87,6 +88,11 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                 .set({
                     stability: newFsrsStats.stability,
                     difficulty: newFsrsStats.difficulty,
+                    reps: newFsrsStats.reps,
+                    lapses: newFsrsStats.fsrsData.lapses,
+                    state: newFsrsStats.fsrsData.state,
+                    elapsedDays: newFsrsStats.fsrsData.elapsed_days,
+                    scheduledDays: newFsrsStats.fsrsData.scheduled_days,
                     lastReview: newFsrsStats.fsrsData.last_review || new Date(),
                     nextReview: newFsrsStats.nextReviewDate,
                     mastery: newMastery,
@@ -190,7 +196,7 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
     }
 }
 
-export async function submitQuizSession({ isPerfect, timeTakenMs }: { isPerfect: boolean, timeTakenMs: number }) {
+export async function submitQuizSession({ isPerfect, timeTakenMs, countsForStats = true }: { isPerfect: boolean, timeTakenMs: number, countsForStats?: boolean }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Unauthorized" };
@@ -203,17 +209,27 @@ export async function submitQuizSession({ isPerfect, timeTakenMs }: { isPerfect:
 
             if (profile) {
                 let fastest = profile.fastestQuizMs;
-                if (!fastest || timeTakenMs < fastest) {
-                    fastest = timeTakenMs;
-                }
+                
+                if (countsForStats) {
+                    if (!fastest || timeTakenMs < fastest) {
+                        fastest = timeTakenMs;
+                    }
 
-                await db.update(userProfiles)
-                    .set({
-                        quizzesCompleted: profile.quizzesCompleted + 1,
-                        fastestQuizMs: fastest,
-                        perfectQuizzes: profile.perfectQuizzes + (isPerfect ? 1 : 0),
-                    })
-                    .where(eq(userProfiles.userId, user.id));
+                    await db.update(userProfiles)
+                        .set({
+                            quizzesCompleted: profile.quizzesCompleted + 1,
+                            fastestQuizMs: fastest,
+                            perfectQuizzes: profile.perfectQuizzes + (isPerfect ? 1 : 0),
+                        })
+                        .where(eq(userProfiles.userId, user.id));
+                } else {
+                    // Only update completed count, skip gamification stats for short/invalid quizzes
+                    await db.update(userProfiles)
+                        .set({
+                            quizzesCompleted: profile.quizzesCompleted + 1,
+                        })
+                        .where(eq(userProfiles.userId, user.id));
+                }
             }
         });
         return { success: true };

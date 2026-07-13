@@ -42,6 +42,11 @@ export const userProgress = pgTable("user_progress", {
     lastReview: timestamp("last_review", { withTimezone: true }),
     nextReview: timestamp("next_review", { withTimezone: true }).defaultNow(),
     mastery: integer("mastery").default(0),
+    reps: integer("reps").default(0),
+    lapses: integer("lapses").default(0),
+    state: integer("state").default(0),
+    elapsedDays: integer("elapsed_days").default(0),
+    scheduledDays: integer("scheduled_days").default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     isArchived: boolean("is_archived").default(false),
 }, (table) => [

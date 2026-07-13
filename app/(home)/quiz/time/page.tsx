@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react";
-import { getVaultWords } from "@/app/actions/vault";
+import { getVaultWords, getQuizWords } from "@/app/actions/vault";
 import { submitQuizAnswer, submitQuizSession } from "@/app/actions/quiz";
 import {
   ChevronRight,
@@ -89,7 +89,9 @@ export default function QuizPage2() {
     setHasSubmittedOnce,
     startQuiz,
     resetQuiz,
-    quizStartTime
+    quizStartTime,
+    countsForStats,
+    isExtraPractice
   } = useTimeQuizStore();
 
   const [loading, setLoading] = useState(true);
@@ -100,6 +102,7 @@ export default function QuizPage2() {
   const [showDetails, setShowDetails] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [sessionSubmitted, setSessionSubmitted] = useState(false);
+  const [showPracticeDialog, setShowPracticeDialog] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const controls = useAnimation();
@@ -111,7 +114,7 @@ export default function QuizPage2() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getVaultWords(true);
+      const res = await getQuizWords("time");
       if (res.success && res.data) {
         const words = res.data.map((item: any) => {
           const w = item.word;
@@ -133,7 +136,10 @@ export default function QuizPage2() {
         });
 
         if (words.length > 0) {
-          startQuiz(words.sort(() => 0.5 - Math.random()).slice(0, 10));
+          if (res.isExtraPractice) {
+            setShowPracticeDialog(true);
+          }
+          startQuiz(words.sort(() => 0.5 - Math.random()), res.countsForStats, res.isExtraPractice);
         } else {
           setError("No suitable words found in your vault.");
         }
@@ -153,13 +159,19 @@ export default function QuizPage2() {
   }, [deck.length, loadQuiz, error]);
 
   useEffect(() => {
+    return () => {
+      resetQuiz();
+    };
+  }, [resetQuiz]);
+
+  useEffect(() => {
     if (quizDone && !sessionSubmitted && deck.length > 0) {
       setSessionSubmitted(true);
       const totalTimeMs = Date.now() - quizStartTime;
       const isPerfect = correctCount === deck.length;
-      submitQuizSession({ isPerfect, timeTakenMs: totalTimeMs });
+      submitQuizSession({ isPerfect, timeTakenMs: totalTimeMs, countsForStats });
     }
-  }, [quizDone, sessionSubmitted, quizStartTime, correctCount, deck.length]);
+  }, [quizDone, sessionSubmitted, quizStartTime, correctCount, deck.length, countsForStats]);
 
   const current = deck[currentIndex];
 
@@ -177,11 +189,33 @@ export default function QuizPage2() {
 
   // --- Timer Logic ---
   useEffect(() => {
-    if (feedback !== "idle" || quizDone || !current || isPending) return;
+    if (feedback !== "idle" || quizDone || !current || isPending || showPracticeDialog) return;
 
     if (timeLeft <= 0) {
       setFeedback("timeout");
-      setResults((prev) => [...prev, { id: current.id, correct: false, timeBonus: false, xpGained: 0, newMastery: 0, level: current.level || "BEGINNER" }]);
+      
+      if (!hasSubmittedOnce) setHasSubmittedOnce(true);
+
+      startTransition(async () => {
+        const res = await submitQuizAnswer({
+          wordId: current.id,
+          userAnswer: "",
+          gameMode: "time",
+          timeTakenMs: 15000,
+          acceptedAnswers: current.acceptedAnswers,
+          countsForStats
+        });
+
+        setResults((prev) => [...prev, { 
+          id: current.id, 
+          correct: false, 
+          timeBonus: false, 
+          xpGained: res.success ? (res.xpGained || 0) : 0, 
+          newMastery: res.success ? (res.newMastery || 0) : 0, 
+          level: current.level || "BEGINNER" 
+        }]);
+      });
+
       setStreak(0);
       return;
     }
@@ -248,6 +282,36 @@ export default function QuizPage2() {
     );
   }
 
+  if (showPracticeDialog) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center p-6 bg-black/5">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0_0_#000] max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-[#FFE500] border-[3px] border-black flex items-center justify-center mx-auto mb-6 shadow-[4px_4px_0_0_#000]">
+             <TimerIcon className="w-8 h-8 text-black" />
+          </div>
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-black mb-2">Queue Cleared!</h2>
+          <p className="font-bold text-sm uppercase text-gray-500 mb-8 leading-relaxed">
+            You&apos;ve completed your daily due words! You are now entering <span className="text-black bg-[#FFE500] px-1">Extra Practice</span> mode. These sessions will count towards your stats, but won&apos;t progress new words.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => setShowPracticeDialog(false)}
+              className="w-full bg-black text-[#FFE500] font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#FFE500] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2"
+            >
+              Start Practice
+            </button>
+            <Link 
+              href="/quiz"
+              className="w-full bg-white text-black font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:bg-gray-100 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#000] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 inline-block"
+            >
+              Return to Menu
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!answer.trim() || feedback !== "idle" || isPending) return;
@@ -261,7 +325,8 @@ export default function QuizPage2() {
          userAnswer: answer,
          gameMode: "time",
          timeTakenMs,
-         acceptedAnswers: current.acceptedAnswers
+         acceptedAnswers: current.acceptedAnswers,
+         countsForStats
       });
 
       if (res.success) {
@@ -467,6 +532,20 @@ export default function QuizPage2() {
              {deck.map((_, i) => (
               <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.1 }} className="w-2 h-2 border-[1.5px] border-black" style={{ background: i < results.length ? (results[i].correct ? "#00C853" : "#FF1744") : (i === currentIndex ? "#FFE500" : "#ddd") }} />
             ))}
+          </div>
+          
+          {/* Status Badges */}
+          <div className="flex flex-col gap-1 ml-14 mt-3 mb-2">
+            {!countsForStats && (
+              <span className="inline-block bg-[#FF1744] text-white text-[8px] sm:text-[10px] font-black tracking-widest px-2 py-0.5 border-2 border-black shadow-[2px_2px_0_0_#000] uppercase">
+                Not Counted For Stats (&lt;10 words)
+              </span>
+            )}
+            {isExtraPractice && (
+              <span className="inline-block bg-[#FFE500] text-black text-[8px] sm:text-[10px] font-black tracking-widest px-2 py-0.5 border-2 border-black shadow-[2px_2px_0_0_#000] uppercase">
+                Extra Practice (Counts for Stats)
+              </span>
+            )}
           </div>
         </motion.div>
 

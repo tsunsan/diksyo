@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useTransition } from "react";
 import { useQuizStore, QuizWord } from "@/store/quiz-store";
-import { getVaultWords } from "@/app/actions/vault";
+import { getVaultWords, getQuizWords } from "@/app/actions/vault";
 import { submitQuizAnswer, submitQuizSession } from "@/app/actions/quiz";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { 
@@ -83,7 +83,9 @@ export default function ClozeQuizPage() {
     applyAnswerResult, 
     nextCard, 
     resetQuiz,
-    quizStartTime 
+    quizStartTime,
+    countsForStats,
+    isExtraPractice
   } = useQuizStore();
   
   const [loading, setLoading] = useState(true);
@@ -99,6 +101,7 @@ export default function ClozeQuizPage() {
   
   const [isPending, startTransition] = useTransition();
   const [sessionSubmitted, setSessionSubmitted] = useState(false);
+  const [showPracticeDialog, setShowPracticeDialog] = useState(false);
   const controls = useAnimation();
 
   // --- Initializer ---
@@ -106,7 +109,7 @@ export default function ClozeQuizPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getVaultWords(true);
+      const res = await getQuizWords("cloze");
       if (res.success && res.data) {
         const clozeWords = res.data.reduce((acc: QuizWord[], item: any) => {
           const w = item.word;
@@ -132,7 +135,10 @@ export default function ClozeQuizPage() {
         }, []);
 
         if (clozeWords.length > 0) {
-          startQuiz(clozeWords.sort(() => 0.5 - Math.random()).slice(0, 10));
+          if (res.isExtraPractice) {
+            setShowPracticeDialog(true);
+          }
+          startQuiz(clozeWords.sort(() => 0.5 - Math.random()), res.countsForStats, res.isExtraPractice);
         } else {
           setError("No suitable context sentences found in your vault.");
         }
@@ -152,13 +158,19 @@ export default function ClozeQuizPage() {
   }, [status, loadQuiz]);
 
   useEffect(() => {
+    return () => {
+      resetQuiz();
+    };
+  }, [resetQuiz]);
+
+  useEffect(() => {
     if (status === 'completed' && !sessionSubmitted && deck.length > 0) {
       setSessionSubmitted(true);
       const totalTimeMs = Date.now() - quizStartTime;
       const isPerfect = correctCount === deck.length;
-      submitQuizSession({ isPerfect, timeTakenMs: totalTimeMs });
+      submitQuizSession({ isPerfect, timeTakenMs: totalTimeMs, countsForStats });
     }
-  }, [status, sessionSubmitted, quizStartTime, correctCount, deck.length]);
+  }, [status, sessionSubmitted, quizStartTime, correctCount, deck.length, countsForStats]);
 
   // --- Multiple Choice Generator ---
   useEffect(() => {
@@ -184,7 +196,7 @@ export default function ClozeQuizPage() {
 
   // --- Handlers ---
   const handleOptionClick = useCallback((option: string) => {
-    if (status !== 'typing' || isPending) return;
+    if (status !== 'typing' || isPending || showPracticeDialog) return;
     
     setSelectedOption(option);
     
@@ -196,7 +208,8 @@ export default function ClozeQuizPage() {
         wordId: currentWord.id,
         userAnswer: option,
         gameMode: "cloze",
-        timeTakenMs
+        timeTakenMs,
+        countsForStats
       });
       
       const isCorrect = res.success ? (res.correct || false) : false;
@@ -242,7 +255,7 @@ export default function ClozeQuizPage() {
         handleNext();
       }
       
-      if (status === 'typing' && !isPending) {
+      if (status === 'typing' && !isPending && !showPracticeDialog) {
         const keyMap: Record<string, number> = { '1': 0, '2': 1, '3': 2, '4': 3 };
         if (keyMap[e.key] !== undefined && options[keyMap[e.key]]) {
           e.preventDefault();
@@ -288,6 +301,36 @@ export default function ClozeQuizPage() {
             >
                 Return to Vault
             </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (showPracticeDialog) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center p-6 bg-black/5">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0_0_#000] max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-[#4361EE] border-[3px] border-black flex items-center justify-center mx-auto mb-6 shadow-[4px_4px_0_0_#000]">
+             <Puzzle className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-black mb-2">Queue Cleared!</h2>
+          <p className="font-bold text-sm uppercase text-gray-500 mb-8 leading-relaxed">
+            You&apos;ve completed your daily due words! You are now entering <span className="text-black bg-[#FFE500] px-1">Extra Practice</span> mode. These sessions will count towards your stats, but won&apos;t progress new words.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => setShowPracticeDialog(false)}
+              className="w-full bg-black text-[#FFE500] font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#FFE500] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2"
+            >
+              Start Practice
+            </button>
+            <Link 
+              href="/quiz"
+              className="w-full bg-white text-black font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:bg-gray-100 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#000] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 inline-block"
+            >
+              Return to Menu
+            </Link>
+          </div>
         </motion.div>
       </div>
     );
@@ -476,6 +519,21 @@ export default function ClozeQuizPage() {
               </div>
             </div>
           </div>
+          
+          {/* Status Badges */}
+          <div className="flex flex-col gap-1 ml-10 sm:ml-14 mb-2">
+            {!countsForStats && (
+              <span className="inline-block bg-[#FF1744] text-white text-[8px] sm:text-[10px] font-black tracking-widest px-2 py-0.5 border-2 border-black shadow-[2px_2px_0_0_#000] uppercase">
+                Not Counted For Stats (&lt;10 words)
+              </span>
+            )}
+            {isExtraPractice && (
+              <span className="inline-block bg-[#FFE500] text-black text-[8px] sm:text-[10px] font-black tracking-widest px-2 py-0.5 border-2 border-black shadow-[2px_2px_0_0_#000] uppercase">
+                Extra Practice (Counts for Stats)
+              </span>
+            )}
+          </div>
+
           {/* Per-question dot progress indicators */}
           <div className="flex gap-2 ml-10 sm:ml-14">
             {deck.map((_, i) => (

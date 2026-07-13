@@ -2,11 +2,83 @@
 
 import { db } from "@/db";
 import { userProgress, words } from "@/db/schema";
-import { eq, and, sql, lt, notInArray } from "drizzle-orm";
+import { eq, and, sql, lt, lte, notInArray } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { withExponentialBackoff } from "@/lib/db-utils";
 
+
+export async function getQuizWords(mode: 'cloze' | 'time' = 'time') {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        const now = new Date();
+        
+        // Fetch up to 100 due words to filter down
+        const dueResult = await withExponentialBackoff(() => db.query.userProgress.findMany({
+            where: and(
+                eq(userProgress.userId, user.id),
+                eq(userProgress.isArchived, false),
+                lte(userProgress.nextReview, now)
+            ),
+            with: { word: true },
+            orderBy: (progress, { asc }) => [asc(progress.nextReview)],
+            limit: 100,
+        }));
+
+        const filterValidWords = (entries: any[]) => {
+            if (mode === 'cloze') {
+                return entries.filter(item => {
+                    const examples = Array.isArray(item.word?.usageExamples) ? item.word.usageExamples : [];
+                    return examples.some((ex: any) => typeof ex.sentence === 'string' && /\*\*(.*?)\*\*/.test(ex.sentence));
+                });
+            }
+            return entries;
+        };
+
+        const validDueWords = filterValidWords(dueResult);
+        let wordsToReview = validDueWords.slice(0, 10);
+        let isExtraPractice = false;
+        const dueCount = validDueWords.length;
+
+        if (wordsToReview.length === 0) {
+            // Fetch unmastered words for extra practice
+            isExtraPractice = true;
+            const unmasteredResult = await withExponentialBackoff(() => db.query.userProgress.findMany({
+                where: and(
+                    eq(userProgress.userId, user.id),
+                    eq(userProgress.isArchived, false),
+                    lt(userProgress.stability, 50)
+                ),
+                with: { word: true },
+                limit: 200
+            }));
+            
+            // Randomly pick 10 valid unmastered words
+            wordsToReview = filterValidWords(unmasteredResult)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 10);
+        }
+
+        const countsForStats = wordsToReview.length === 10;
+
+        return { 
+            success: true, 
+            data: wordsToReview, 
+            countsForStats, 
+            isExtraPractice,
+            dueCount 
+        };
+    } catch (error) {
+        console.error("Error fetching quiz words:", error);
+        return { success: false, error: "Failed to fetch quiz words" };
+    }
+}
 
 export async function getVaultWords(excludeMastered: boolean = false) {
     const supabase = await createClient();

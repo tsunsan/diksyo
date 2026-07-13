@@ -36,8 +36,8 @@ export const calculateNextReview = (
             reps: previousCard.reps ?? cardToGrade.reps,
             lapses: previousCard.lapses ?? cardToGrade.lapses,
             state: previousCard.state ?? cardToGrade.state,
-            elapsed_days: previousCard.elapsed_days ?? cardToGrade.elapsed_days,
-            scheduled_days: previousCard.scheduled_days ?? cardToGrade.scheduled_days,
+            elapsed_days: previousCard.elapsedDays ?? previousCard.elapsed_days ?? cardToGrade.elapsed_days,
+            scheduled_days: previousCard.scheduledDays ?? previousCard.scheduled_days ?? cardToGrade.scheduled_days,
         };
         const lastReview = previousCard.last_review || previousCard.lastReview;
         if (lastReview) {

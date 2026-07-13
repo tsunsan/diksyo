@@ -23,8 +23,10 @@ interface TimeQuizState {
   quizDone: boolean;
   hasSubmittedOnce: boolean;
   quizStartTime: number;
+  countsForStats: boolean;
+  isExtraPractice: boolean;
   
-  startQuiz: (words: QuizWord[]) => void;
+  startQuiz: (words: QuizWord[], countsForStats?: boolean, isExtraPractice?: boolean) => void;
   setCurrentIndex: (index: number | ((prev: number) => number)) => void;
   setFeedback: (feedback: FeedbackState) => void;
   setTotalXP: (xp: number | ((prev: number) => number)) => void;
@@ -47,8 +49,10 @@ export const useTimeQuizStore = create<TimeQuizState>((set) => ({
   quizDone: false,
   hasSubmittedOnce: false,
   quizStartTime: 0,
+  countsForStats: false,
+  isExtraPractice: false,
 
-  startQuiz: (words) => set({ deck: words, currentIndex: 0, feedback: "idle", totalXP: 0, streak: 0, maxStreak: 0, results: [], quizDone: false, hasSubmittedOnce: false, quizStartTime: Date.now() }),
+  startQuiz: (words, countsForStats = true, isExtraPractice = false) => set({ deck: words, currentIndex: 0, feedback: "idle", totalXP: 0, streak: 0, maxStreak: 0, results: [], quizDone: false, hasSubmittedOnce: false, quizStartTime: Date.now(), countsForStats, isExtraPractice }),
   setCurrentIndex: (index) => set((state) => ({ currentIndex: typeof index === 'function' ? index(state.currentIndex) : index })),
   setFeedback: (feedback) => set({ feedback }),
   setTotalXP: (xp) => set((state) => ({ totalXP: typeof xp === 'function' ? xp(state.totalXP) : xp })),
@@ -58,6 +62,7 @@ export const useTimeQuizStore = create<TimeQuizState>((set) => ({
   setQuizDone: (done) => set({ quizDone: done }),
   setHasSubmittedOnce: (hasSubmitted) => set({ hasSubmittedOnce: hasSubmitted }),
   resetQuiz: () => set({
+    deck: [],
     currentIndex: 0,
     feedback: "idle",
     totalXP: 0,

@@ -24,8 +24,10 @@ interface QuizState {
     correctCount: number;
     questionStartTime: number;
     quizStartTime: number;
+    countsForStats: boolean;
+    isExtraPractice: boolean;
 
-    startQuiz: (words: QuizWord[]) => void;
+    startQuiz: (words: QuizWord[], countsForStats?: boolean, isExtraPractice?: boolean) => void;
     applyAnswerResult: (isCorrect: boolean) => void;
     nextCard: () => void;
     resetQuiz: () => void;
@@ -38,14 +40,18 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     correctCount: 0,
     questionStartTime: 0,
     quizStartTime: 0,
+    countsForStats: false,
+    isExtraPractice: false,
 
-    startQuiz: (words) => set({
+    startQuiz: (words, countsForStats = true, isExtraPractice = false) => set({
         deck: words,
         currentIndex: 0,
         status: 'typing',
         correctCount: 0,
         questionStartTime: Date.now(),
-        quizStartTime: Date.now()
+        quizStartTime: Date.now(),
+        countsForStats,
+        isExtraPractice
     }),
 
     applyAnswerResult: (isCorrect) => set((state) => ({
