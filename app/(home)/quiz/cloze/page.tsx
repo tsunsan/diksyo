@@ -240,7 +240,8 @@ export default function ClozeQuizPage() {
       userAnswer: option,
       gameMode: "cloze",
       timeTakenMs,
-      countsForStats
+      countsForStats,
+      isExtraPractice
     }).then(res => {
       if (res.success) {
         setResults(prev => prev.map(r => r.id === currentWord.id ? {

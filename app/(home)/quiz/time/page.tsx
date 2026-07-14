@@ -212,7 +212,8 @@ export default function QuizPage2() {
         gameMode: "time",
         timeTakenMs: 15000,
         acceptedAnswers: current.acceptedAnswers,
-        countsForStats
+        countsForStats,
+        isExtraPractice
       }).then(res => {
         setResults((prev) => [...prev, { 
           id: current.id, 
@@ -419,7 +420,8 @@ export default function QuizPage2() {
        gameMode: "time",
        timeTakenMs,
        acceptedAnswers: current.acceptedAnswers,
-       countsForStats
+       countsForStats,
+       isExtraPractice
     }).then(res => {
        if (res.success) {
           setResults(prev => prev.map(r => r.id === current.id ? {

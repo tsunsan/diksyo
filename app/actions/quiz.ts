@@ -15,6 +15,7 @@ export interface QuizSubmission {
     timeTakenMs: number;
     acceptedAnswers?: string[];
     countsForStats?: boolean;
+    isExtraPractice?: boolean;
 }
 
 const LEVEL_XP_MAP: Record<string, number> = {
@@ -28,7 +29,7 @@ const calculateMastery = (stability: number): number => {
     return Math.min(100, Math.round((stability / 30) * 100));
 };
 
-export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTakenMs, acceptedAnswers }: QuizSubmission) {
+export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTakenMs, acceptedAnswers, countsForStats = true, isExtraPractice = false }: QuizSubmission) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -79,28 +80,31 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
         }
 
         const newFsrsStats = calculateNextReview(calculatedGrade, progressRecord);
-        const newMastery = calculateMastery(newFsrsStats.stability);
+        const newMastery = isExtraPractice ? (progressRecord.mastery || 0) : calculateMastery(newFsrsStats.stability);
 
         // Update DB
         await withExponentialBackoff(async () => {
             // Update FSRS Progress
-            await db.update(userProgress)
-                .set({
-                    stability: newFsrsStats.stability,
-                    difficulty: newFsrsStats.difficulty,
-                    reps: newFsrsStats.reps,
-                    lapses: newFsrsStats.fsrsData.lapses,
-                    state: newFsrsStats.fsrsData.state,
-                    elapsedDays: newFsrsStats.fsrsData.elapsed_days,
-                    scheduledDays: newFsrsStats.fsrsData.scheduled_days,
-                    lastReview: newFsrsStats.fsrsData.last_review || new Date(),
-                    nextReview: newFsrsStats.nextReviewDate,
-                    mastery: newMastery,
-                })
-                .where(eq(userProgress.id, progressRecord.id));
+            if (!isExtraPractice) {
+                await db.update(userProgress)
+                    .set({
+                        stability: newFsrsStats.stability,
+                        difficulty: newFsrsStats.difficulty,
+                        reps: newFsrsStats.reps,
+                        lapses: newFsrsStats.fsrsData.lapses,
+                        state: newFsrsStats.fsrsData.state,
+                        elapsedDays: newFsrsStats.fsrsData.elapsed_days,
+                        scheduledDays: newFsrsStats.fsrsData.scheduled_days,
+                        lastReview: newFsrsStats.fsrsData.last_review || new Date(),
+                        nextReview: newFsrsStats.nextReviewDate,
+                        mastery: newMastery,
+                    })
+                    .where(eq(userProgress.id, progressRecord.id));
+            }
 
             // Determine if daily streak should be incremented
-            const profile = await db.query.userProfiles.findFirst({
+            if (countsForStats) {
+                const profile = await db.query.userProfiles.findFirst({
                 where: eq(userProfiles.userId, user.id)
             });
 
@@ -153,23 +157,24 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                 where: and(eq(dailyActivity.userId, user.id), eq(dailyActivity.date, today))
             });
 
-            if (activity) {
-                await db.update(dailyActivity)
-                    .set({
-                        xpEarned: activity.xpEarned + xpGained,
-                        totalAnswers: activity.totalAnswers + 1,
-                        correctAnswers: activity.correctAnswers + (isCorrect ? 1 : 0),
-                    })
-                    .where(eq(dailyActivity.id, activity.id));
-            } else {
-                await db.insert(dailyActivity).values({
-                    userId: user.id,
-                    date: today,
-                    xpEarned: xpGained,
-                    totalAnswers: 1,
-                    correctAnswers: isCorrect ? 1 : 0,
-                    wordsLearned: 1, // Assume 1 word learned on first activity
-                });
+                if (activity) {
+                    await db.update(dailyActivity)
+                        .set({
+                            xpEarned: activity.xpEarned + xpGained,
+                            totalAnswers: activity.totalAnswers + 1,
+                            correctAnswers: activity.correctAnswers + (isCorrect ? 1 : 0),
+                        })
+                        .where(eq(dailyActivity.id, activity.id));
+                } else {
+                    await db.insert(dailyActivity).values({
+                        userId: user.id,
+                        date: today,
+                        xpEarned: xpGained,
+                        totalAnswers: 1,
+                        correctAnswers: isCorrect ? 1 : 0,
+                        wordsLearned: 1, // Assume 1 word learned on first activity
+                    });
+                }
             }
         });
 
