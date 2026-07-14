@@ -134,7 +134,7 @@ export default function QuizPage2() {
             usageExamples: Array.isArray(w.usageExamples) ? w.usageExamples : [],
             level: w.level || "BEGINNER",
             hint: w.usageNotes || "Translate this to Tagalog",
-            xp: w.level === 'ADVANCED' ? 30 : w.level === 'INTERMEDIATE' ? 20 : 10,
+            xp: (w.level || "").toUpperCase() === 'ADVANCED' ? 30 : (w.level || "").toUpperCase() === 'INTERMEDIATE' ? 20 : 10,
             example: (Array.isArray(w.usageExamples) && w.usageExamples[0]) ? w.usageExamples[0].translation : "No example available.",
             answer: w.word,
             acceptedAnswers: [w.word]
@@ -402,6 +402,16 @@ export default function QuizPage2() {
     }
 
     const timeTakenMs = (15 - timeLeft) * 1000;
+    const optimisticXP = current.xp || 10;
+    
+    setResults(prev => [...prev, {
+       id: current.id,
+       correct: isCorrect,
+       timeBonus,
+       xpGained: isCorrect ? optimisticXP : 0,
+       level: current.level || "BEGINNER",
+       newMastery: 0
+    }]);
     
     const promise = submitQuizAnswer({
        wordId: current.id,
@@ -412,23 +422,15 @@ export default function QuizPage2() {
        countsForStats
     }).then(res => {
        if (res.success) {
-          setResults(prev => [...prev, {
-             id: current.id,
-             correct: res.correct || false,
-             timeBonus,
-             xpGained: res.xpGained || 0,
-             level: res.level || "BEGINNER",
+          setResults(prev => prev.map(r => r.id === current.id ? {
+             ...r,
+             correct: res.correct ?? r.correct,
+             xpGained: res.xpGained || r.xpGained,
              newMastery: res.newMastery || 0
-          }]);
-       } else {
-          setResults(prev => [...prev, {
-             id: current.id, correct: isCorrect, timeBonus, xpGained: 0, level: current.level || "BEGINNER", newMastery: 0
-          }]);
+          } : r));
        }
     }).catch(err => {
-       setResults(prev => [...prev, {
-          id: current.id, correct: isCorrect, timeBonus, xpGained: 0, level: current.level || "BEGINNER", newMastery: 0
-       }]);
+       console.error("Failed to submit answer", err);
     });
 
     pendingRequestsRef.current.push(promise);
@@ -689,6 +691,7 @@ export default function QuizPage2() {
                           <motion.div>
                             <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white border-[3px] sm:border-[4px] border-black flex items-center justify-center mx-auto mb-3 sm:mb-6 shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000]"><Check className="w-10 h-10 sm:w-16 sm:h-16 text-[#00C853]" /></div>
                             <h2 className="text-white uppercase font-black text-3xl sm:text-[3rem]">EXCELLENT!</h2>
+                            <p className="text-white font-black text-base sm:text-lg uppercase mt-2">+{current.xp || 10} XP</p>
                             {timeLeft > 10 && <p className="text-[#FFE500] font-black text-xs sm:text-sm uppercase mt-1">+5 SPEED BONUS</p>}
                           </motion.div>
                         ) : (

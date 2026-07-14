@@ -211,7 +211,7 @@ export default function ClozeQuizPage() {
     applyAnswerResult(isCorrect);
 
     if (isCorrect) {
-      const optimisticXP = currentWord.level === 'ADVANCED' ? 30 : currentWord.level === 'INTERMEDIATE' ? 20 : 10;
+      const optimisticXP = (currentWord.level || "").toUpperCase() === 'ADVANCED' ? 30 : (currentWord.level || "").toUpperCase() === 'INTERMEDIATE' ? 20 : 10;
       setTotalXP(prev => prev + optimisticXP);
       setStreak(prev => {
         const newStreak = prev + 1;
@@ -223,6 +223,18 @@ export default function ClozeQuizPage() {
       controls.start({ x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } });
     }
     
+    const optimisticXP = (currentWord.level || "").toUpperCase() === 'ADVANCED' ? 30 : (currentWord.level || "").toUpperCase() === 'INTERMEDIATE' ? 20 : 10;
+    
+    setResults(prev => [...prev, {
+      id: currentWord.id,
+      word: currentWord.word,
+      translationPrompt: currentWord.englishPrompt,
+      correct: isCorrect,
+      xpGained: isCorrect ? optimisticXP : 0,
+      newMastery: 0,
+      level: currentWord.level || "BEGINNER"
+    }]);
+    
     const promise = submitQuizAnswer({
       wordId: currentWord.id,
       userAnswer: option,
@@ -230,25 +242,16 @@ export default function ClozeQuizPage() {
       timeTakenMs,
       countsForStats
     }).then(res => {
-      setResults(prev => [...prev, {
-        id: currentWord.id,
-        word: currentWord.word,
-        translationPrompt: currentWord.englishPrompt,
-        correct: res.success ? (res.correct || false) : false,
-        xpGained: res.xpGained || 0,
-        newMastery: res.newMastery || 0,
-        level: res.level || "BEGINNER"
-      }]);
+      if (res.success) {
+        setResults(prev => prev.map(r => r.id === currentWord.id ? {
+          ...r,
+          correct: res.correct ?? r.correct,
+          xpGained: res.xpGained || r.xpGained,
+          newMastery: res.newMastery || 0
+        } : r));
+      }
     }).catch(err => {
-      setResults(prev => [...prev, {
-        id: currentWord.id,
-        word: currentWord.word,
-        translationPrompt: currentWord.englishPrompt,
-        correct: isCorrect,
-        xpGained: 0,
-        newMastery: 0,
-        level: "BEGINNER"
-      }]);
+      console.error("Failed to submit cloze answer", err);
     });
 
     pendingRequestsRef.current.push(promise);
