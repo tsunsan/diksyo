@@ -25,8 +25,8 @@ const LEVEL_XP_MAP: Record<string, number> = {
 };
 
 const calculateMastery = (stability: number): number => {
-    // Stability of 30 days equates to 100% mastery
-    return Math.min(100, Math.round((stability / 30) * 100));
+    // Stability of 15 days equates to 100% mastery
+    return Math.min(100, Math.round((stability / 15) * 100));
 };
 
 export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTakenMs, acceptedAnswers, countsForStats = true, isExtraPractice = false }: QuizSubmission) {
@@ -102,9 +102,8 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                     .where(eq(userProgress.id, progressRecord.id));
             }
 
-            // Determine if daily streak should be incremented
-            if (countsForStats) {
-                const profile = await db.query.userProfiles.findFirst({
+            // Determine if daily streak should be incremented (always give XP/Streak regardless of quiz length)
+            const profile = await db.query.userProfiles.findFirst({
                 where: eq(userProfiles.userId, user.id)
             });
 
@@ -139,6 +138,9 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
 
                 const newLongestStreak = Math.max(newStreak, profile.longestStreak);
 
+                // Check if word just became mastered
+                const justMastered = (progressRecord.mastery || 0) < 90 && newMastery >= 90;
+
                 await db.update(userProfiles)
                     .set({
                         xp: profile.xp + xpGained,
@@ -146,6 +148,7 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                         longestStreak: newLongestStreak,
                         lastActiveDate: now,
                         totalTimeLearningMs: profile.totalTimeLearningMs + timeTakenMs,
+                        wordsMastered: profile.wordsMastered + (justMastered ? 1 : 0),
                     })
                     .where(eq(userProfiles.userId, user.id));
             }
@@ -175,7 +178,6 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                         wordsLearned: 1, // Assume 1 word learned on first activity
                     });
                 }
-            }
         });
 
         // Trigger Achievement Engine asynchronously (don't await it so we don't block the UI response)

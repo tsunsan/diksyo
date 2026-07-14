@@ -45,14 +45,14 @@ function getMasteryStatus(entry: VaultEntry) {
     return { label: "NEW" + suffix, bg: "bg-[#3B82F6]", icon: Sparkles };
   }
 
+  if (percent >= 90) {
+    return { label: "MASTERED" + suffix, bg: "bg-[#10B981]", icon: CheckCircle2 };
+  }
+
   const now = new Date();
   const nextDate = entry.nextReview ? new Date(entry.nextReview) : null;
   if (nextDate && nextDate <= now) {
     return { label: "DUE" + suffix, bg: "bg-[#EF4444]", icon: Clock };
-  }
-
-  if (percent >= 90) {
-    return { label: "MASTERED" + suffix, bg: "bg-[#10B981]", icon: CheckCircle2 };
   }
   
   if (percent >= 50) {

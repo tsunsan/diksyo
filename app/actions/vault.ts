@@ -24,7 +24,8 @@ export async function getQuizWords(mode: 'cloze' | 'time' = 'time') {
             where: and(
                 eq(userProgress.userId, user.id),
                 eq(userProgress.isArchived, false),
-                lte(userProgress.nextReview, now)
+                lte(userProgress.nextReview, now),
+                lt(userProgress.mastery, 100)
             ),
             with: { word: true },
             orderBy: (progress, { asc }) => [asc(progress.nextReview)],
@@ -139,9 +140,11 @@ export async function addWordToVault(wordId: string) {
             mastery: 0,
             stability: 0,
             difficulty: 0,
+            nextReview: new Date(),
         }));
 
         revalidatePath("/vault");
+        revalidatePath("/quiz");
         return { success: true };
     } catch (error) {
         console.error("Error adding word to vault:", error);
@@ -187,7 +190,8 @@ export async function getDueWordCount() {
                 .where(and(
                     eq(userProgress.userId, user.id),
                     eq(userProgress.isArchived, false),
-                    lte(userProgress.nextReview, now)
+                    lte(userProgress.nextReview, now),
+                    lt(userProgress.mastery, 100)
                 ))),
             withExponentialBackoff(() => db
                 .select({ count: sql<number>`count(*)::int` })
@@ -252,6 +256,7 @@ export async function seedStarterPack() {
                 difficulty: 0,
                 mastery: 0,
                 isArchived: false,
+                nextReview: new Date(),
             }))
         ));
 

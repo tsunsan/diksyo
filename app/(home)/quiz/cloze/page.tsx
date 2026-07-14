@@ -260,14 +260,15 @@ export default function ClozeQuizPage() {
 
   const handleNext = useCallback(async () => {
     if (status !== 'revealed') return;
-    setSelectedOption("");
     
     if (currentIndex < deck.length - 1) {
+      setSelectedOption("");
       nextCard();
     } else {
       setIsFinalizing(true);
       await Promise.all(pendingRequestsRef.current);
       setIsFinalizing(false);
+      setSelectedOption("");
       nextCard();
     }
   }, [status, currentIndex, deck.length, nextCard]);

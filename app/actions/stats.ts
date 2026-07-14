@@ -33,6 +33,22 @@ export async function getUserStats() {
             profile = newProfile;
         }
 
+        // Dynamically compute streak for display
+        if (profile.lastActiveDate) {
+            const nowPHT = getPHTDate();
+            const lastActivePHT = new Date(profile.lastActiveDate.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+            
+            nowPHT.setHours(0, 0, 0, 0);
+            lastActivePHT.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(nowPHT.getTime() - lastActivePHT.getTime());
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1) {
+                profile.currentStreak = 0;
+            }
+        }
+
         // Fetch Configs
         const dynamicLevels = await db.query.levels.findMany({
             orderBy: (levels, { asc }) => [asc(levels.minXp)]
@@ -85,6 +101,14 @@ export async function getUserStats() {
         const retentionRate = reviewedCount > 0 
             ? Math.round(totalMastery / reviewedCount) 
             : 0;
+
+        // Self-heal the profile's wordsMastered count if it differs from the actual dynamic count
+        if (profile.wordsMastered !== mastered) {
+            await db.update(userProfiles)
+                .set({ wordsMastered: mastered })
+                .where(eq(userProfiles.userId, user.id));
+            profile.wordsMastered = mastered;
+        }
 
         // Struggled Words (only words actually reviewed)
         const topStruggled = [...progressRecords]

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import Link from "next/link";
 import { 
   JeepneySVG, 
   JeepneySignboard,
@@ -1150,12 +1151,13 @@ export default function StatsDashboardClient({
                         WORDS READY TO PRACTICE NOW
                       </p>
                       {fsrs.upcomingReviewsCount > 0 && (
-                        <div
-                          className="border-[2px] border-black bg-[#FFE500] px-3 py-1.5 text-center uppercase tracking-wider text-[10px] cursor-pointer hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none shadow-[2px_2px_0_#000] transition-all"
+                        <Link
+                          href="/quiz"
+                          className="border-[2px] border-black bg-[#FFE500] px-3 py-1.5 text-center uppercase tracking-wider text-[10px] cursor-pointer hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none shadow-[2px_2px_0_#000] transition-all block"
                           style={{ fontWeight: 900 }}
                         >
                           START REVIEW →
-                        </div>
+                        </Link>
                       )}
                     </div>
 
