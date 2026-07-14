@@ -574,7 +574,7 @@ export default function DictionaryClient({
                   >
                     <AuthInput id="modal-full-name" name="full-name" type="text" label="Full Name" placeholder="Juan Dela Cruz" icon={User} />
                     <AuthInput id="modal-username" name="username" type="text" label="Username" placeholder="juandelacruz" icon={User} />
-                    <AuthInput id="modal-signup-email" name="email" type="email" label="Email Address" placeholder="alamat@diksyo.ph" icon={Mail} />
+                    <AuthInput id="modal-signup-email" name="email" type="email" label="Email Address" placeholder="alamat@diksyo.app" icon={Mail} />
                     <div className="grid grid-cols-2 gap-3">
                       <AuthInput id="modal-password" name="password" type="password" label="Password" icon={Lock} />
                       <AuthInput id="modal-confirm-password" name="confirm-password" type="password" label="Confirm" icon={Lock} />

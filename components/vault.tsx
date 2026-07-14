@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { BookMarked, History, ChevronRight, ChevronDown, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star, Filter, ArrowUp, ArrowDown, Layers, Zap, Type, Gem, Minimize, Maximize } from "lucide-react";
+import { BookMarked, History, ChevronRight, ChevronDown, Plus, Search, Tag, CheckCircle2, Clock, PlayCircle, Sparkles, Loader2, ArrowDownUp, Edit, Trash2, X, ExternalLink, Star, Filter, ArrowUp, ArrowDown, Layers, Zap, Type, Gem, Minimize, Maximize, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,16 +44,21 @@ function getMasteryStatus(entry: VaultEntry) {
   if (!entry.lastReview) {
     return { label: "NEW" + suffix, bg: "bg-[#3B82F6]", icon: Sparkles };
   }
-  
-  if (entry.stability && entry.stability >= 50) {
-    return { label: "MASTERED" + suffix, bg: "bg-[#10B981]", icon: CheckCircle2 };
-  }
 
   const now = new Date();
   const nextDate = entry.nextReview ? new Date(entry.nextReview) : null;
   if (nextDate && nextDate <= now) {
     return { label: "DUE" + suffix, bg: "bg-[#EF4444]", icon: Clock };
   }
+
+  if (percent >= 90) {
+    return { label: "MASTERED" + suffix, bg: "bg-[#10B981]", icon: CheckCircle2 };
+  }
+  
+  if (percent >= 50) {
+    return { label: "REVIEWING" + suffix, bg: "bg-[#8B5CF6]", icon: RefreshCw };
+  }
+
   return { label: "LEARNING" + suffix, bg: "bg-[#F59E0B]", icon: PlayCircle };
 }
 
@@ -143,7 +148,7 @@ function highlightBold(text: string) {
 }
 
 export default function VaultClient({ initialWords }: { initialWords: VaultEntry[] }) {
-  const masteredCount = initialWords.filter(w => w.stability && w.stability > 50).length;
+  const masteredCount = initialWords.filter(w => w.mastery && w.mastery >= 90).length;
 
   const [activeRoot, setActiveRoot] = useState("ALL");
   const [activeLevel, setActiveLevel] = useState("ALL");

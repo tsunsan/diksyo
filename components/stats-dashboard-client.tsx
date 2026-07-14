@@ -296,7 +296,7 @@ export default function StatsDashboardClient({
   const fsrs = stats?.fsrs || {
     retentionRate: 0,
     upcomingReviewsCount: 0,
-    wordsByDifficulty: { learning: 0, reviewing: 0, mastered: 0 },
+    wordsByDifficulty: { newWords: 0, learning: 0, reviewing: 0, mastered: 0 },
     struggledWords: [],
   };
   const yearlyHeatmap = stats?.yearlyHeatmap || [];
@@ -333,16 +333,18 @@ export default function StatsDashboardClient({
   const totalPipelineWords =
     fsrs.wordsByDifficulty.learning +
     fsrs.wordsByDifficulty.reviewing +
-    fsrs.wordsByDifficulty.mastered;
+    fsrs.wordsByDifficulty.mastered +
+    (fsrs.wordsByDifficulty.newWords || 0);
 
   const pipelinePercentages =
     totalPipelineWords > 0
       ? {
+          newWords: ((fsrs.wordsByDifficulty.newWords || 0) / totalPipelineWords) * 100,
           learning: (fsrs.wordsByDifficulty.learning / totalPipelineWords) * 100,
           reviewing: (fsrs.wordsByDifficulty.reviewing / totalPipelineWords) * 100,
           mastered: (fsrs.wordsByDifficulty.mastered / totalPipelineWords) * 100,
         }
-      : { learning: 0, reviewing: 0, mastered: 0 };
+      : { newWords: 0, learning: 0, reviewing: 0, mastered: 0 };
 
   const unlockedCount = achievements.filter((a: any) => a.unlocked).length;
   const activeDays = yearlyHeatmap.filter((d: any) => d.xp > 0).length;
@@ -1175,6 +1177,23 @@ export default function StatsDashboardClient({
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{
+                                width: `${pipelinePercentages.newWords}%`,
+                              }}
+                              transition={{ duration: 0.8, delay: 0.1 }}
+                              className="h-full bg-[#3B82F6] flex items-center justify-center"
+                            >
+                              {pipelinePercentages.newWords > 18 && (
+                                <span
+                                  className="text-[8px] text-white"
+                                  style={{ fontWeight: 900 }}
+                                >
+                                  {fsrs.wordsByDifficulty.newWords || 0}
+                                </span>
+                              )}
+                            </motion.div>
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
                                 width: `${pipelinePercentages.learning}%`,
                               }}
                               transition={{ duration: 0.8, delay: 0.2 }}
@@ -1241,6 +1260,11 @@ export default function StatsDashboardClient({
                       {/* Legend */}
                       <div className="flex gap-3 flex-wrap">
                         {[
+                          {
+                            label: "NEW",
+                            count: fsrs.wordsByDifficulty.newWords || 0,
+                            color: "#3B82F6",
+                          },
                           {
                             label: "LEARNING",
                             count: fsrs.wordsByDifficulty.learning,

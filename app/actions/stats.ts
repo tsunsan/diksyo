@@ -62,19 +62,24 @@ export async function getUserStats() {
         let learning = 0;
         let reviewing = 0;
         let mastered = 0;
+        let newWords = 0;
         let reviewedCount = 0;
 
         progressRecords.forEach(record => {
             if (record.lastReview) {
                 totalMastery += record.mastery || 0;
                 reviewedCount++;
+                
+                if ((record.mastery || 0) < 50) learning++;
+                else if ((record.mastery || 0) < 90) reviewing++;
+                else mastered++;
+            } else {
+                newWords++;
             }
+            
             if (record.nextReview && new Date(record.nextReview) <= now) {
                 upcomingReviewsCount++;
             }
-            if ((record.mastery || 0) < 50) learning++;
-            else if ((record.mastery || 0) < 90) reviewing++;
-            else mastered++;
         });
 
         const retentionRate = reviewedCount > 0 
@@ -171,7 +176,7 @@ export async function getUserStats() {
             fsrs: {
                 retentionRate,
                 upcomingReviewsCount,
-                wordsByDifficulty: { learning, reviewing, mastered },
+                wordsByDifficulty: { newWords, learning, reviewing, mastered },
                 struggledWords
             },
             yearlyHeatmap
