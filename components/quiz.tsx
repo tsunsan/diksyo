@@ -26,6 +26,13 @@ import {
   Package,
   Search,
   Loader2,
+  CalendarCheck,
+  BookMarked,
+  TrendingUp,
+  Repeat,
+  Trophy,
+  Sparkles,
+  Info,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,7 +41,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { getVaultWordCount, seedStarterPack } from "@/app/actions/vault";
+import { getVaultWordCount, getDueWordCount, seedStarterPack } from "@/app/actions/vault";
 
 const LEARNING_MODES = [
   { id: "affix", title: "Affix Builder", desc: "Construct words from roots.", icon: Blocks, available: false },
@@ -45,8 +52,8 @@ const LEARNING_MODES = [
 ];
 
 const MASTERY_MODES = [
-  { id: "time", title: "Time Attack", desc: "Race against the clock in this high-speed typing challenge.", icon: Timer, customBg: "#FF6D00", customText: "#fff" },
-  { id: "cloze", title: "Cloze Deletion", desc: "Test your comprehension by filling in the missing words.", icon: Puzzle, customBg: "#0057FF", customText: "#fff" },
+  { id: "time", title: "Time Attack", desc: "Race against the clock in this high-speed typing challenge.", icon: Timer, customBg: "#FF6D00", customText: "#fff", accentColor: "#FFE500" },
+  { id: "cloze", title: "Cloze Deletion", desc: "Test your comprehension by filling in the missing words.", icon: Puzzle, customBg: "#0057FF", customText: "#fff", accentColor: "#4361EE" },
 ];
 
 const ALL_MODES = [...LEARNING_MODES, ...MASTERY_MODES];
@@ -156,41 +163,154 @@ function ModePreviewContent({ modeId }: { modeId: string | null }) {
 
     case "time":
       return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-5">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Timer className="w-5 h-5 text-[#FF4444]" />
-              <span className="text-[#FF4444] text-xl font-mono" style={{ fontWeight: 900 }}>00:42</span>
+        <div className="flex-1 flex flex-col gap-3">
+          {/* Mini HUD */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 bg-[#FF6D00] border-[2px] border-black flex items-center justify-center">
+                <Timer className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="text-[9px] uppercase tracking-widest text-[#999]" style={{ fontWeight: 800 }}>Time Attack</span>
             </div>
-            <h4 className="text-black text-3xl" style={{ fontWeight: 900 }}>Bahay</h4>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-black px-1.5 py-0.5 border-[1.5px] border-black">
+                <Zap className="w-3 h-3 text-[#FFE500]" />
+                <span className="text-[#FFE500] text-[9px]" style={{ fontWeight: 900 }}>45</span>
+              </div>
+              <div className="flex items-center gap-1 bg-[#FF6D00] px-1.5 py-0.5 border-[1.5px] border-black">
+                <Flame className="w-3 h-3 text-white" />
+                <span className="text-white text-[9px]" style={{ fontWeight: 900 }}>3</span>
+              </div>
+            </div>
           </div>
-          <div className="w-full bg-[#f0f0f0] border-[2.5px] border-black h-3 overflow-hidden">
-            <div className="h-full bg-[#FF4444] transition-all" style={{ width: "65%" }} />
+
+          {/* Timer bar */}
+          <div className="relative">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[8px] uppercase tracking-widest text-[#aaa]" style={{ fontWeight: 700 }}>3 / 10</span>
+              <div className="flex items-center gap-1">
+                <Timer className="w-3 h-3 text-[#FF4444]" />
+                <span className="text-[#FF4444] text-sm font-mono" style={{ fontWeight: 900 }}>00:08</span>
+              </div>
+            </div>
+            <div className="w-full bg-[#f0f0f0] border-[2px] border-black h-2 overflow-hidden">
+              <div className="h-full bg-[#FF4444] transition-all" style={{ width: "53%" }} />
+            </div>
           </div>
-          <div className="w-full mt-auto border-[3px] border-black border-dashed h-14 bg-[#FFFBF0] flex items-center justify-center opacity-80">
-            <span className="text-[#666] text-xs uppercase tracking-widest" style={{ fontWeight: 800 }}>Type fast...</span>
+
+          {/* Word card */}
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <span className="inline-block border-[2px] border-black px-2 py-0.5 text-[8px] uppercase tracking-widest mb-2 bg-[#00C853] text-white" style={{ fontWeight: 900 }}>Noun</span>
+            <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1" style={{ fontWeight: 700 }}>Translate to Tagalog</p>
+            <h4 className="text-black text-2xl mb-1" style={{ fontWeight: 900 }}>House</h4>
+            <p className="text-[10px] text-[#888] italic mb-3" style={{ fontWeight: 600 }}>&quot;Isang tirahan ng tao&quot;</p>
+          </div>
+
+          {/* Input mockup */}
+          <div className="flex gap-2">
+            <div className="flex-1 border-[2.5px] border-black h-10 bg-[#FFFBF0] flex items-center px-3">
+              <span className="text-[#bbb] text-xs uppercase tracking-wider" style={{ fontWeight: 700 }}>b a h a y</span>
+              <div className="w-[2px] h-4 bg-black ml-0.5 animate-pulse" />
+            </div>
+            <div className="border-[2.5px] border-black bg-black px-3 h-10 flex items-center justify-center">
+              <span className="text-[#FFE500] text-[10px] uppercase" style={{ fontWeight: 900 }}>Check</span>
+            </div>
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex gap-1.5 justify-center pt-1">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div 
+                key={i} 
+                className="w-1.5 h-1.5 border-[1.5px] border-black" 
+                style={{ background: i < 2 ? "#00C853" : i === 2 ? "#FF6D00" : "#ddd" }} 
+              />
+            ))}
           </div>
         </div>
       );
 
     case "cloze":
       return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-5">
-          <div className="text-center">
-            <p className="text-[10px] uppercase tracking-widest text-[#999] mb-3" style={{ fontWeight: 800 }}>Fill in the blank</p>
-            <p className="text-black text-lg leading-relaxed" style={{ fontWeight: 700 }}>
+        <div className="flex-1 flex flex-col gap-3">
+          {/* Mini HUD */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 bg-[#4361EE] border-[2px] border-black flex items-center justify-center">
+                <Puzzle className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="text-[9px] uppercase tracking-widest text-[#999]" style={{ fontWeight: 800 }}>Cloze Deletion</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-black px-1.5 py-0.5 border-[1.5px] border-black">
+                <Zap className="w-3 h-3 text-[#FFE500]" />
+                <span className="text-[#FFE500] text-[9px]" style={{ fontWeight: 900 }}>30</span>
+              </div>
+              <div className="flex items-center gap-1 bg-[#FF6D00] px-1.5 py-0.5 border-[1.5px] border-black">
+                <Flame className="w-3 h-3 text-white" />
+                <span className="text-white text-[9px]" style={{ fontWeight: 900 }}>2</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[8px] uppercase tracking-widest text-[#aaa]" style={{ fontWeight: 700 }}>5 / 10</span>
+              <span className="text-black text-sm" style={{ fontWeight: 900 }}>50%</span>
+            </div>
+            <div className="w-full bg-white border-[2px] border-black h-1.5 overflow-hidden">
+              <div className="h-full bg-[#4361EE]" style={{ width: "50%" }} />
+            </div>
+          </div>
+
+          {/* Cloze sentence card */}
+          <div className="flex-1 flex flex-col items-center justify-center border-[2.5px] border-black bg-white p-4 relative">
+            <div className="absolute top-2 right-2">
+              <span className="border-[2px] border-black bg-[#4361EE] text-white px-1.5 py-0.5 text-[8px] uppercase" style={{ fontWeight: 900 }}>5 / 10</span>
+            </div>
+            <p className="text-[9px] uppercase tracking-widest text-[#aaa] mb-3" style={{ fontWeight: 800 }}>Fill in the blank</p>
+            <p className="text-black text-base leading-relaxed text-center" style={{ fontWeight: 700 }}>
               Ang &nbsp;
-              <span className="inline-block border-b-[3px] border-black px-4 py-0.5 bg-[#FFE500] min-w-[80px]">
-                <span className="text-[#999] text-sm">?</span>
+              <span className="inline-block border-b-[3px] border-[#4361EE] px-3 py-0.5 bg-[#EEF2FF] min-w-[70px]">
+                <span className="text-[#4361EE] text-sm" style={{ fontWeight: 900 }}>?</span>
               </span>
               &nbsp; ay malaki.
             </p>
+            <p className="text-[9px] text-[#888] mt-2 italic" style={{ fontWeight: 600 }}>&quot;The ___ is big.&quot;</p>
           </div>
-          <div className="w-full mt-auto flex gap-2 justify-center flex-wrap">
-            {["bahay", "aklat", "tao"].map((word, i) => (
-              <span key={i} className="border-[2.5px] border-black px-3 py-1.5 text-xs uppercase bg-white hover:bg-[#FFE500] transition-colors cursor-pointer" style={{ fontWeight: 800 }}>
-                {word}
-              </span>
+
+          {/* Multiple choice options */}
+          <div className="grid grid-cols-2 gap-1.5">
+            {[
+              { letter: "A", word: "bahay", correct: true },
+              { letter: "B", word: "aklat", correct: false },
+              { letter: "C", word: "tao", correct: false },
+              { letter: "D", word: "isda", correct: false },
+            ].map((opt, i) => (
+              <div 
+                key={i} 
+                className={`border-[2px] border-black p-2 flex items-center gap-2 transition-colors ${opt.correct ? "bg-[#4361EE]" : "bg-white"}`}
+              >
+                <span 
+                  className={`w-5 h-5 flex items-center justify-center border-[1.5px] border-black text-[9px] flex-shrink-0 ${opt.correct ? "bg-white text-black" : "bg-[#f5f5f5] text-[#666]"}`} 
+                  style={{ fontWeight: 900 }}
+                >
+                  {opt.letter}
+                </span>
+                <span className={`text-[10px] uppercase ${opt.correct ? "text-white" : "text-black"}`} style={{ fontWeight: 800 }}>{opt.word}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex gap-1.5 justify-center pt-1">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div 
+                key={i} 
+                className="w-1.5 h-1.5 border-[1.5px] border-black" 
+                style={{ background: i < 3 ? "#00C853" : i === 3 ? "#FF1744" : i === 4 ? "#4361EE" : "#ddd" }} 
+              />
             ))}
           </div>
         </div>
@@ -208,14 +328,22 @@ export function QuizModeClient() {
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [vaultCount, setVaultCount] = useState<number | null>(null);
+  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const currentMode = ALL_MODES.find((m) => m.id === selectedMode);
 
-  // Fetch vault word count on mount
+  // Fetch vault word count and due count on mount
   useEffect(() => {
     getVaultWordCount().then((res) => {
       if (res.success) setVaultCount(res.count);
+    });
+    getDueWordCount().then((res) => {
+      if (res.success) {
+        setDueCount(res.dueCount);
+        setTotalCount(res.totalCount);
+      }
     });
   }, []);
 
@@ -245,8 +373,87 @@ export function QuizModeClient() {
     });
   }
 
+  const dueDisplay = dueCount !== null ? Math.min(dueCount, 10) : null;
+  const sessionsNeeded = dueCount !== null ? Math.ceil(dueCount / 10) : null;
+
   return (
     <>
+      {/* ── Daily Review Status Banner ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="border-[4px] border-black bg-white shadow-[8px_8px_0_0_#000] overflow-hidden">
+          {/* Top accent */}
+          <div className="w-full h-2 bg-[#FFE500] border-b-[3px] border-black" />
+          
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              {/* Left: Daily status */}
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#FFE500] border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_0_#000] flex-shrink-0">
+                  <CalendarCheck className="w-6 h-6 sm:w-7 sm:h-7 text-black" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h2 className="text-black uppercase tracking-tighter text-lg sm:text-xl" style={{ fontWeight: 900 }}>
+                    Daily Review
+                  </h2>
+                  <p className="text-[#666] text-[10px] sm:text-xs uppercase tracking-widest" style={{ fontWeight: 700 }}>
+                    {dueCount !== null ? (
+                      dueCount === 0 
+                        ? "All caught up! No words due today." 
+                        : `${dueCount} word${dueCount !== 1 ? 's' : ''} due · ${sessionsNeeded} session${sessionsNeeded !== 1 ? 's' : ''} of 10`
+                    ) : (
+                      "Loading your queue..."
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Stats pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="bg-black text-[#FFE500] border-[3px] border-black px-3 py-1.5 flex items-center gap-2">
+                  <Repeat className="w-3.5 h-3.5" />
+                  <span className="text-[10px] sm:text-xs uppercase tracking-widest" style={{ fontWeight: 900 }}>
+                    {dueDisplay !== null ? dueDisplay : "–"} / 10
+                  </span>
+                </div>
+                <div className="bg-white text-black border-[3px] border-black px-3 py-1.5 flex items-center gap-2">
+                  <BookMarked className="w-3.5 h-3.5" />
+                  <span className="text-[10px] sm:text-xs uppercase tracking-widest" style={{ fontWeight: 900 }}>
+                    {totalCount !== null ? totalCount : "–"} in vault
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {dueCount !== null && dueCount > 0 && (
+              <div className="mt-4">
+                <div className="w-full h-2.5 bg-white border-[3px] border-black overflow-hidden shadow-[2px_2px_0_0_#000]">
+                  <motion.div 
+                    className="h-full bg-[#FFE500]" 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((dueDisplay! / 10) * 100, 100)}%` }}
+                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {dueCount === 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-[#FF6D00]" />
+                <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#FF6D00]" style={{ fontWeight: 800 }}>
+                  You can still practice! Extra sessions won&apos;t progress new words but will count for stats.
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
       {/* ── Header Section ── */}
       <div className="mb-12">
         <motion.h1
@@ -420,6 +627,96 @@ export function QuizModeClient() {
 
         </div>
       </div>
+
+      {/* ── How It Works Section ── */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mt-16 mb-12 md:mb-0"
+      >
+        <div className="border-[4px] border-black bg-white shadow-[8px_8px_0_0_#000] overflow-hidden">
+          {/* Section header */}
+          <div className="bg-black px-5 sm:px-6 py-4 flex items-center gap-3">
+            <Info className="w-5 h-5 text-[#FFE500]" />
+            <h2 className="text-[#FFE500] uppercase tracking-widest text-sm sm:text-base" style={{ fontWeight: 900 }}>
+              How The Quiz System Works
+            </h2>
+          </div>
+
+          <div className="p-5 sm:p-8">
+            {/* Step-by-step explanation */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+              {[
+                {
+                  step: "01",
+                  icon: BookMarked,
+                  title: "Save Words",
+                  desc: "Browse the dictionary and save Tagalog words to your personal vault. These are the words you'll be quizzed on.",
+                  color: "#4361EE",
+                },
+                {
+                  step: "02",
+                  icon: CalendarCheck,
+                  title: "Daily Queue",
+                  desc: "Each day, a smart algorithm picks up to 10 words that are due for review based on how well you know them.",
+                  color: "#FF6D00",
+                },
+                {
+                  step: "03",
+                  icon: Zap,
+                  title: "Play & Learn",
+                  desc: "Answer quizzes in Time Attack or Cloze Deletion. Correct answers push the next review further out; wrong ones bring it closer.",
+                  color: "#00C853",
+                },
+                {
+                  step: "04",
+                  icon: TrendingUp,
+                  title: "Build Mastery",
+                  desc: "As you consistently recall words, their mastery percentage grows. The goal: long-term retention, not short-term cramming.",
+                  color: "#7C3AED",
+                },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 + i * 0.1 }}
+                  className="relative border-[3px] border-black p-5 bg-white"
+                >
+                  {/* Step number */}
+                  <div 
+                    className="absolute -top-3 -left-1 border-[3px] border-black px-2 py-0.5 text-white text-[10px] uppercase tracking-widest shadow-[3px_3px_0_0_#000]" 
+                    style={{ fontWeight: 900, background: item.color }}
+                  >
+                    Step {item.step}
+                  </div>
+                  <item.icon className="w-6 h-6 text-black mb-3 mt-2" strokeWidth={2.5} />
+                  <h3 className="text-black uppercase text-sm mb-2" style={{ fontWeight: 900 }}>{item.title}</h3>
+                  <p className="text-[#555] text-xs leading-relaxed" style={{ fontWeight: 600 }}>{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Why 10 words? callout */}
+            <div className="border-[3px] border-black bg-[#FFFBF0] p-4 sm:p-5 flex items-start gap-4">
+              <div className="w-10 h-10 bg-[#FFE500] border-[3px] border-black flex items-center justify-center flex-shrink-0 shadow-[3px_3px_0_0_#000]">
+                <Sparkles className="w-5 h-5 text-black" />
+              </div>
+              <div>
+                <h3 className="text-black uppercase text-sm mb-1" style={{ fontWeight: 900 }}>Why only 10 words per session?</h3>
+                <p className="text-[#555] text-xs leading-relaxed" style={{ fontWeight: 600 }}>
+                  Research shows that shorter, focused sessions lead to better long-term retention than marathon study sessions. 
+                  We use the <span className="text-black" style={{ fontWeight: 800 }}>FSRS (Free Spaced Repetition Scheduler)</span> algorithm 
+                  to scientifically schedule when each word should reappear — right before you&apos;re about to forget it. 
+                  This means every quiz session is maximally efficient. After clearing your daily queue, you can continue with extra practice, 
+                  but those sessions won&apos;t schedule new reviews.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* ── Mastery Onboarding Dialog ── */}
       <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>

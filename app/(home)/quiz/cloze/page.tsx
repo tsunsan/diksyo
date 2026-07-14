@@ -18,6 +18,8 @@ import {
   ChevronDown,
   Check,
   X,
+  Trophy,
+  Coffee,
 } from "lucide-react";
 import { POS_COLORS } from "@/lib/utils";
 import Link from "next/link";
@@ -327,28 +329,78 @@ export default function ClozeQuizPage() {
 
   if (showPracticeDialog) {
     return (
-      <div className="min-h-[600px] flex items-center justify-center p-6 bg-black/5">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0_0_#000] max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-[#4361EE] border-[3px] border-black flex items-center justify-center mx-auto mb-6 shadow-[4px_4px_0_0_#000]">
-             <Puzzle className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-black mb-2">Queue Cleared!</h2>
-          <p className="font-bold text-sm uppercase text-gray-500 mb-8 leading-relaxed">
-            You&apos;ve completed your daily due words! You are now entering <span className="text-black bg-[#FFE500] px-1">Extra Practice</span> mode. These sessions will count towards your stats, but won&apos;t progress new words.
-          </p>
-          <div className="flex flex-col gap-3">
-            <button 
-              onClick={() => setShowPracticeDialog(false)}
-              className="w-full bg-black text-[#FFE500] font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#FFE500] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2"
+      <div className="min-h-[600px] flex items-center justify-center p-4 sm:p-6">
+        <motion.div 
+          initial={{ y: 40, opacity: 0, rotate: -2 }} 
+          animate={{ y: 0, opacity: 1, rotate: 0 }} 
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className="bg-white border-[4px] border-black shadow-[12px_12px_0_0_#000] max-w-md w-full relative overflow-hidden"
+        >
+          {/* Top accent bar */}
+          <div className="w-full h-3 bg-[#4361EE] border-b-[4px] border-black" />
+          
+          {/* Diagonal stripe decoration */}
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#4361EE] border-[4px] border-black rotate-12 opacity-20" />
+          <div className="absolute -left-4 -bottom-4 w-16 h-16 bg-black rotate-45 opacity-5" />
+
+          <div className="p-6 sm:p-8 text-center">
+            {/* Trophy icon */}
+            <motion.div 
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
+              className="w-20 h-20 bg-[#4361EE] border-[4px] border-black flex items-center justify-center mx-auto mb-6 shadow-[6px_6px_0_0_#000]"
             >
-              Start Practice
-            </button>
-            <Link 
-              href="/quiz"
-              className="w-full bg-white text-black font-black uppercase text-lg border-[3px] border-black px-6 py-4 hover:bg-gray-100 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#000] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 inline-block"
+              <Trophy className="w-10 h-10 text-white" strokeWidth={2.5} />
+            </motion.div>
+
+            <motion.h2 
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter text-black mb-1"
             >
-              Return to Menu
-            </Link>
+              Queue Cleared!
+            </motion.h2>
+            
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="inline-flex items-center gap-2 bg-black text-[#4361EE] px-3 py-1 border-[3px] border-black mb-6 font-black text-xs uppercase tracking-widest">
+                <Coffee className="w-4 h-4" />
+                You&apos;ve earned a break, champ
+              </div>
+              
+              <p className="font-bold text-xs sm:text-sm uppercase text-black/50 mb-2 leading-relaxed">
+                Your brain did its daily reps. We cap it at 10 so you actually <span className="bg-[#4361EE] text-white px-1 border-[2px] border-black">remember</span> things &mdash; not just speedrun them.
+              </p>
+              <p className="font-bold text-xs uppercase text-black/30 mb-8 leading-relaxed">
+                Want more? Extra practice won&apos;t progress new words, but it still counts for stats.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col gap-3"
+            >
+              <button 
+                onClick={() => setShowPracticeDialog(false)}
+                className="w-full bg-[#4361EE] text-white font-black uppercase text-lg border-[4px] border-black px-6 py-4 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#000] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 flex items-center justify-center gap-3"
+              >
+                <Puzzle className="w-5 h-5" strokeWidth={3} />
+                Start Practice
+              </button>
+              <Link 
+                href="/quiz"
+                className="w-full bg-white text-black font-black uppercase text-lg border-[4px] border-black px-6 py-4 hover:translate-x-1 hover:translate-y-1 shadow-[6px_6px_0_0_#000] hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 flex items-center justify-center gap-3"
+              >
+                Return to Menu
+              </Link>
+            </motion.div>
           </div>
         </motion.div>
       </div>

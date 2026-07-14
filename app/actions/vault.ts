@@ -170,6 +170,45 @@ export async function getVaultWordCount() {
     }
 }
 
+export async function getDueWordCount() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, dueCount: 0, totalCount: 0, error: "Unauthorized" };
+    }
+
+    try {
+        const now = new Date();
+        const [dueResult, totalResult] = await Promise.all([
+            withExponentialBackoff(() => db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(userProgress)
+                .where(and(
+                    eq(userProgress.userId, user.id),
+                    eq(userProgress.isArchived, false),
+                    lte(userProgress.nextReview, now)
+                ))),
+            withExponentialBackoff(() => db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(userProgress)
+                .where(and(
+                    eq(userProgress.userId, user.id),
+                    eq(userProgress.isArchived, false)
+                )))
+        ]);
+
+        return { 
+            success: true, 
+            dueCount: dueResult[0]?.count ?? 0, 
+            totalCount: totalResult[0]?.count ?? 0 
+        };
+    } catch (error) {
+        console.error("Error counting due words:", error);
+        return { success: false, dueCount: 0, totalCount: 0, error: "Failed to count due words" };
+    }
+}
+
 export async function seedStarterPack() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
