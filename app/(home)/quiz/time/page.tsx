@@ -17,6 +17,7 @@ import {
   ArrowRight,
   Trophy,
   Coffee,
+  Keyboard,
 } from "lucide-react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { POS_COLORS } from "@/lib/utils";
@@ -597,16 +598,13 @@ export default function QuizPage2() {
             <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="w-8 h-8 sm:w-10 sm:h-10 bg-[#FFE500] border-[2px] sm:border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0_#000]">
               <TimerIcon className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </motion.div>
-            <h1 className="uppercase tracking-tighter text-black font-black text-xl sm:text-[2rem]">TIME ATTACK </h1>
-          </div>
-          <div className="flex gap-2 ml-14">
-             {deck.map((_, i) => (
-              <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.1 }} className="w-2 h-2 border-[1.5px] border-black" style={{ background: i < results.length ? (results[i].correct ? "#00C853" : "#FF1744") : (i === currentIndex ? "#FFE500" : "#ddd") }} />
-            ))}
+            <div>
+              <h1 className="uppercase tracking-tighter text-black font-black text-xl sm:text-[2rem] leading-none">TIME ATTACK</h1>
+            </div>
           </div>
           
           {/* Status Badges */}
-          <div className="flex flex-col gap-1 ml-14 mt-3 mb-2">
+          <div className="flex flex-col items-start gap-1 ml-10 sm:ml-14 mb-2">
             {!countsForStats && (
               <span className="inline-block bg-[#FF1744] text-white text-[8px] sm:text-[10px] font-black tracking-widest px-2 py-0.5 border-2 border-black shadow-[2px_2px_0_0_#000] uppercase">
                 Not Counted For Stats (&lt;10 words)
@@ -617,6 +615,13 @@ export default function QuizPage2() {
                 Extra Practice (Counts for Stats)
               </span>
             )}
+          </div>
+
+          {/* Per-question dot progress indicators */}
+          <div className="flex gap-2 ml-10 sm:ml-14">
+             {deck.map((_, i) => (
+              <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.1 }} className="w-2 h-2 border-[1.5px] border-black" style={{ background: i < results.length ? (results[i].correct ? "#00C853" : "#FF1744") : (i === currentIndex ? "#FFE500" : "#ddd") }} />
+            ))}
           </div>
         </motion.div>
 
@@ -716,43 +721,38 @@ export default function QuizPage2() {
         <motion.div animate={{ y: [0, -20, 0], rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute -right-12 top-1/2 -z-10 opacity-10"><Star className="w-32 h-32 text-black" /></motion.div>
       </div>
 
+      {/* Input Form */}
+      <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-3 mt-4 sm:mt-0">
+        <Keyboard className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+        <p className="text-[8px] sm:text-[10px] uppercase font-black tracking-widest text-gray-400">Press Enter to submit</p>
+      </div>
       <form onSubmit={handleSubmit} className="mb-4 sm:mb-8 relative">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <input ref={inputRef} type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={feedback !== "idle" || isFinalizing} placeholder={feedback !== "idle" || isFinalizing ? "" : "TYPE IN TAGALOG..."} className={`flex-1 px-4 sm:px-8 py-3 sm:py-6 bg-white border-[3px] sm:border-[4px] border-black outline-none shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] focus:shadow-[6px_6px_0_#000] sm:focus:shadow-[12px_12px_0_#000] transition-all uppercase text-base sm:text-xl placeholder:text-[#ccc] font-black ${isFinalizing ? 'bg-gray-100 opacity-60 animate-pulse' : ''} disabled:bg-[#eee]`} />
-          <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={feedback !== "idle" || !answer.trim() || isFinalizing} className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-6 bg-black text-[#FFE500] border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#FFE500] sm:shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
-            {isFinalizing ? <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <span className="text-base sm:text-xl">CHECK</span>}
-            {!isFinalizing && <kbd className="font-sans text-[8px] sm:text-[10px] font-bold bg-white text-black px-1.5 py-0.5 border-[1.5px] sm:border-2 border-white shadow-[2px_2px_0_#FFE500] group-hover:shadow-none hidden sm:inline-block">ENTER ↵</kbd>}
-          </motion.button>
+          {feedback === "idle" ? (
+            <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="submit" disabled={!answer.trim() || isFinalizing} className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-6 bg-black text-[#FFE500] border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#FFE500] sm:shadow-[8px_8px_0_#FFE500] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 hover:bg-[#111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+              {isFinalizing ? <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <span className="text-base sm:text-xl">CHECK</span>}
+            </motion.button>
+          ) : (
+            <motion.button whileHover={{ scale: 1.05, x: 5 }} whileTap={{ scale: 0.95 }} type="button" onClick={handleNext} disabled={isFinalizing} className={`w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-6 border-[3px] sm:border-[4px] border-black shadow-[4px_4px_0_#000] sm:shadow-[8px_8px_0_#000] uppercase font-black transition-all flex items-center justify-center gap-3 disabled:opacity-40 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${feedback === "correct" ? "bg-[#00E676] text-black" : "bg-white text-black"}`}>
+              {isFinalizing ? (
+                <>
+                  <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" strokeWidth={3} />
+                  <span className="text-base sm:text-xl">SAVING...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-base sm:text-xl">{currentIndex < deck.length - 1 ? "NEXT CARD" : "FINISH QUIZ"}</span>
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+                </>
+              )}
+            </motion.button>
+          )}
         </div>
       </form>
 
       <div className="flex flex-col sm:flex-row gap-4 flex-wrap items-stretch sm:items-center">
         <motion.button whileHover={{ y: -4, boxShadow: "6px 6px 0 #000" }} whileTap={{ y: 0, boxShadow: "none" }} onClick={() => setFlipped(!flipped)} className="w-full sm:w-auto flex justify-center items-center gap-3 px-6 py-4 bg-white border-[3px] border-black shadow-[4px_4px_0_#000] uppercase font-black text-sm transition-all"><RotateCcw className={`w-5 h-5 transition-transform duration-500 ${flipped ? "rotate-180" : ""}`} />{flipped ? "HIDE MEANING" : "VIEW MEANING"}</motion.button>
-        <AnimatePresence>
-          {feedback !== "idle" && (
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-8">
-              <button
-                onClick={handleNext}
-                disabled={isFinalizing}
-                className={`w-full font-black uppercase text-2xl py-6 border-[4px] border-black shadow-[8px_8px_0_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all active:translate-x-2 active:translate-y-2 flex items-center justify-center gap-3 ${
-                  feedback === "correct" ? "bg-[#00E676] text-black" : "bg-white text-black"
-                }`}
-              >
-                {isFinalizing ? (
-                  <>
-                    <RefreshCw className="w-8 h-8 animate-spin" strokeWidth={3} />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    {currentIndex < deck.length - 1 ? "Next Card" : "Finish Quiz"}
-                    <ArrowRight className="w-8 h-8" strokeWidth={3} />
-                  </>
-                )}
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
       {process.env.NODE_ENV === 'development' && (
         <button onClick={() => {

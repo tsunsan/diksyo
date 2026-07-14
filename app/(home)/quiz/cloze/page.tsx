@@ -584,15 +584,11 @@ export default function ClozeQuizPage() {
             </motion.div>
             <div>
               <h1 className="uppercase tracking-tighter text-black font-black text-xl sm:text-[2rem] leading-none">CLOZE DELETION</h1>
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-1.5">
-                <Keyboard className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
-                <p className="text-[8px] sm:text-[10px] uppercase font-black tracking-widest text-gray-500">Press 1-4 to select</p>
-              </div>
             </div>
           </div>
           
           {/* Status Badges */}
-          <div className="flex flex-col gap-1 ml-10 sm:ml-14 mb-2">
+          <div className="flex flex-col items-start gap-1 ml-10 sm:ml-14 mb-2">
             {!countsForStats && (
               <span className="inline-block bg-[#FF1744] text-white text-[8px] sm:text-[10px] font-black tracking-widest px-2 py-0.5 border-2 border-black shadow-[2px_2px_0_0_#000] uppercase">
                 Not Counted For Stats (&lt;10 words)
@@ -764,6 +760,10 @@ export default function ClozeQuizPage() {
       </div>
 
       {/* Multiple Choice Grid */}
+      <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-3 mt-4 sm:mt-0">
+        <Keyboard className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+        <p className="text-[8px] sm:text-[10px] uppercase font-black tracking-widest text-gray-400">Press 1-4 to select</p>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5 mb-4 sm:mb-8">
         {options.map((option, idx) => {
           const isCorrectOption = option.toLowerCase() === currentWord.word.toLowerCase();
