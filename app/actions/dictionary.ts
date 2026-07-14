@@ -7,6 +7,38 @@ import { createClient } from "@/utils/supabase/server";
 import { withExponentialBackoff } from "@/lib/db-utils";
 import { searchRateLimit, mutationRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { unstable_cache } from "next/cache";
+
+const getCachedEmptySearch = unstable_cache(
+    async () => {
+        return db.query.words.findMany({ 
+            with: { rootWord: true },
+            limit: 50 
+        });
+    },
+    ['empty-search'],
+    { revalidate: 3600, tags: ['dictionary'] }
+);
+
+const getCachedWordOfTheDay = unstable_cache(
+    async () => {
+        const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
+        const count = countResult[0]?.count ?? 0;
+        
+        if (count === 0) return null;
+
+        const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+        const stableIndex = daysSinceEpoch % count;
+        
+        return db.query.words.findFirst({
+            orderBy: (words, { asc }) => [asc(words.word)],
+            offset: stableIndex,
+            with: { rootWord: true }
+        });
+    },
+    ['word-of-the-day'],
+    { revalidate: 86400, tags: ['dictionary'] }
+);
 
 export async function searchWordBySlug(slug: string) {
     return withExponentialBackoff(async () => {
@@ -168,6 +200,10 @@ export async function getUserSavedWordIds() {
 
     export async function searchWords(query: string) {
     return withExponentialBackoff(async () => {
+        if (!query) {
+            return getCachedEmptySearch();
+        }
+
         const headersList = await headers();
         const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
         
@@ -183,14 +219,7 @@ export async function getUserSavedWordIds() {
             throw new Error("Rate limit exceeded. Please try again later.");
         }
 
-    if (!query) {
-        return db.query.words.findMany({ 
-            with: { rootWord: true },
-            limit: 50 
-        });
-    }
-
-    const normalizedQuery = query.trim().toLowerCase();
+        const normalizedQuery = query.trim().toLowerCase();
     
     return db.query.words.findMany({
         where: or(
@@ -247,19 +276,7 @@ export async function getRandomDiscoverWords() {
 export async function getWordOfTheDay() {
     return withExponentialBackoff(async () => {
 
-    const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
-    const count = countResult[0]?.count ?? 0;
-    
-    if (count === 0) return null;
-
-    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-    const stableIndex = daysSinceEpoch % count;
-    
-    return db.query.words.findFirst({
-        orderBy: (words, { asc }) => [asc(words.word)],
-        offset: stableIndex,
-        with: { rootWord: true }
-    });
+    return getCachedWordOfTheDay();
     });
 }
 

@@ -20,7 +20,7 @@ const dummyLimiter = async (identifier: string) => {
 export const searchRateLimit = hasRedis && redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(20, "10 s"),
+      limiter: Ratelimit.fixedWindow(20, "10 s"),
       analytics: false,
       prefix: "@upstash/search",
     })
@@ -30,7 +30,7 @@ export const searchRateLimit = hasRedis && redis
 export const authRateLimit = hasRedis && redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      limiter: Ratelimit.fixedWindow(5, "1 m"),
       analytics: false,
       prefix: "@upstash/auth",
     })
@@ -40,7 +40,7 @@ export const authRateLimit = hasRedis && redis
 export const mutationRateLimit = hasRedis && redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(10, "10 s"),
+      limiter: Ratelimit.fixedWindow(10, "10 s"),
       analytics: false,
       prefix: "@upstash/mutation",
     })
