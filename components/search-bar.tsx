@@ -5,26 +5,18 @@ import { Search, Loader2, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { searchWordSuggestions } from "@/app/actions/dictionary";
+import { useDebounce } from "use-debounce";
 
 export default function SearchBar() {
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [debouncedQuery, setDebouncedQuery] = useState("");
+    const [debouncedQuery] = useDebounce(query, 300);
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // 1. Debounce Logic: Wait ~300ms after the user stops typing
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedQuery(query);
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [query]);
-
-    // 2. Fetch Logic: Triggered when debouncedQuery changes
+    // Fetch Logic: Triggered when debouncedQuery changes
     useEffect(() => {
         async function fetchSuggestions() {
             if (!debouncedQuery.trim()) {

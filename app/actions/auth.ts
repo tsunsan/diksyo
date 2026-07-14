@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation'
 import { db } from "@/db"
 import { userProfiles } from "@/db/schema"
 import { sql } from "drizzle-orm"
+import { authRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 
 export type AuthState = {
@@ -16,6 +18,19 @@ export type AuthState = {
 
 export async function login(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
+    
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let rlSuccess = true;
+    try {
+        const result = await authRateLimit.limit(ip);
+        rlSuccess = result.success;
+    } catch (error) {
+        console.warn("Rate limit service unavailable:", error);
+    }
+    if (!rlSuccess) {
+        return { error: 'Too many login attempts. Please wait a minute.', errorTitle: 'RATE LIMIT EXCEEDED' }
+    }
 
     const supabase = await createClient()
     const username = formData.get('username') as string
@@ -66,6 +81,19 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
 
 export async function signup(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
+    
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let rlSuccess = true;
+    try {
+        const result = await authRateLimit.limit(ip);
+        rlSuccess = result.success;
+    } catch (error) {
+        console.warn("Rate limit service unavailable:", error);
+    }
+    if (!rlSuccess) {
+        return { error: 'Too many signup attempts. Please wait a minute.', errorTitle: 'RATE LIMIT EXCEEDED' }
+    }
 
     const supabase = await createClient()
     const email = formData.get('email') as string
@@ -134,6 +162,19 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
 
 export async function requestPasswordReset(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
+    
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let rlSuccess = true;
+    try {
+        const result = await authRateLimit.limit(ip);
+        rlSuccess = result.success;
+    } catch (error) {
+        console.warn("Rate limit service unavailable:", error);
+    }
+    if (!rlSuccess) {
+        return { error: 'Too many reset requests. Please wait a minute.', errorTitle: 'RATE LIMIT EXCEEDED' }
+    }
 
     const supabase = await createClient()
     const email = formData.get('email') as string
@@ -163,6 +204,19 @@ export async function requestPasswordReset(prevState: AuthState, formData: FormD
 
 export async function updateUserPassword(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
+    
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let rlSuccess = true;
+    try {
+        const result = await authRateLimit.limit(ip);
+        rlSuccess = result.success;
+    } catch (error) {
+        console.warn("Rate limit service unavailable:", error);
+    }
+    if (!rlSuccess) {
+        return { error: 'Too many attempts. Please wait a minute.', errorTitle: 'RATE LIMIT EXCEEDED' }
+    }
 
     const supabase = await createClient()
     const password = formData.get('password') as string

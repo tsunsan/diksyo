@@ -30,11 +30,12 @@ import {
   Send,
   Copy,
 } from "lucide-react";
-import { searchWords, saveWordToVault, removeWordFromVault } from "@/app/actions/dictionary";
+import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions } from "@/app/actions/dictionary";
 import { login, signup, type AuthState } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
+import { useDebounce } from "use-debounce";
 
 /* ─── Filter Constants ─── */
 const FILTER_POS_OPTIONS: { key: string; label: string; labelEn: string }[] = [
@@ -274,6 +275,8 @@ export default function DictionaryClient({
   const [words, setWords] = useState<any[]>(initialWords);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedWordIds));
   const [isLoading, setIsLoading] = useState(false);
+  const [fuzzySuggestions, setFuzzySuggestions] = useState<any[]>([]);
+  const [isFuzzyLoading, setIsFuzzyLoading] = useState(false);
   
   const defaultSelectedId = (initialDiscoverWords && initialDiscoverWords.length > 0) 
     ? initialDiscoverWords[0].id 
@@ -282,6 +285,7 @@ export default function DictionaryClient({
   const [selectedId, setSelectedId] = useState<string | null>(defaultSelectedId);
   
   const [search, setSearch] = useState(initialSearch || "");
+  const [debouncedSearch] = useDebounce(search, 300);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
   const [shareWord, setShareWord] = useState<any | null>(null);
@@ -342,21 +346,21 @@ export default function DictionaryClient({
 
   useEffect(() => {
     // Skip initial fetch on mount if search is empty
-    if (!search && words === initialWords) return;
+    if (!debouncedSearch && words === initialWords) return;
 
     const fetchWords = async () => {
       setIsLoading(true);
       try {
-        const results = await searchWords(search);
+        const results = await searchWords(debouncedSearch);
         setWords(results);
         
-        if (search === "" && discoverWords.length > 0) {
+        if (debouncedSearch === "" && discoverWords.length > 0) {
             const hasSelected = selectedId && discoverWords.find(w => w.id === selectedId);
             if (!hasSelected) {
                 setSelectedId(discoverWords[0].id);
             }
         } else if (results.length > 0) {
-            const exactMatch = results.find(w => w.word.toLowerCase() === search.toLowerCase());
+            const exactMatch = results.find(w => w.word.toLowerCase() === debouncedSearch.toLowerCase());
             const hasSelected = selectedId && results.find(w => w.id === selectedId);
             
             if (exactMatch && exactMatch.id !== selectedId) {
@@ -366,6 +370,19 @@ export default function DictionaryClient({
             }
         } else if (results.length === 0) {
             setSelectedId(null);
+            if (debouncedSearch && debouncedSearch.length >= 3) {
+                setIsFuzzyLoading(true);
+                try {
+                    const fuzzy = await getLevenshteinSuggestions(debouncedSearch);
+                    setFuzzySuggestions(fuzzy);
+                } catch (err) {
+                    console.error("Fuzzy search error:", err);
+                } finally {
+                    setIsFuzzyLoading(false);
+                }
+            } else {
+                setFuzzySuggestions([]);
+            }
         }
       } catch (error) {
         console.error("Failed to fetch words:", error);
@@ -374,13 +391,8 @@ export default function DictionaryClient({
       }
     };
     
-    // Add a small debounce if search isn't empty to prevent too many DB calls
-    const timeoutId = setTimeout(() => {
-      fetchWords();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [search]);
+    fetchWords();
+  }, [debouncedSearch]);
 
   const word = words.find((w) => w.id === selectedId) || 
                discoverWords.find((w) => w.id === selectedId) || 
@@ -391,7 +403,7 @@ export default function DictionaryClient({
 
   /* ─── Filtered Words (client-side) ─── */
   const filteredWords = useMemo(() => {
-    let source = !search ? discoverWords : words;
+    let source = !debouncedSearch ? discoverWords : words;
     if (filterPos.size > 0) {
       source = source.filter((w: any) => {
         const pos = (w.partOfSpeech || "").toUpperCase();
@@ -406,7 +418,7 @@ export default function DictionaryClient({
       source = source.filter((w: any) => !w.rootWordId && !w.rootWordString);
     }
     return source;
-  }, [words, discoverWords, search, filterPos, filterLevel, filterRootOnly]);
+  }, [words, discoverWords, debouncedSearch, filterPos, filterLevel, filterRootOnly]);
 
   const activeFilterCount = (filterPos.size > 0 ? 1 : 0) + (filterLevel ? 1 : 0) + (filterRootOnly ? 1 : 0);
 
@@ -1264,6 +1276,45 @@ export default function DictionaryClient({
                 <>
                   <Loader2 className="w-12 h-12 text-black animate-spin mb-4" />
                   <h2 className="uppercase font-black text-xl text-[#888]">LOADING WORD...</h2>
+                </>
+              ) : (search && words.length === 0) ? (
+                <>
+                  <div className="w-16 h-16 bg-[#FF007F] border-[3px] border-black rounded-full flex items-center justify-center shadow-[4px_4px_0_#000] mb-6">
+                    <AlertCircle className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="uppercase font-black text-xl text-black mb-2">NO EXACT MATCHES FOUND</h2>
+                  
+                  {isFuzzyLoading ? (
+                    <p className="uppercase font-bold text-xs text-[#555] flex items-center gap-2 mt-4">
+                        <Loader2 className="w-4 h-4 animate-spin" /> FINDING RELATED WORDS...
+                    </p>
+                  ) : fuzzySuggestions.length > 0 ? (
+                    <div className="mt-8 w-full max-w-md">
+                        <p className="text-sm font-black uppercase tracking-widest text-[#888] mb-4">
+                            DID YOU MEAN?
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            {fuzzySuggestions.map((fw) => (
+                                <button
+                                    key={fw.id}
+                                    onClick={() => {
+                                        setSearch(fw.word);
+                                        setIsLoading(true);
+                                    }}
+                                    className="flex items-center justify-between p-3 bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-[#FDE047] transition-all text-left"
+                                >
+                                    <div>
+                                        <span className="font-black text-lg uppercase block leading-none mb-1">{fw.word}</span>
+                                        <span className="text-xs font-bold text-[#555] uppercase tracking-wider">{fw.partOfSpeech}</span>
+                                    </div>
+                                    <ArrowRight className="w-5 h-5 text-black" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                  ) : (
+                    <p className="uppercase font-bold text-xs text-[#555] mt-2">TRY A DIFFERENT SPELLING OR SUGGEST A WORD</p>
+                  )}
                 </>
               ) : (
                 <>

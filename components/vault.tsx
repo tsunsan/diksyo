@@ -14,6 +14,7 @@ import { searchWordSuggestions, removeWordFromVault, searchWords } from "@/app/a
 import { addWordToVault } from "@/app/actions/vault";
 import { toast } from "sonner";
 import { POS_COLORS } from "@/lib/utils";
+import { useDebounce } from "use-debounce";
 
 
 type VaultEntry = {
@@ -211,16 +212,11 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
 
   // Dialog Search State
   const [dialogQuery, setDialogQuery] = useState("");
-  const [debouncedDialogQuery, setDebouncedDialogQuery] = useState("");
+  const [debouncedDialogQuery] = useDebounce(dialogQuery, 300);
   const [dialogResults, setDialogResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [addingWordId, setAddingWordId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedDialogQuery(dialogQuery), 300);
-    return () => clearTimeout(timer);
-  }, [dialogQuery]);
 
   useEffect(() => {
     async function fetchSuggestions() {

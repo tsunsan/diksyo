@@ -5,6 +5,8 @@ import { userProgress, words } from "@/db/schema";
 import { and, eq, ilike, sql, or, inArray } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { withExponentialBackoff } from "@/lib/db-utils";
+import { searchRateLimit, mutationRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 export async function searchWordBySlug(slug: string) {
     return withExponentialBackoff(async () => {
@@ -29,6 +31,20 @@ export async function searchWordBySlug(slug: string) {
 
 export async function getRandomWordSlug() {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await mutationRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
 
     const randomWord = await db.query.words.findFirst({
         orderBy: sql`RANDOM()`,
@@ -42,6 +58,20 @@ export async function getRandomWordSlug() {
 
 export async function saveWordToVault(wordId: string) {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await mutationRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            return { error: "Rate limit exceeded. Please try again later." };
+        }
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -83,6 +113,20 @@ export async function saveWordToVault(wordId: string) {
 
 export async function removeWordFromVault(wordId: string) {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await mutationRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            return { error: "Rate limit exceeded. Please try again later." };
+        }
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -122,8 +166,22 @@ export async function getUserSavedWordIds() {
     });
 }
 
-export async function searchWords(query: string) {
+    export async function searchWords(query: string) {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await searchRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
 
     if (!query) {
         return db.query.words.findMany({ 
@@ -163,6 +221,20 @@ export async function searchWords(query: string) {
 
 export async function getRandomDiscoverWords() {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await mutationRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
 
     return db.query.words.findMany({
         orderBy: sql`RANDOM()`,
@@ -193,6 +265,20 @@ export async function getWordOfTheDay() {
 
 export async function getWordByExactSlug(slug: string) {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await searchRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
 
     return db.query.words.findFirst({
         where: eq(words.slug, slug),
@@ -205,6 +291,20 @@ export async function getWordByExactSlug(slug: string) {
 
 export async function searchWordsByBaseWord(baseWord: string) {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await searchRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
 
     const normalizedWord = baseWord.trim().toLowerCase();
 
@@ -237,6 +337,20 @@ export async function getAllDictionaryEntriesForSitemap() {
 
 export async function searchWordSuggestions(term: string, limit = 8) {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await searchRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
 
     const normalizedTerm = term.trim().toLowerCase();
 
@@ -290,5 +404,49 @@ export async function getLandingPageStats() {
             wordCount: wordCountResult[0]?.count ?? 0,
             rootCount: rootCountResult[0]?.count ?? 0,
         };
+    });
+}
+
+export async function getLevenshteinSuggestions(query: string) {
+    return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        
+        let success = true;
+        try {
+            const result = await searchRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
+
+        const normalizedQuery = query.trim().toLowerCase();
+        if (!normalizedQuery || normalizedQuery.length < 3) {
+            return [];
+        }
+
+        // We only consider levenshtein distance <= 3 to keep suggestions highly relevant
+        // Postgres requires casting parameter bindings in function calls (::text)
+        // Levenshtein throws an error if any string is > 255 chars, so we filter length first.
+        const suggestions = await db.execute<any>(sql`
+            SELECT 
+                id, 
+                word, 
+                slug, 
+                part_of_speech AS "partOfSpeech", 
+                translation, 
+                root_word_string AS "rootWordString",
+                levenshtein(lower(word), ${normalizedQuery}::text) as distance
+            FROM words
+            WHERE length(word) < 255 AND levenshtein(lower(word), ${normalizedQuery}::text) <= 3
+            ORDER BY distance ASC
+            LIMIT 5
+        `);
+
+        return suggestions;
     });
 }
