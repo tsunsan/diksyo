@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
 import {
-    searchWords,
-    getUserSavedWordIds,
-    getRandomDiscoverWords,
-    getWordOfTheDay,
     getWordByExactSlug,
     searchWordsByBaseWord,
+    getAllDictionaryEntriesForSitemap,
 } from "@/app/actions/dictionary";
 import BaseWordDisambiguation from "@/components/base-word-disambiguation";
-import DictionaryClient from "@/components/dictionary";
+import DictionaryDataWrapper from "@/components/dictionary-data-wrapper";
+import { SkeletonCard } from "@/components/ui/skeleton";
+import { Suspense } from "react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 function toTitleCase(value: string) {
     if (!value) return value;
     return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+    const entries = await getAllDictionaryEntriesForSitemap();
+    return entries.slice(0, 1000).map((entry) => ({
+        slug: entry.slug,
+    }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -135,19 +142,6 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
         // with the query pre-filled so the user can refine their search.
     }
 
-    const initialWords = await searchWords("");
-    const initialSavedWordIds = await getUserSavedWordIds();
-    const discoverWordsList = await getRandomDiscoverWords();
-    const dailyWord = await getWordOfTheDay();
-
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Provide matchedWord at the top of discoverWords to pre-select it
-    const initialDiscoverWords = matchedWord
-        ? [matchedWord, ...discoverWordsList.filter((w: any) => w.id !== matchedWord.id)]
-        : discoverWordsList;
-
     const jsonLd = matchedWord ? {
         "@context": "https://schema.org",
         "@type": "DefinedTerm",
@@ -170,14 +164,12 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                         ← Back Home
                     </Link>
                 </div>
-                <DictionaryClient 
-                    initialWords={initialWords as any} 
-                    initialSavedWordIds={initialSavedWordIds} 
-                    initialDiscoverWords={initialDiscoverWords as any}
-                    initialWordOfTheDay={dailyWord as any}
-                    isAuthenticated={!!user}
-                    initialSearch={!matchedWord ? resolvedParams.slug : undefined}
-                />
+                <Suspense fallback={<SkeletonCard className="h-[600px]" />}>
+                    <DictionaryDataWrapper 
+                        initialSearch={!matchedWord ? resolvedParams.slug : undefined}
+                        matchedWord={matchedWord}
+                    />
+                </Suspense>
             </div>
         </div>
     );

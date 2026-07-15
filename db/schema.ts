@@ -50,6 +50,7 @@ export const userProgress = pgTable("user_progress", {
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     isArchived: boolean("is_archived").default(false),
 }, (table) => [
+    index("user_progress_user_archived_idx").on(table.userId, table.isArchived),
     pgPolicy("Users can view own progress", {
         as: "permissive",
         for: "select",
@@ -105,6 +106,8 @@ export const userProfiles = pgTable("user_profiles", {
     totalTimeLearningMs: integer("total_time_learning_ms").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
+    index("user_profiles_xp_idx").on(table.xp),
+    index("user_profiles_words_mastered_idx").on(table.wordsMastered),
     pgPolicy("Public read for leaderboard", {
         as: "permissive",
         for: "select",

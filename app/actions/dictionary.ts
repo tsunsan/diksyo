@@ -8,6 +8,7 @@ import { withExponentialBackoff } from "@/lib/db-utils";
 import { searchRateLimit, mutationRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 const getCachedEmptySearch = unstable_cache(
     async () => {
@@ -198,7 +199,7 @@ export async function getUserSavedWordIds() {
     });
 }
 
-    export async function searchWords(query: string) {
+    export const searchWords = cache(async (query: string) => {
     return withExponentialBackoff(async () => {
         if (!query) {
             return getCachedEmptySearch();
@@ -246,7 +247,7 @@ export async function getUserSavedWordIds() {
         limit: 50,
     });
     });
-}
+});
 
 export async function getRandomDiscoverWords() {
     return withExponentialBackoff(async () => {
@@ -280,7 +281,7 @@ export async function getWordOfTheDay() {
     });
 }
 
-export async function getWordByExactSlug(slug: string) {
+export const getWordByExactSlug = cache(async (slug: string) => {
     return withExponentialBackoff(async () => {
         const headersList = await headers();
         const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
@@ -304,7 +305,7 @@ export async function getWordByExactSlug(slug: string) {
         },
     });
     });
-}
+});
 
 export async function searchWordsByBaseWord(baseWord: string) {
     return withExponentialBackoff(async () => {

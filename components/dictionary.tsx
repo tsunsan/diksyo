@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useActionState, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useActionState, useCallback, useRef, useMemo, useOptimistic, startTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import {
@@ -274,6 +274,15 @@ export default function DictionaryClient({
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const [words, setWords] = useState<any[]>(initialWords);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedWordIds));
+  const [optimisticSavedIds, addOptimisticSavedId] = useOptimistic(
+    savedIds,
+    (state, { id, action }: { id: string, action: "add" | "remove" }) => {
+      const next = new Set(state);
+      if (action === "add") next.add(id);
+      else next.delete(id);
+      return next;
+    }
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [fuzzySuggestions, setFuzzySuggestions] = useState<any[]>([]);
   const [isFuzzyLoading, setIsFuzzyLoading] = useState(false);
@@ -398,7 +407,7 @@ export default function DictionaryClient({
                discoverWords.find((w) => w.id === selectedId) || 
                (wordOfTheDay && wordOfTheDay.id === selectedId ? wordOfTheDay : null) || 
                null;
-  const isSaved = word ? savedIds.has(word.id) : false;
+  const isSaved = word ? optimisticSavedIds.has(word.id) : false;
   const posStyle = word && word.partOfSpeech ? (POS_COLORS[word.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
 
   /* ─── Filtered Words (client-side) ─── */
@@ -443,9 +452,16 @@ export default function DictionaryClient({
       return;
     }
     
+    const willSave = !savedIds.has(id);
+    
+    // 1. Optimistic Update instantly
+    startTransition(() => {
+        addOptimisticSavedId({ id, action: willSave ? "add" : "remove" });
+    });
+    
     try {
         setSavingId(id);
-        const willSave = !savedIds.has(id);
+        // 2. Perform background mutation
         const result = willSave ? await saveWordToVault(id) : await removeWordFromVault(id);
 
         if (result?.success) {

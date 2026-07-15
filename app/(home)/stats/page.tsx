@@ -1,17 +1,11 @@
-import { getUserStats, getLeaderboard } from "@/app/actions/stats";
-import { getDynamicGreeting } from "@/lib/date-utils";
-import StatsDashboardClient from "@/components/stats-dashboard-client";
+import { Suspense } from "react";
+import StatsDataWrapper from "@/components/stats-data-wrapper";
+import { StatSkeleton } from "@/components/ui/skeleton";
 
-export default async function StatsPage() {
-    const stats = await getUserStats();
-    const leaderboard = await getLeaderboard();
-    const greeting = getDynamicGreeting();
-
+export default function StatsPage() {
     return (
-        <StatsDashboardClient 
-            stats={stats} 
-            leaderboard={leaderboard} 
-            greeting={greeting} 
-        />
+        <Suspense fallback={<div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto"><StatSkeleton /></div>}>
+            <StatsDataWrapper />
+        </Suspense>
     );
 }

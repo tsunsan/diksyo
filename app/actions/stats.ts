@@ -6,8 +6,10 @@ import { userProfiles, userAchievements, dailyActivity, achievementsConfig, leve
 import { eq, desc, and, gte, sql, inArray } from 'drizzle-orm'
 import { withExponentialBackoff } from '@/lib/db-utils'
 import { getPHTDate } from '@/lib/date-utils'
+import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 
-export async function getUserStats() {
+export const getUserStats = cache(async () => {
     return withExponentialBackoff(async () => {
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
@@ -49,28 +51,36 @@ export async function getUserStats() {
             }
         }
 
-        // Fetch Configs
-        const dynamicLevels = await db.query.levels.findMany({
-            orderBy: (levels, { asc }) => [asc(levels.minXp)]
-        });
+        const oneYearAgo = getPHTDate();
+        oneYearAgo.setDate(oneYearAgo.getDate() - 365);
 
-        const dynamicAchievements = await db.query.achievementsConfig.findMany();
+        const [
+            dynamicLevels,
+            dynamicAchievements,
+            unlocked,
+            progressRecords,
+            activity
+        ] = await Promise.all([
+            db.query.levels.findMany({
+                orderBy: (levels, { asc }) => [asc(levels.minXp)]
+            }),
+            db.query.achievementsConfig.findMany(),
+            db.query.userAchievements.findMany({
+                where: eq(userAchievements.userId, user.id)
+            }),
+            db.query.userProgress.findMany({
+                where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))
+            }),
+            db.query.dailyActivity.findMany({
+                where: and(
+                    eq(dailyActivity.userId, user.id),
+                    gte(dailyActivity.date, oneYearAgo)
+                ),
+                orderBy: [desc(dailyActivity.date)]
+            })
+        ]);
 
-        // Fetch achievements unlocked by user
-        const unlocked = await db.query.userAchievements.findMany({
-            where: eq(userAchievements.userId, user.id)
-        });
         const unlockedIds = new Set(unlocked.map(a => a.achievementId));
-
-        const achievementsList = dynamicAchievements.map(ach => ({
-            ...ach,
-            unlocked: unlockedIds.has(ach.id)
-        }));
-
-// Fetch FSRS Insights
-        const progressRecords = await db.query.userProgress.findMany({
-            where: and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))
-        });
 
         const now = new Date();
         let totalMastery = 0;
@@ -131,17 +141,10 @@ export async function getUserStats() {
             };
         });
 
-        // Fetch activity for heatmap (last 365 days)
-        const oneYearAgo = getPHTDate();
-        oneYearAgo.setDate(oneYearAgo.getDate() - 365);
-        
-        const activity = await db.query.dailyActivity.findMany({
-            where: and(
-                eq(dailyActivity.userId, user.id),
-                gte(dailyActivity.date, oneYearAgo)
-            ),
-            orderBy: [desc(dailyActivity.date)]
-        });
+        const achievementsList = dynamicAchievements.map(ach => ({
+            ...ach,
+            unlocked: unlockedIds.has(ach.id)
+        }));
 
         // Format activity for charts
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -206,44 +209,39 @@ export async function getUserStats() {
             yearlyHeatmap
         };
     });
-}
+});
 
-export async function getLeaderboard() {
+export const getLeaderboard = unstable_cache(async () => {
     return withExponentialBackoff(async () => {
-        // Fetch top 10 users by XP (All Time)
-        const topXp = await db.query.userProfiles.findMany({
-            orderBy: [desc(userProfiles.xp)],
-            limit: 10,
-            columns: {
-                userId: true,
-                username: true,
-                xp: true,
-                level: true,
-                avatarUrl: true,
-                showAvatar: true
-            }
-        });
-
-        // Fetch top 10 users by Words Mastered (All Time)
-        const topWords = await db.query.userProfiles.findMany({
-            orderBy: [desc(userProfiles.wordsMastered)],
-            limit: 10,
-            columns: {
-                userId: true,
-                username: true,
-                wordsMastered: true,
-                level: true,
-                avatarUrl: true,
-                showAvatar: true
-            }
-        });
-
-        // Fetch Weekly Leaderboard via DB aggregation
         const sevenDaysAgo = getPHTDate();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const weeklyTopXpRaw = await db
-            .select({
+        const [topXp, topWords, weeklyTopXpRaw] = await Promise.all([
+            db.query.userProfiles.findMany({
+                orderBy: [desc(userProfiles.xp)],
+                limit: 10,
+                columns: {
+                    userId: true,
+                    username: true,
+                    xp: true,
+                    level: true,
+                    avatarUrl: true,
+                    showAvatar: true
+                }
+            }),
+            db.query.userProfiles.findMany({
+                orderBy: [desc(userProfiles.wordsMastered)],
+                limit: 10,
+                columns: {
+                    userId: true,
+                    username: true,
+                    wordsMastered: true,
+                    level: true,
+                    avatarUrl: true,
+                    showAvatar: true
+                }
+            }),
+            db.select({
                 userId: dailyActivity.userId,
                 username: userProfiles.username,
                 level: userProfiles.level,
@@ -262,7 +260,8 @@ export async function getLeaderboard() {
                 userProfiles.showAvatar
             )
             .orderBy(desc(sql`sum(${dailyActivity.xpEarned})`))
-            .limit(10);
+            .limit(10)
+        ]);
 
         const weeklyTopXp = weeklyTopXpRaw.map(row => ({
             userId: row.userId,
@@ -275,4 +274,4 @@ export async function getLeaderboard() {
 
         return { topXp, topWords, weeklyTopXp };
     });
-}
+}, ['leaderboard-cache'], { revalidate: 60, tags: ['leaderboard-cache'] });
