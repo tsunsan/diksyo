@@ -10,7 +10,7 @@ import { useDebounce } from "use-debounce";
 export default function SearchBar() {
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [debouncedQuery] = useDebounce(query, 300);
+    const [debouncedQuery] = useDebounce(query, 100);
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isOpen, setIsOpen] = useState(false);

@@ -7,9 +7,24 @@ import { AuthState } from './auth'
 import { db } from "@/db"
 import { userProfiles } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { mutationRateLimit } from "@/lib/rate-limit"
+import { headers } from "next/headers"
 
 export async function updateProfile(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        let success = true;
+        try {
+            const result = await mutationRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            return { error: "Rate limit exceeded. Please try again later.", errorTitle: "RATE LIMIT EXCEEDED" };
+        }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -68,6 +83,19 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
 
 export async function deleteAccount(prevState: AuthState, formData: FormData): Promise<AuthState> {
     return withExponentialBackoff(async () => {
+        const headersList = await headers();
+        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+        let success = true;
+        try {
+            const result = await mutationRateLimit.limit(ip);
+            success = result.success;
+        } catch (error) {
+            console.warn("Rate limiting service unavailable, bypassing:", error);
+        }
+        
+        if (!success) {
+            return { error: "Rate limit exceeded. Please try again later.", errorTitle: "RATE LIMIT EXCEEDED" };
+        }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

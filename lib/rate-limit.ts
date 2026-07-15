@@ -16,11 +16,12 @@ const dummyLimiter = async (identifier: string) => {
   return { success: true, limit: 100, remaining: 100, reset: 0 };
 };
 
-// 1. Search & Lookups (20 requests per 10 seconds)
+// 1. Search & Lookups (50 requests per 10 seconds)
 export const searchRateLimit = hasRedis && redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.fixedWindow(20, "10 s"),
+      limiter: Ratelimit.fixedWindow(50, "10 s"),
+      ephemeralCache: new Map(),
       analytics: false,
       prefix: "@upstash/search",
     })

@@ -7,6 +7,8 @@ import { createClient } from "@/utils/supabase/server";
 import { withExponentialBackoff } from "@/lib/db-utils";
 import { calculateNextReview, FSRSGrade } from "@/lib/fsrs-logic";
 import { getPHTDate } from "@/lib/date-utils";
+import { mutationRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 export interface QuizSubmission {
     wordId: string;
@@ -30,6 +32,20 @@ const calculateMastery = (stability: number): number => {
 };
 
 export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTakenMs, acceptedAnswers, countsForStats = true, isExtraPractice = false }: QuizSubmission) {
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let success = true;
+    try {
+        const result = await mutationRateLimit.limit(ip);
+        success = result.success;
+    } catch (error) {
+        console.warn("Rate limiting service unavailable, bypassing:", error);
+    }
+    
+    if (!success) {
+        return { success: false, error: "Rate limit exceeded. Please try again later." };
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -204,6 +220,20 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
 }
 
 export async function submitQuizSession({ isPerfect, timeTakenMs, countsForStats = true }: { isPerfect: boolean, timeTakenMs: number, countsForStats?: boolean }) {
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let success = true;
+    try {
+        const result = await mutationRateLimit.limit(ip);
+        success = result.success;
+    } catch (error) {
+        console.warn("Rate limiting service unavailable, bypassing:", error);
+    }
+    
+    if (!success) {
+        return { success: false, error: "Rate limit exceeded. Please try again later." };
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Unauthorized" };

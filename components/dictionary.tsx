@@ -294,7 +294,7 @@ export default function DictionaryClient({
   const [selectedId, setSelectedId] = useState<string | null>(defaultSelectedId);
   
   const [search, setSearch] = useState(initialSearch || "");
-  const [debouncedSearch] = useDebounce(search, 300);
+  const [debouncedSearch] = useDebounce(search, 100);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
   const [shareWord, setShareWord] = useState<any | null>(null);

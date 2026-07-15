@@ -6,6 +6,8 @@ import { eq, and, sql, lt, lte, notInArray } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { withExponentialBackoff } from "@/lib/db-utils";
+import { mutationRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 
 export async function getQuizWords(mode: 'cloze' | 'time' = 'time') {
@@ -110,6 +112,20 @@ export async function getVaultWords(excludeMastered: boolean = false) {
 }
 
 export async function addWordToVault(wordId: string) {
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let success = true;
+    try {
+        const result = await mutationRateLimit.limit(ip);
+        success = result.success;
+    } catch (error) {
+        console.warn("Rate limiting service unavailable, bypassing:", error);
+    }
+    
+    if (!success) {
+        return { success: false, error: "Rate limit exceeded. Please try again later." };
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -214,6 +230,20 @@ export async function getDueWordCount() {
 }
 
 export async function seedStarterPack() {
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+    let success = true;
+    try {
+        const result = await mutationRateLimit.limit(ip);
+        success = result.success;
+    } catch (error) {
+        console.warn("Rate limiting service unavailable, bypassing:", error);
+    }
+    
+    if (!success) {
+        return { success: false, error: "Rate limit exceeded. Please try again later." };
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

@@ -64,20 +64,7 @@ export async function searchWordBySlug(slug: string) {
 
 export async function getRandomWordSlug() {
     return withExponentialBackoff(async () => {
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await mutationRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
     const randomWord = await db.query.words.findFirst({
         orderBy: sql`RANDOM()`,
@@ -205,20 +192,7 @@ export async function getUserSavedWordIds() {
             return getCachedEmptySearch();
         }
 
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await searchRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
         const normalizedQuery = query.trim().toLowerCase();
     
@@ -251,20 +225,7 @@ export async function getUserSavedWordIds() {
 
 export async function getRandomDiscoverWords() {
     return withExponentialBackoff(async () => {
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await mutationRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
     return db.query.words.findMany({
         orderBy: sql`RANDOM()`,
@@ -283,20 +244,7 @@ export async function getWordOfTheDay() {
 
 export const getWordByExactSlug = cache(async (slug: string) => {
     return withExponentialBackoff(async () => {
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await searchRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
     return db.query.words.findFirst({
         where: eq(words.slug, slug),
@@ -309,20 +257,7 @@ export const getWordByExactSlug = cache(async (slug: string) => {
 
 export async function searchWordsByBaseWord(baseWord: string) {
     return withExponentialBackoff(async () => {
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await searchRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
     const normalizedWord = baseWord.trim().toLowerCase();
 
@@ -355,20 +290,7 @@ export async function getAllDictionaryEntriesForSitemap() {
 
 export async function searchWordSuggestions(term: string, limit = 8) {
     return withExponentialBackoff(async () => {
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await searchRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
     const normalizedTerm = term.trim().toLowerCase();
 
@@ -376,30 +298,30 @@ export async function searchWordSuggestions(term: string, limit = 8) {
         return [];
     }
 
-    const exactBaseWordMatches = await db.query.words.findMany({
-        where: sql`lower(${words.word}) = ${normalizedTerm}`,
-        with: { rootWord: true },
-        orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
-        limit,
-    });
-
-    const slugPrefixMatches = await db.query.words.findMany({
-        where: ilike(words.slug, `${normalizedTerm}%`),
-        with: { rootWord: true },
-        orderBy: (word, { asc }) => [asc(word.slug)],
-        limit,
-    });
-
-    const fuzzyMatches = await db.query.words.findMany({
-        where: or(
-            ilike(words.slug, `%${normalizedTerm}%`),
-            ilike(words.word, `%${normalizedTerm}%`),
-            ilike(words.translation, `%${normalizedTerm}%`)
-        ),
-        with: { rootWord: true },
-        orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
-        limit,
-    });
+    const [exactBaseWordMatches, slugPrefixMatches, fuzzyMatches] = await Promise.all([
+        db.query.words.findMany({
+            where: sql`lower(${words.word}) = ${normalizedTerm}`,
+            with: { rootWord: true },
+            orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
+            limit,
+        }),
+        db.query.words.findMany({
+            where: ilike(words.slug, `${normalizedTerm}%`),
+            with: { rootWord: true },
+            orderBy: (word, { asc }) => [asc(word.slug)],
+            limit,
+        }),
+        db.query.words.findMany({
+            where: or(
+                ilike(words.slug, `%${normalizedTerm}%`),
+                ilike(words.word, `%${normalizedTerm}%`),
+                ilike(words.translation, `%${normalizedTerm}%`)
+            ),
+            with: { rootWord: true },
+            orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
+            limit,
+        })
+    ]);
 
     const merged = [...exactBaseWordMatches, ...slugPrefixMatches, ...fuzzyMatches];
     const deduped = merged.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
@@ -427,20 +349,7 @@ export async function getLandingPageStats() {
 
 export async function getLevenshteinSuggestions(query: string) {
     return withExponentialBackoff(async () => {
-        const headersList = await headers();
-        const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
-        
-        let success = true;
-        try {
-            const result = await searchRateLimit.limit(ip);
-            success = result.success;
-        } catch (error) {
-            console.warn("Rate limiting service unavailable, bypassing:", error);
-        }
-        
-        if (!success) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
+
 
         const normalizedQuery = query.trim().toLowerCase();
         if (!normalizedQuery || normalizedQuery.length < 3) {
