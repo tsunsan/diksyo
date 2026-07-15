@@ -1285,35 +1285,140 @@ export default function DictionaryClient({
                   <h2 className="uppercase font-black text-xl text-black mb-2">NO EXACT MATCHES FOUND</h2>
                   
                   {isFuzzyLoading ? (
-                    <p className="uppercase font-bold text-xs text-[#555] flex items-center gap-2 mt-4">
-                        <Loader2 className="w-4 h-4 animate-spin" /> FINDING RELATED WORDS...
-                    </p>
+                    <div className="mt-6 flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 bg-[#FDE047] border-[2.5px] border-black flex items-center justify-center shadow-[3px_3px_0_#000]">
+                            <Loader2 className="w-6 h-6 animate-spin text-black" />
+                        </div>
+                        <p className="uppercase font-black text-xs text-black tracking-widest">FINDING SIMILAR WORDS...</p>
+                        <p className="uppercase font-bold text-[10px] text-[#888] tracking-wider">USING LEVENSHTEIN DISTANCE MATCHING</p>
+                    </div>
                   ) : fuzzySuggestions.length > 0 ? (
-                    <div className="mt-8 w-full max-w-md">
-                        <p className="text-sm font-black uppercase tracking-widest text-[#888] mb-4">
-                            DID YOU MEAN?
-                        </p>
+                    <div className="mt-8 w-full max-w-lg">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-8 h-8 bg-[#7C3AED] border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000]">
+                                <Sparkles className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black uppercase tracking-tight text-black leading-none">
+                                    DID YOU MEAN?
+                                </p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-[#888] mt-0.5">
+                                    CLOSEST MATCHES FOR &ldquo;<span className="text-[#FF007F]">{debouncedSearch}</span>&rdquo;
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Suggestion Cards */}
                         <div className="flex flex-col gap-3">
-                            {fuzzySuggestions.map((fw) => (
-                                <button
-                                    key={fw.id}
-                                    onClick={() => {
-                                        setSearch(fw.word);
-                                        setIsLoading(true);
-                                    }}
-                                    className="flex items-center justify-between p-3 bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-[#FDE047] transition-all text-left"
-                                >
-                                    <div>
-                                        <span className="font-black text-lg uppercase block leading-none mb-1">{fw.word}</span>
-                                        <span className="text-xs font-bold text-[#555] uppercase tracking-wider">{fw.partOfSpeech}</span>
-                                    </div>
-                                    <ArrowRight className="w-5 h-5 text-black" />
-                                </button>
-                            ))}
+                            {fuzzySuggestions.map((fw, idx) => {
+                                const fwPosStyle = fw.partOfSpeech ? (POS_COLORS[fw.partOfSpeech.toUpperCase()] || { bg: "#333", text: "#fff" }) : { bg: "#333", text: "#fff" };
+                                const dist = fw.distance ?? 0;
+                                // Color gradient: 1 = green (close), 2 = yellow, 3 = orange
+                                const distColor = dist <= 1 ? "#00C853" : dist <= 2 ? "#FFB300" : "#FF6D00";
+                                const distLabel = dist <= 1 ? "VERY CLOSE" : dist <= 2 ? "CLOSE" : "SIMILAR";
+
+                                return (
+                                    <motion.button
+                                        key={fw.id}
+                                        initial={{ opacity: 0, y: 12, x: -8 }}
+                                        animate={{ opacity: 1, y: 0, x: 0 }}
+                                        transition={{ type: "spring", stiffness: 400, damping: 25, delay: idx * 0.08 }}
+                                        onClick={() => {
+                                            setSearch(fw.word);
+                                            setIsLoading(true);
+                                        }}
+                                        className="group flex items-stretch bg-white border-[2.5px] border-black shadow-[5px_5px_0_#000] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[2px_2px_0_#000] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all text-left overflow-hidden"
+                                    >
+                                        {/* Distance indicator stripe */}
+                                        <div
+                                            className="w-[6px] flex-shrink-0"
+                                            style={{ background: distColor }}
+                                        />
+
+                                        {/* Card content */}
+                                        <div className="flex-1 p-3.5 min-w-0">
+                                            <div className="flex items-center flex-wrap gap-1.5 mb-1.5">
+                                                {/* Word */}
+                                                <span
+                                                    className="text-black uppercase group-hover:text-[#7C3AED] transition-colors"
+                                                    style={{ fontWeight: 900, fontSize: "1.15rem", lineHeight: 1, letterSpacing: "-0.01em" }}
+                                                >
+                                                    {fw.word}
+                                                </span>
+
+                                                {/* POS Badge */}
+                                                <span
+                                                    className="inline-flex items-center h-[18px] px-1.5 border-[1.5px] border-black text-[8px] uppercase tracking-wider"
+                                                    style={{ fontWeight: 800, background: fwPosStyle.bg, color: fwPosStyle.text }}
+                                                >
+                                                    {fw.partOfSpeech}
+                                                </span>
+
+                                                {/* Root word indicator */}
+                                                {(!fw.rootWordString) && (
+                                                    <span
+                                                        className="inline-flex items-center h-[18px] w-[18px] border-[1.5px] border-black bg-[#FF007F] text-[9px] justify-center"
+                                                        title="Root Word"
+                                                    >
+                                                        ⭐
+                                                    </span>
+                                                )}
+
+                                                {/* Distance badge */}
+                                                <span
+                                                    className="inline-flex items-center gap-1 h-[18px] px-1.5 border-[1.5px] text-[8px] uppercase tracking-wider ml-auto"
+                                                    style={{ fontWeight: 800, background: distColor + "20", color: distColor, borderColor: distColor }}
+                                                >
+                                                    {/* Distance dots */}
+                                                    <span className="flex items-center gap-[2px]">
+                                                        {[1, 2, 3].map(d => (
+                                                            <span
+                                                                key={d}
+                                                                className="w-[5px] h-[5px] rounded-full"
+                                                                style={{ background: d <= (3 - dist) ? distColor : distColor + "30" }}
+                                                            />
+                                                        ))}
+                                                    </span>
+                                                    {distLabel}
+                                                </span>
+                                            </div>
+
+                                            {/* Translation preview */}
+                                            {fw.translation && (
+                                                <p
+                                                    className="text-[#666] text-[11px] uppercase tracking-wider truncate"
+                                                    style={{ fontWeight: 600 }}
+                                                >
+                                                    {fw.translation.length > 60 ? fw.translation.slice(0, 60) + "..." : fw.translation}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Arrow indicator */}
+                                        <div className="flex items-center px-3 bg-black/[0.03] group-hover:bg-[#FDE047] transition-colors border-l-[2px] border-black">
+                                            <ArrowRight className="w-5 h-5 text-black/40 group-hover:text-black transition-colors" />
+                                        </div>
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Footer hint */}
+                        <div className="mt-4 flex items-center justify-center gap-2 bg-[#FFFBF0] border-[1.5px] border-black/15 px-3 py-2">
+                            <AlertCircle className="w-3 h-3 text-[#aaa]" />
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-[#aaa]">
+                                RESULTS RANKED BY SPELLING SIMILARITY
+                            </p>
                         </div>
                     </div>
                   ) : (
-                    <p className="uppercase font-bold text-xs text-[#555] mt-2">TRY A DIFFERENT SPELLING OR SUGGEST A WORD</p>
+                    <div className="mt-6 flex flex-col items-center gap-3">
+                        <p className="uppercase font-black text-xs text-black tracking-wider">NO SIMILAR WORDS FOUND</p>
+                        <p className="uppercase font-bold text-[10px] text-[#888] tracking-wider max-w-xs text-center leading-relaxed">
+                            TRY A DIFFERENT SPELLING OR USE THE SUGGEST A WORD FEATURE
+                        </p>
+                    </div>
                   )}
                 </>
               ) : (
