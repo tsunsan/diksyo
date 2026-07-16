@@ -1297,7 +1297,7 @@ export default function DictionaryClient({
           )}
 
           {/* Suggest a Word Card */}
-          {(!search || (!isLoading && search && words.length === 0)) && (
+          {!isInitialLoad && (!search || (!isLoading && search && words.length === 0)) && (
             <div className="hidden lg:flex mt-4 bg-[#E8F0FF] border-[3px] border-black shadow-[6px_6px_0_#000] p-5 flex-col items-center text-center group transition-all">
               <div className="w-10 h-10 bg-[#FF007F] border-[2px] border-black flex items-center justify-center rounded-full mb-3 shadow-[2px_2px_0_#000] group-hover:bg-[#7C3AED] transition-colors">
                 <span className="text-white font-black text-lg">?</span>
@@ -1867,7 +1867,7 @@ export default function DictionaryClient({
           )}
 
           {/* Suggest a Word Card (Mobile Only) */}
-          {(!search || (!isLoading && search && words.length === 0)) && (
+          {!isInitialLoad && (!search || (!isLoading && search && words.length === 0)) && (
             <div className="flex lg:hidden mt-4 bg-[#E8F0FF] border-[3px] border-black shadow-[6px_6px_0_#000] p-5 flex-col items-center text-center group transition-all">
               <div className="w-10 h-10 bg-[#FF007F] border-[2px] border-black flex items-center justify-center rounded-full mb-3 shadow-[2px_2px_0_#000] group-hover:bg-[#7C3AED] transition-colors">
                 <span className="text-white font-black text-lg">?</span>
