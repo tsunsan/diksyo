@@ -6,7 +6,7 @@ import {
 } from "@/app/actions/dictionary";
 import BaseWordDisambiguation from "@/components/base-word-disambiguation";
 import DictionaryDataWrapper from "@/components/dictionary-data-wrapper";
-import { SkeletonCard } from "@/components/ui/skeleton";
+import { DictionarySkeleton } from "@/components/dictionary-skeleton";
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -164,7 +164,7 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                         ← Back Home
                     </Link>
                 </div>
-                <Suspense fallback={<SkeletonCard className="h-[600px]" />}>
+                <Suspense fallback={<DictionarySkeleton />}>
                     <DictionaryDataWrapper 
                         initialSearch={!matchedWord ? resolvedParams.slug : undefined}
                         matchedWord={matchedWord}
