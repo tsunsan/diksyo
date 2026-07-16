@@ -30,12 +30,13 @@ import {
   Send,
   Copy,
 } from "lucide-react";
-import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions } from "@/app/actions/dictionary";
+import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds } from "@/app/actions/dictionary";
 import { login, signup, type AuthState } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
 import { useDebounce } from "use-debounce";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /* ─── Filter Constants ─── */
 const FILTER_POS_OPTIONS: { key: string; label: string; labelEn: string }[] = [
@@ -262,8 +263,8 @@ export default function DictionaryClient({
   showOnboarding = false,
   initialSearch = ""
 }: { 
-  initialWords: any[], 
-  initialSavedWordIds: string[],
+  initialWords?: any[], 
+  initialSavedWordIds?: string[],
   initialDiscoverWords?: any[],
   initialWordOfTheDay?: any,
   isAuthenticated?: boolean,
@@ -272,7 +273,31 @@ export default function DictionaryClient({
 }) {
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
-  const [words, setWords] = useState<any[]>(initialWords);
+  const [words, setWords] = useState<any[]>(initialWords || []);
+  const [isInitialLoad, setIsInitialLoad] = useState(!initialWords);
+
+  useEffect(() => {
+    async function loadDictionary() {
+      if (initialWords) return;
+      try {
+        const [w, s, d, dw] = await Promise.all([
+          searchWords(""),
+          isAuthenticated ? getUserSavedWordIds() : Promise.resolve([]),
+          getRandomDiscoverWords(),
+          getWordOfTheDay()
+        ]);
+        setWords(w as any);
+        setSavedIds(new Set(s));
+        setDiscoverWords(dw ? [dw, ...d.filter((ww: any) => ww.id !== dw.id)] : d as any);
+        setWordOfTheDay(dw);
+      } catch (err) {
+        console.error("Failed to fetch dictionary", err);
+      } finally {
+        setIsInitialLoad(false);
+      }
+    }
+    loadDictionary();
+  }, [initialWords, isAuthenticated]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedWordIds));
   const [optimisticSavedIds, addOptimisticSavedId] = useOptimistic(
     savedIds,
@@ -289,7 +314,7 @@ export default function DictionaryClient({
   
   const defaultSelectedId = (initialDiscoverWords && initialDiscoverWords.length > 0) 
     ? initialDiscoverWords[0].id 
-    : (initialWords.length > 0 ? initialWords[0].id : null);
+    : (initialWords && initialWords.length > 0 ? initialWords[0].id : null);
     
   const [selectedId, setSelectedId] = useState<string | null>(defaultSelectedId);
   
@@ -335,27 +360,25 @@ export default function DictionaryClient({
     });
   };
 
+
+
   useEffect(() => {
-    // Fallback if the server-provided Discover Words are missing
     if (!initialDiscoverWords || initialDiscoverWords.length === 0) {
-      if (initialWords.length > 0) {
+      if (initialWords && initialWords.length > 0) {
         const shuffled = [...initialWords].sort(() => 0.5 - Math.random());
-        setDiscoverWords(shuffled.slice(0, 5));
+        setDiscoverWords(shuffled.slice(0, 3));
       }
     }
-    
-    // Fallback if the server-provided Word of the Day is missing
-    if (!initialWordOfTheDay && initialWords.length > 0) {
+
+    if (!initialWordOfTheDay && initialWords && initialWords.length > 0) {
       const sortedWords = [...initialWords].sort((a, b) => a.word.localeCompare(b.word));
-      const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-      const stableIndex = daysSinceEpoch % sortedWords.length;
-      setWordOfTheDay(sortedWords[stableIndex]);
+      setWordOfTheDay(sortedWords[0]);
     }
   }, [initialWords, initialDiscoverWords, initialWordOfTheDay]);
 
   useEffect(() => {
     // Skip initial fetch on mount if search is empty
-    if (!debouncedSearch && words === initialWords) return;
+    if (!debouncedSearch && words === (initialWords || [])) return;
 
     const fetchWords = async () => {
       setIsLoading(true);
@@ -1128,11 +1151,24 @@ export default function DictionaryClient({
               </div>
             )}
             
-            {isLoading ? (
-                <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-black" />
-                    SEARCHING...
-                </div>
+            {isInitialLoad || isLoading ? (
+              <div className="flex flex-col gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 p-4 border-[2.5px] border-black bg-white"
+                  >
+                    <div className="flex-1 min-w-0 flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-4 w-12" />
+                      </div>
+                      <Skeleton className="h-3 w-40" />
+                    </div>
+                    <Skeleton className="w-7 h-7 shrink-0" />
+                  </div>
+                ))}
+              </div>
             ) : filteredWords.length === 0 ? (
                 <div className="p-8 text-center text-sm font-bold uppercase text-[#888]">
                     {activeFilterCount > 0 ? "NO WORDS MATCH YOUR FILTERS." : "NO WORDS FOUND."}
@@ -1286,7 +1322,58 @@ export default function DictionaryClient({
 
         {/* Main Word Card */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          {!word ? (
+          {isInitialLoad ? (
+             <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-6 lg:p-8 flex flex-col gap-6 min-h-[500px]">
+                {/* Top row */}
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="flex flex-col gap-3 flex-1">
+                    <div className="flex gap-2">
+                       <Skeleton className="h-6 w-20" />
+                       <Skeleton className="h-6 w-16" />
+                    </div>
+                    <Skeleton className="h-12 w-3/4 sm:w-1/2 mt-2" />
+                    <Skeleton className="h-4 w-1/3" />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Skeleton className="w-10 h-10" />
+                    <Skeleton className="w-10 h-10" />
+                    <Skeleton className="w-24 h-10" />
+                  </div>
+                </div>
+
+                <div className="h-[3px] bg-black opacity-10" />
+
+                {/* Definition Blocks */}
+                <div className="flex flex-col gap-3 mt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1.5 h-6 bg-zinc-200" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-4/6 mt-2" />
+                </div>
+
+                {/* Extra Box Skeleton */}
+                <div className="mt-4 border-[2px] border-black p-4 flex flex-col gap-3">
+                  <Skeleton className="h-5 w-32 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+                
+                {/* Examples Skeleton */}
+                <div className="mt-4 flex flex-col gap-3">
+                    <Skeleton className="h-5 w-48 mb-2" />
+                    {[1, 2].map(i => (
+                        <div key={i} className="border-[2px] border-black p-3">
+                            <Skeleton className="h-4 w-full mb-2" />
+                            <Skeleton className="h-4 w-4/5" />
+                        </div>
+                    ))}
+                </div>
+              </div>
+          ) : !word ? (
             <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
               {isLoading ? (
                 <>

@@ -33,6 +33,9 @@ import {
   Swords,
   GraduationCap,
 } from "lucide-react";
+import { getUserStats, getLeaderboard } from "@/app/actions/stats";
+import { getDynamicGreeting } from "@/lib/date-utils";
+import { StatsSkeleton } from "@/components/stats-skeleton";
 
 const ENVIRONMENTS = [
   {
@@ -233,14 +236,42 @@ const itemVariants = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function StatsDashboardClient({
-  stats,
-  leaderboard,
-  greeting,
+  stats: initialStats,
+  leaderboard: initialLeaderboard,
+  greeting: initialGreeting,
 }: {
-  stats: any;
-  leaderboard: any;
-  greeting: string;
+  stats?: any;
+  leaderboard?: any;
+  greeting?: string;
 }) {
+  const [stats, setStats] = useState<any>(initialStats);
+  const [leaderboard, setLeaderboard] = useState<any>(initialLeaderboard);
+  const [greeting, setGreeting] = useState<string>(initialGreeting || "");
+  const [isLoading, setIsLoading] = useState(!initialStats);
+
+  useEffect(() => {
+    async function loadData() {
+      if (initialStats) return;
+      try {
+        const [s, l] = await Promise.all([
+          getUserStats(),
+          getLeaderboard()
+        ]);
+        setStats(s);
+        setLeaderboard(l);
+        setGreeting(getDynamicGreeting());
+      } catch (err) {
+        console.error("Failed to fetch stats", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    if (!initialStats) {
+      setGreeting(getDynamicGreeting());
+      loadData();
+    }
+  }, [initialStats]);
+
   const [activeTab, setActiveTab] = useState("MY PROGRESS");
   const containerRef = useRef<HTMLDivElement>(null);
   const [envScale, setEnvScale] = useState(1);
@@ -338,16 +369,16 @@ export default function StatsDashboardClient({
 
 
   // ── Render ──
+  if (isLoading) {
+    return <StatsSkeleton />;
+  }
+
   return (
     <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
       {/* ═══════════════════════════════════════════════════════════════════
           PERSISTENT HERO — Always visible above tabs
           ═══════════════════════════════════════════════════════════════════ */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex flex-col gap-5 mb-8"
-      >
+      <div className="flex flex-col gap-5 mb-8">
         <div>
           <p
             className="text-[#888] text-xs uppercase tracking-[0.2em] mb-1"
@@ -453,7 +484,7 @@ export default function StatsDashboardClient({
             </motion.div>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
           TAB NAVIGATION

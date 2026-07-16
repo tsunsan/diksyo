@@ -11,7 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { searchWordSuggestions, removeWordFromVault, searchWords } from "@/app/actions/dictionary";
-import { addWordToVault } from "@/app/actions/vault";
+import { addWordToVault, getVaultWords } from "@/app/actions/vault";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { POS_COLORS } from "@/lib/utils";
 import { useDebounce } from "use-debounce";
@@ -148,7 +149,26 @@ function highlightBold(text: string) {
   );
 }
 
-export default function VaultClient({ initialWords }: { initialWords: VaultEntry[] }) {
+export default function VaultClient() {
+  const [initialWords, setInitialWords] = useState<VaultEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadVault() {
+      try {
+        const res = await getVaultWords();
+        if (res.success && res.data) {
+          setInitialWords(res.data as any);
+        }
+      } catch (err) {
+        console.error("Failed to fetch vault words", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadVault();
+  }, []);
+
   const masteredCount = initialWords.filter(w => w.mastery && w.mastery >= 90).length;
 
   const [activeRoot, setActiveRoot] = useState("ALL");
@@ -463,9 +483,17 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
                 PERSONAL VOCABULARY VAULT
               </h2>
             </div>
-            <p className="text-[#888] text-xs uppercase tracking-widest mt-1" style={{ fontWeight: 800 }}>
-              {initialWords.length} WORDS SAVED • <span className="text-[#10B981]">{masteredCount} MASTERED</span>
-            </p>
+            <div className="text-[#888] text-xs uppercase tracking-widest mt-1 flex items-center gap-2 h-4" style={{ fontWeight: 800 }}>
+              {isLoading ? (
+                  <>
+                    <Skeleton className="h-3 w-20" /> <span className="opacity-50">•</span> <Skeleton className="h-3 w-24" />
+                  </>
+              ) : (
+                  <>
+                    {initialWords.length} WORDS SAVED <span className="opacity-50">•</span> <span className="text-[#10B981]">{masteredCount} MASTERED</span>
+                  </>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {editMode && selectedIds.size > 0 && (
@@ -692,7 +720,33 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
         {/* Word grid */}
         <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
-          {sortedAndFilteredVault.map((entry) => {
+          {isLoading ? (
+            [1, 2, 3, 4, 5, 6].map((i) => (
+              <motion.div
+                key={`skeleton-${i}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-white border-[2.5px] border-black shadow-[4px_4px_0_#000] p-5 gap-3 flex flex-col min-h-[160px]"
+              >
+                <div className="flex items-start justify-between gap-2">
+                   <div className="flex flex-col gap-2 w-full">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-3 w-48" />
+                   </div>
+                   <Skeleton className="h-5 w-12 border-[1.5px] border-black shrink-0" />
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-auto mb-2">
+                   <Skeleton className="h-4 w-16 border-[1.5px] border-black" />
+                   <Skeleton className="h-4 w-20 border-[1.5px] border-black" />
+                </div>
+                <div className="flex items-end justify-between pt-4 border-t-[2px] border-black">
+                   <Skeleton className="h-6 w-24 border-[1.5px] border-black" />
+                   <Skeleton className="h-3 w-20" />
+                </div>
+              </motion.div>
+            ))
+          ) : sortedAndFilteredVault.map((entry) => {
             const w = entry.word;
             const isSelected = selectedIds.has(w.id);
             return (
@@ -810,7 +864,7 @@ export default function VaultClient({ initialWords }: { initialWords: VaultEntry
           })}
 
           {/* Add new card */}
-          {sortedAndFilteredVault.length === 0 && (
+          {!isLoading && sortedAndFilteredVault.length === 0 && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

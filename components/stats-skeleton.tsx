@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function StatsSkeleton() {
   return (
-    <div className="w-full relative animate-in fade-in duration-500 max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8" style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
+    <div className="w-full relative" style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
       {/* Header and 4 Badges Skeleton */}
       <div className="flex flex-col gap-5 mb-8">
         <div>
