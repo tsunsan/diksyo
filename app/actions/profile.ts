@@ -3,10 +3,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { withExponentialBackoff } from "@/lib/db-utils"
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { AuthState } from './auth'
 import { db } from "@/db"
 import { userProfiles } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { mutationRateLimit } from "@/lib/rate-limit"
 import { headers } from "next/headers"
 
@@ -52,6 +53,20 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
     }
     
     if (username !== user.user_metadata?.username) {
+        // Check if username is taken in auth.users
+        const authRes = await db.execute<{id: string}>(sql`
+            SELECT id FROM auth.users WHERE raw_user_meta_data->>'username' = ${username} LIMIT 1
+        `)
+        if (authRes && authRes.length > 0) {
+            return { error: 'Username is already taken.', errorTitle: 'VALIDATION FAILED' }
+        }
+
+        // Check if username is taken in userProfiles (just to be absolutely sure)
+        const existingProfile = await db.select().from(userProfiles).where(eq(userProfiles.username, username)).limit(1)
+        if (existingProfile.length > 0 && existingProfile[0].userId !== user.id) {
+            return { error: 'Username is already taken.', errorTitle: 'VALIDATION FAILED' }
+        }
+
         updates.data = { username }
         needsMetadataUpdate = true
     }
@@ -74,9 +89,11 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
     }
 
     if (needsEmailUpdate) {
+        revalidatePath('/profile')
         return { success: 'Profile updated. Please verify your new email address.' }
     }
 
+    revalidatePath('/profile')
     return { success: 'Profile successfully updated.' }
     });
 }
@@ -112,6 +129,6 @@ export async function deleteAccount(prevState: AuthState, formData: FormData): P
     }
 
     await supabase.auth.signOut()
-    redirect('/login')
+    return { success: 'Account successfully deleted.' }
     });
 }

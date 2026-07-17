@@ -119,6 +119,21 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
             errorTitle: 'VALIDATION FAILED'
         }
     }
+
+    // Check if username is taken in auth.users
+    const authRes = await db.execute<{id: string}>(sql`
+        SELECT id FROM auth.users WHERE raw_user_meta_data->>'username' = ${username} LIMIT 1
+    `)
+    if (authRes && authRes.length > 0) {
+        return { error: 'Username is already taken.', errorTitle: 'VALIDATION FAILED' }
+    }
+
+    // Check if username is taken in userProfiles (just to be absolutely sure)
+    const existingProfile = await db.select().from(userProfiles).where(sql`${userProfiles.username} = ${username}`).limit(1)
+    if (existingProfile.length > 0) {
+        return { error: 'Username is already taken.', errorTitle: 'VALIDATION FAILED' }
+    }
+
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -186,19 +201,20 @@ export async function requestPasswordReset(prevState: AuthState, formData: FormD
         }
     }
 
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    const host = headersList.get('host') || 'localhost:3000';
+    const origin = `${protocol}://${host}`;
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // Change this to your actual production URL later
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/update-password`,
+        redirectTo: `${origin}/auth/callback?next=/update-password`,
     })
 
     if (error) {
-        return {
-            error: error.message,
-            errorTitle: 'SYSTEM ERROR'
-        }
+        console.error("Password reset error:", error.message)
+        // We do not return the error to the user to prevent email enumeration (security best practice)
     }
 
-    return { success: 'Reset link dispatched! Check your inbox to proceed.' }
+    return { success: 'If an account exists for this email, a reset link has been dispatched.' }
     });
 }
 

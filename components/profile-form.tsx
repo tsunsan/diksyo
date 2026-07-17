@@ -41,13 +41,22 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
   }, [updateState?.success])
   
   useEffect(() => {
+    if (deleteState?.success) {
+      toast.success("ACCOUNT DELETED", {
+        description: deleteState.success,
+        duration: 3000,
+      })
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1500)
+    }
     if (deleteState?.error) {
        toast.error(deleteState.errorTitle || "ERROR", {
         description: deleteState.error,
         duration: 4000,
       })
     }
-  }, [deleteState?.error])
+  }, [deleteState?.error, deleteState?.success])
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -265,7 +274,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                 Delete Account
               </Button>
             } />
-            <DialogContent className="rounded-none border-4 border-black shadow-[8px_8px_0_0_#000] p-6 sm:p-8 max-w-md bg-white">
+            <DialogContent className="w-[calc(100%-2rem)] sm:w-full rounded-none border-4 border-black shadow-[8px_8px_0_0_#000] p-4 sm:p-8 max-w-md bg-white">
               <DialogHeader>
                 <DialogTitle className="font-black uppercase tracking-tighter text-red-600 text-2xl border-b-4 border-black pb-2 mb-4">
                   Are you absolutely sure?
@@ -293,7 +302,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
                 <form action={deleteAction} className="w-full">
                   <Button 
                     type="submit" 
-                    disabled={isDeleting || deleteConfirmText !== "delete account"}
+                    disabled={isDeleting || deleteConfirmText.replace(/\s+/g, '').toLowerCase() !== "deleteaccount"}
                     variant="destructive"
                     className="w-full rounded-none border-4 border-black bg-red-600 text-white font-black uppercase hover:bg-red-500 hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0_0_#000] hover:shadow-none transition-all disabled:opacity-50 disabled:shadow-[4px_4px_0_0_#000] active:bg-red-700"
                   >
