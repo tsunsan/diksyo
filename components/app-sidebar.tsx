@@ -42,12 +42,12 @@ export function AppSidebar({
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:inset-auto`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2 px-6 py-5 border-b-4 border-black">
+        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-6 py-5 border-b-4 border-black hover:bg-yellow-100 transition-colors">
             <Image src="/icon.svg" alt="Diksyo Icon" width={24} height={24} className="w-6 h-6" />
           <span className="text-black font-black uppercase tracking-tighter text-xl italic">
             DIKSYO
           </span>
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="flex-1 px-4 py-6 flex flex-col gap-4">
@@ -175,9 +175,9 @@ export function AppSidebar({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile topbar */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#f4f1ea] border-b-4 border-black">
-          <span className="text-black font-black uppercase tracking-tighter text-xl italic">
+          <Link href="/" onClick={() => setMobileOpen(false)} className="text-black font-black uppercase tracking-tighter text-xl italic">
             DIKSYO
-          </span>
+          </Link>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="text-black p-1.5 border-4 border-black bg-[#f4f1ea] shadow-[2px_2px_0_0_#000] hover:bg-yellow-400 hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
