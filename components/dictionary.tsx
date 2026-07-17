@@ -288,7 +288,7 @@ export default function DictionaryClient({
         ]);
         setWords(w as any);
         setSavedIds(new Set(s));
-        setDiscoverWords(dw ? [dw, ...d.filter((ww: any) => ww.id !== dw.id)] : d as any);
+        setDiscoverWords(d as any);
         setWordOfTheDay(dw);
       } catch (err) {
         console.error("Failed to fetch dictionary", err);
