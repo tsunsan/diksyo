@@ -120,7 +120,7 @@ export async function saveWordToVault(wordId: string) {
                 .where(eq(userProgress.id, existingEntry.id));
             return { success: true, message: "Word successfully restored to vault." };
         }
-        return { success: false, message: "Word is already saved in your vault." };
+        return { success: true, alreadySaved: true, message: "Word is already saved in your vault." };
     }
 
     await db.insert(userProgress).values({

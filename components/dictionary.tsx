@@ -261,7 +261,8 @@ export default function DictionaryClient({
   initialWordOfTheDay,
   isAuthenticated = false,
   showOnboarding = false,
-  initialSearch = ""
+  initialSearch = "",
+  initialSaveWordId = ""
 }: { 
   initialWords?: any[], 
   initialSavedWordIds?: string[],
@@ -269,9 +270,11 @@ export default function DictionaryClient({
   initialWordOfTheDay?: any,
   isAuthenticated?: boolean,
   showOnboarding?: boolean,
-  initialSearch?: string
+  initialSearch?: string,
+  initialSaveWordId?: string
 }) {
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [pendingSaveWordId, setPendingSaveWordId] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const [words, setWords] = useState<any[]>(initialWords || []);
   const [isInitialLoad, setIsInitialLoad] = useState(!initialWords);
@@ -316,7 +319,7 @@ export default function DictionaryClient({
     ? initialDiscoverWords[0].id 
     : (initialWords && initialWords.length > 0 ? initialWords[0].id : null);
     
-  const [selectedId, setSelectedId] = useState<string | null>(defaultSelectedId);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSaveWordId || defaultSelectedId);
   
   const [search, setSearch] = useState(initialSearch || "");
   const [debouncedSearch] = useDebounce(search, 100);
@@ -347,15 +350,40 @@ export default function DictionaryClient({
       });
       setShowAuthOverlay(false);
       setTourStep(0);
+      
+      if (signupState.nextUrl && signupState.nextUrl !== '/dictionary') {
+          window.location.href = signupState.nextUrl;
+      }
     }
-  }, [signupState?.success]);
+  }, [signupState?.success, signupState?.nextUrl]);
+
+  const pendingWord = useMemo(() => {
+    if (!pendingSaveWordId) return null;
+    return words.find(w => w.id === pendingSaveWordId) || discoverWords.find(w => w.id === pendingSaveWordId) || (wordOfTheDay?.id === pendingSaveWordId ? wordOfTheDay : null);
+  }, [pendingSaveWordId, words, discoverWords, wordOfTheDay]);
+
+  useEffect(() => {
+    if (initialSaveWordId && isAuthenticated) {
+      setTimeout(() => {
+        handleSaveToVault(initialSaveWordId, true);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('saveWordId');
+        window.history.replaceState({}, '', url.toString());
+      }, 500);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSaveWordId, isAuthenticated]);
 
   const handleGoogleLogin = async () => {
     const supabase = createClient();
+    const nextUrl = pendingWord 
+      ? `/dictionary?search=${encodeURIComponent(pendingWord.word)}&saveWordId=${pendingSaveWordId}`
+      : `/dictionary`;
+      
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
       },
     });
   };
@@ -469,13 +497,15 @@ export default function DictionaryClient({
     });
   };
 
-  const handleSaveToVault = async (id: string) => {
+  const handleSaveToVault = async (id: string, forceSave = false) => {
     if (!isAuthenticated) {
+      setPendingSaveWordId(id);
       setShowAuthOverlay(true);
       return;
     }
     
-    const willSave = !savedIds.has(id);
+    const targetWord = words.find(w => w.id === id) || discoverWords.find(w => w.id === id) || (wordOfTheDay?.id === id ? wordOfTheDay : null);
+    const willSave = forceSave ? true : !savedIds.has(id);
     
     // 1. Optimistic Update instantly
     startTransition(() => {
@@ -488,6 +518,15 @@ export default function DictionaryClient({
         const result = willSave ? await saveWordToVault(id) : await removeWordFromVault(id);
 
         if (result?.success) {
+            if ('alreadySaved' in result && result.alreadySaved) {
+                toast("ALREADY SAVED", {
+                    description: `"${targetWord?.word || word?.word}" is already in your vault.`,
+                    duration: 3000,
+                    style: { background: "#FFE500", color: "#000", border: "2px solid #000" }
+                });
+                return;
+            }
+
             setSavedIds(prev => {
                 const next = new Set(prev);
                 if (willSave) next.add(id);
@@ -497,12 +536,12 @@ export default function DictionaryClient({
             
             if (willSave) {
               toast.success("ADDED TO VAULT", {
-                description: `"${word?.word}" has been saved for review.`,
+                description: `"${targetWord?.word || word?.word}" has been saved for review.`,
                 duration: 3000,
               });
             } else {
               toast.success("REMOVED", {
-                description: `"${word?.word}" was removed from your vault.`,
+                description: `"${targetWord?.word || word?.word}" was removed from your vault.`,
                 duration: 3000,
               });
             }
@@ -623,6 +662,8 @@ export default function DictionaryClient({
                     action={signupAction}
                     className="flex flex-col gap-4"
                   >
+                    {pendingSaveWordId && <input type="hidden" name="saveWordId" value={pendingSaveWordId} />}
+                    <input type="hidden" name="next" value={pendingWord ? `/dictionary?search=${encodeURIComponent(pendingWord.word)}&saveWordId=${pendingSaveWordId}` : '/dictionary'} />
                     <AuthInput id="modal-full-name" name="full-name" type="text" label="Full Name" placeholder="Juan Dela Cruz" icon={User} />
                     <AuthInput id="modal-username" name="username" type="text" label="Username" placeholder="juandelacruz" icon={User} />
                     <AuthInput id="modal-signup-email" name="email" type="email" label="Email Address" placeholder="alamat@diksyo.app" icon={Mail} />
@@ -652,6 +693,8 @@ export default function DictionaryClient({
                     action={loginAction}
                     className="flex flex-col gap-4"
                   >
+                    {pendingSaveWordId && <input type="hidden" name="saveWordId" value={pendingSaveWordId} />}
+                    <input type="hidden" name="next" value={pendingWord ? `/dictionary?search=${encodeURIComponent(pendingWord.word)}&saveWordId=${pendingSaveWordId}` : '/dictionary'} />
                     <AuthInput id="modal-login-username" name="username" type="text" label="Username" placeholder="juandelacruz" icon={User} />
                     <AuthInput id="modal-login-password" name="password" type="password" label="Password" icon={Lock} />
 

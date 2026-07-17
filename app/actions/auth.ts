@@ -14,6 +14,7 @@ export type AuthState = {
     error?: string;
     errorTitle?: string;
     success?: string;
+    nextUrl?: string;
 };
 
 export async function login(prevState: AuthState, formData: FormData): Promise<AuthState> {
@@ -75,7 +76,8 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
         }
     }
 
-    redirect('/dictionary')
+    const nextUrl = formData.get('next') as string || '/dictionary'
+    redirect(nextUrl)
     });
 }
 
@@ -171,7 +173,9 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
         }
     }
 
-    return { success: 'Welcome to Diksyo. Rerouting to dictionary...' }
+    const nextUrl = formData.get('next') as string || '/dictionary'
+
+    return { success: 'Welcome to Diksyo. Rerouting to dictionary...', nextUrl }
     });
 }
 

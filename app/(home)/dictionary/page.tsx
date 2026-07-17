@@ -1,7 +1,13 @@
-import DictionaryClient from "@/components/dictionary";
+import DictionaryDataWrapper from "@/components/dictionary-data-wrapper";
 
-export default async function DictionaryPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
+export default async function DictionaryPage({ searchParams }: { searchParams: Promise<{ onboarding?: string, search?: string, saveWordId?: string }> }) {
   const params = await searchParams;
 
-  return <DictionaryClient isAuthenticated={true} showOnboarding={params.onboarding === "true"} />;
+  return (
+    <DictionaryDataWrapper 
+      showOnboarding={params.onboarding === "true"} 
+      initialSearch={params.search}
+      initialSaveWordId={params.saveWordId}
+    />
+  );
 }

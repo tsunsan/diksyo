@@ -4,10 +4,12 @@ import DictionaryClient from "@/components/dictionary";
 
 export default async function DictionaryDataWrapper({
     initialSearch = "",
+    initialSaveWordId = "",
     matchedWord = null,
     showOnboarding = false
 }: {
     initialSearch?: string;
+    initialSaveWordId?: string;
     matchedWord?: any;
     showOnboarding?: boolean;
 }) {
@@ -20,7 +22,7 @@ export default async function DictionaryDataWrapper({
         dailyWord,
         { data: { user } }
     ] = await Promise.all([
-        searchWords(""),
+        searchWords(initialSearch || ""),
         getUserSavedWordIds(),
         getRandomDiscoverWords(),
         getWordOfTheDay(),
@@ -39,6 +41,7 @@ export default async function DictionaryDataWrapper({
             initialWordOfTheDay={dailyWord as any}
             isAuthenticated={!!user}
             initialSearch={initialSearch}
+            initialSaveWordId={initialSaveWordId}
             showOnboarding={showOnboarding}
         />
     );
