@@ -33,7 +33,7 @@ import {
   Swords,
   GraduationCap,
 } from "lucide-react";
-import { getUserStats, getLeaderboard } from "@/app/actions/stats";
+import { getProfileStats, getActivityStats, getFSRSStats, getAchievementsStats, getLeaderboard } from "@/app/actions/stats";
 import { getDynamicGreeting } from "@/lib/date-utils";
 import { StatsSkeleton } from "@/components/stats-skeleton";
 
@@ -236,41 +236,32 @@ const itemVariants = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function StatsDashboardClient({
-  stats: initialStats,
-  leaderboard: initialLeaderboard,
   greeting: initialGreeting,
 }: {
-  stats?: any;
-  leaderboard?: any;
   greeting?: string;
 }) {
-  const [stats, setStats] = useState<any>(initialStats);
-  const [leaderboard, setLeaderboard] = useState<any>(initialLeaderboard);
+  const [profileStats, setProfileStats] = useState<any>(null);
+  const [activityStats, setActivityStats] = useState<any>(null);
+  const [fsrsStats, setFsrsStats] = useState<any>(null);
+  const [achievementsStats, setAchievementsStats] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<any>(null);
+  
   const [greeting, setGreeting] = useState<string>(initialGreeting || "");
-  const [isLoading, setIsLoading] = useState(!initialStats);
+  
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
+  const [isLoadingFsrs, setIsLoadingFsrs] = useState(true);
+  const [isLoadingAchievements, setIsLoadingAchievements] = useState(true);
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      if (initialStats) return;
-      try {
-        const [s, l] = await Promise.all([
-          getUserStats(),
-          getLeaderboard()
-        ]);
-        setStats(s);
-        setLeaderboard(l);
-        setGreeting(getDynamicGreeting());
-      } catch (err) {
-        console.error("Failed to fetch stats", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    if (!initialStats) {
-      setGreeting(getDynamicGreeting());
-      loadData();
-    }
-  }, [initialStats]);
+    setGreeting(getDynamicGreeting());
+    getProfileStats().then(data => { setProfileStats(data); setIsLoadingProfile(false); }).catch(() => setIsLoadingProfile(false));
+    getActivityStats().then(data => { setActivityStats(data); setIsLoadingActivity(false); }).catch(() => setIsLoadingActivity(false));
+    getFSRSStats().then(data => { setFsrsStats(data); setIsLoadingFsrs(false); }).catch(() => setIsLoadingFsrs(false));
+    getAchievementsStats().then(data => { setAchievementsStats(data); setIsLoadingAchievements(false); }).catch(() => setIsLoadingAchievements(false));
+    getLeaderboard().then(data => { setLeaderboard(data); setIsLoadingLeaderboard(false); }).catch(() => setIsLoadingLeaderboard(false));
+  }, []);
 
   const [activeTab, setActiveTab] = useState("MY PROGRESS");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -289,7 +280,7 @@ export default function StatsDashboardClient({
   }, [activeTab]);
 
   // ── Data extraction with fallbacks ──
-  const profile = stats?.profile || {
+  const profile = profileStats?.profile || {
     username: "JUAN DELA CRUZ",
     userId: "",
     xp: 0,
@@ -302,17 +293,18 @@ export default function StatsDashboardClient({
     totalTimeLearningMs: 0,
   };
 
-  const achievements = stats?.achievements || [];
-  const weeklyWords = stats?.weeklyWords || [];
-  const accuracyTrend = stats?.accuracyTrend || [];
-  const dynamicLevels = stats?.levels || [];
-  const fsrs = stats?.fsrs || {
+  const dynamicLevels = profileStats?.levels || [];
+  const achievements = achievementsStats?.achievements || [];
+  const weeklyWords = activityStats?.weeklyWords || [];
+  const accuracyTrend = activityStats?.accuracyTrend || [];
+  const yearlyHeatmap = activityStats?.yearlyHeatmap || [];
+
+  const fsrs = fsrsStats?.fsrs || {
     retentionRate: 0,
     upcomingReviewsCount: 0,
     wordsByDifficulty: { newWords: 0, learning: 0, reviewing: 0, mastered: 0 },
     struggledWords: [],
   };
-  const yearlyHeatmap = stats?.yearlyHeatmap || [];
 
   const topXp = leaderboard?.topXp || [];
   const topWords = leaderboard?.topWords || [];
@@ -369,9 +361,18 @@ export default function StatsDashboardClient({
 
 
   // ── Render ──
-  if (isLoading) {
+  if (isLoadingProfile) {
     return <StatsSkeleton />;
   }
+
+  const SectionLoader = () => (
+    <div className="h-[200px] w-full bg-[#FFFBF0] border-[3px] border-black flex items-center justify-center shadow-[6px_6px_0_#000]">
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-8 h-8 border-[3px] border-black rounded-full border-t-[#FFE500] animate-spin" />
+        <span className="font-bold uppercase tracking-widest text-[10px] text-[#555]">LOADING...</span>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }}>
@@ -777,6 +778,8 @@ export default function StatsDashboardClient({
               </motion.div>
 
               {/* Yearly Activity Heatmap */}
+              {isLoadingActivity ? <SectionLoader /> : (
+              <>
               <motion.div variants={itemVariants}>
                 <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 sm:p-6 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all">
                   <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
@@ -976,8 +979,11 @@ export default function StatsDashboardClient({
                   <AccuracyTrendChart data={accuracyTrend} />
                 </div>
               </motion.div>
+              </>
+              )}
 
               {/* Memory Insights */}
+              {isLoadingFsrs ? <SectionLoader /> : (
               <motion.div variants={itemVariants}>
                 <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-5 sm:p-6 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_#000] transition-all">
                   <div className="flex items-center gap-2 mb-6">
@@ -1304,11 +1310,13 @@ export default function StatsDashboardClient({
                   )}
                 </div>
               </motion.div>
+              )}
             </>
           )}
 
           {/* ─────────────── ACHIEVEMENTS TAB ─────────────── */}
           {activeTab === "ACHIEVEMENTS" && (
+            isLoadingAchievements ? <SectionLoader /> : (
             <>
               {/* Personal Records */}
               <motion.div variants={itemVariants}>
@@ -1469,10 +1477,12 @@ export default function StatsDashboardClient({
                 </div>
               </motion.div>
             </>
+            )
           )}
 
           {/* ─────────────── LEADERBOARD TAB ─────────────── */}
           {activeTab === "LEADERBOARD" && (
+            isLoadingLeaderboard ? <SectionLoader /> : (
             <>
               {/* Scope toggle */}
               <motion.div variants={itemVariants} className="flex justify-center">
@@ -1702,6 +1712,7 @@ export default function StatsDashboardClient({
                 </div>
               </motion.div>
             </>
+            )
           )}
         </motion.div>
       </AnimatePresence>

@@ -64,15 +64,20 @@ export async function searchWordBySlug(slug: string) {
 
 export async function getRandomWordSlug() {
     return withExponentialBackoff(async () => {
+        const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
+        const count = countResult[0]?.count ?? 0;
+        
+        if (count === 0) return null;
 
-
-    const randomWord = await db.query.words.findFirst({
-        orderBy: sql`RANDOM()`,
-        columns: {
-            slug: true,
-        }
-    });
-    return randomWord?.slug || null;
+        const randomOffset = Math.floor(Math.random() * count);
+        const randomWord = await db.query.words.findFirst({
+            orderBy: (words, { asc }) => [asc(words.word)],
+            offset: randomOffset,
+            columns: {
+                slug: true,
+            }
+        });
+        return randomWord?.slug || null;
     });
 }
 
@@ -225,13 +230,20 @@ export async function getUserSavedWordIds() {
 
 export async function getRandomDiscoverWords() {
     return withExponentialBackoff(async () => {
+        const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
+        const count = countResult[0]?.count ?? 0;
 
+        if (count === 0) return [];
 
-    return db.query.words.findMany({
-        orderBy: sql`RANDOM()`,
-        with: { rootWord: true },
-        limit: 5
-    });
+        const maxOffset = Math.max(0, count - 5);
+        const randomOffset = Math.floor(Math.random() * maxOffset);
+
+        return db.query.words.findMany({
+            orderBy: (words, { asc }) => [asc(words.word)],
+            offset: randomOffset,
+            with: { rootWord: true },
+            limit: 5
+        });
     });
 }
 
@@ -255,7 +267,7 @@ export const getWordByExactSlug = cache(async (slug: string) => {
     });
 });
 
-export async function searchWordsByBaseWord(baseWord: string) {
+export const searchWordsByBaseWord = cache(async (baseWord: string) => {
     return withExponentialBackoff(async () => {
 
 
@@ -273,7 +285,7 @@ export async function searchWordsByBaseWord(baseWord: string) {
         orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
     });
     });
-}
+});
 
 export async function getAllDictionaryEntriesForSitemap() {
     return withExponentialBackoff(async () => {

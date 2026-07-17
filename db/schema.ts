@@ -25,6 +25,8 @@ export const words = pgTable("words", {
     index("words_word_trgm_idx").using("gin", table.word.op("gin_trgm_ops")),
     index("words_slug_trgm_idx").using("gin", table.slug.op("gin_trgm_ops")),
     index("words_translation_trgm_idx").using("gin", table.translation.op("gin_trgm_ops")),
+    index("words_lower_word_idx").on(sql`lower(${table.word})`),
+    index("words_root_word_id_idx").on(table.rootWordId),
     pgPolicy("Allow public read access on words", {
         as: "permissive",
         for: "select",
@@ -51,6 +53,7 @@ export const userProgress = pgTable("user_progress", {
     isArchived: boolean("is_archived").default(false),
 }, (table) => [
     index("user_progress_user_archived_idx").on(table.userId, table.isArchived),
+    index("user_progress_user_word_idx").on(table.userId, table.wordId),
     pgPolicy("Users can view own progress", {
         as: "permissive",
         for: "select",
