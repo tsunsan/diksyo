@@ -14,6 +14,7 @@ export default function SearchBar() {
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Fetch Logic: Triggered when debouncedQuery changes
@@ -22,6 +23,7 @@ export default function SearchBar() {
             if (!debouncedQuery.trim()) {
                 setResults([]);
                 setIsOpen(false);
+                setSelectedIndex(-1);
                 return;
             }
 
@@ -30,6 +32,7 @@ export default function SearchBar() {
                 const suggestions = await searchWordSuggestions(debouncedQuery.toLowerCase(), 8);
                 setResults(suggestions);
                 setIsOpen(suggestions.length > 0);
+                setSelectedIndex(-1);
             } catch (error) {
                 console.error("Search failed:", error);
             } finally {
@@ -43,9 +46,33 @@ export default function SearchBar() {
     // 3. Handle Form Submit (Hard Navigation)
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const displayedResults = results.slice(0, 5);
+        if (isOpen && selectedIndex >= 0 && selectedIndex < displayedResults.length) {
+            const selected = displayedResults[selectedIndex];
+            setIsOpen(false);
+            setSelectedIndex(-1);
+            router.push(`/salita/${selected.slug || selected.word.toLowerCase()}`);
+            return;
+        }
+
         if (query.trim()) {
             setIsOpen(false);
+            setSelectedIndex(-1);
             router.push(`/salita/${query.toLowerCase()}`);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        const displayedResults = results.slice(0, 5);
+        if (!isOpen || displayedResults.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (prev < displayedResults.length - 1 ? prev + 1 : prev));
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (prev > -1 ? prev - 1 : prev));
         }
     };
 
@@ -54,6 +81,7 @@ export default function SearchBar() {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
+                setSelectedIndex(-1);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -77,6 +105,7 @@ export default function SearchBar() {
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Search Diksyo..."
                         className="w-full min-w-0 bg-transparent p-2 text-lg font-bold text-black outline-none placeholder:text-gray-400 sm:p-4 sm:text-xl md:text-2xl"
                         autoComplete="off"
@@ -86,7 +115,10 @@ export default function SearchBar() {
                         href="/salita/random"
                         className="group mr-2 flex shrink-0 items-center justify-center border-4 border-black bg-cyan-300 p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none sm:mr-4"
                         title="Random Word"
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => {
+                            setIsOpen(false);
+                            setSelectedIndex(-1);
+                        }}
                     >
                         <Shuffle className="h-5 w-5 text-black transition-transform group-hover:rotate-180 sm:h-6 sm:w-6" />
                     </Link>
@@ -102,12 +134,17 @@ export default function SearchBar() {
             {/* Neo-brutalist Autocomplete Dropdown */}
             {isOpen && results.length > 0 && (
                 <div className="absolute z-50 left-0 right-0 top-full mt-2 flex flex-col border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[300px] overflow-y-auto">
-                    {results.slice(0, 5).map((result) => (
+                    {results.slice(0, 5).map((result, index) => (
                         <Link
                             key={result.id || result.word}
                             href={`/salita/${result.slug || result.word.toLowerCase()}`}
-                            onClick={() => setIsOpen(false)}
-                            className="group flex flex-col border-b-2 border-black p-4 last:border-b-0 hover:bg-yellow-400 transition-colors"
+                            onClick={() => {
+                                setIsOpen(false);
+                                setSelectedIndex(-1);
+                            }}
+                            className={`group flex flex-col border-b-2 border-black p-4 last:border-b-0 transition-colors hover:bg-yellow-400 ${
+                                index === selectedIndex ? "bg-yellow-400" : ""
+                            }`}
                         >
                             <div className="flex items-center justify-between">
                                 <span className="font-mono text-xl font-black uppercase">{result.word}</span>
