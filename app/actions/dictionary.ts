@@ -319,6 +319,15 @@ export async function searchWordSuggestions(term: string, limit = 8) {
             ilike(words.translation, `%${normalizedTerm}%`)
         ),
         with: { rootWord: true },
+        orderBy: [
+            sql`case
+                when lower(${words.word}) = ${normalizedTerm} then 0
+                when lower(${words.slug}) like ${`${normalizedTerm}-%`} then 1
+                when lower(${words.word}) like ${`${normalizedTerm}%`} then 2
+                else 3
+            end`,
+            sql`lower(${words.word}) asc`,
+        ],
         limit: 30, // Fetch enough to sort and filter down to the limit
     });
 

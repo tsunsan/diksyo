@@ -7,10 +7,26 @@ import Link from "next/link";
 import { searchWordSuggestions } from "@/app/actions/dictionary";
 import { useDebounce } from "use-debounce";
 
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+    if (!query.trim() || !text) return <>{text}</>;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return (
+        <>
+            {parts.map((part, i) =>
+                part.toLowerCase() === query.toLowerCase() ? (
+                    <span key={i} className="text-yellow-500 group-hover:text-black">{part}</span>
+                ) : (
+                    <span key={i}>{part}</span>
+                )
+            )}
+        </>
+    );
+}
+
 export default function SearchBar() {
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [debouncedQuery] = useDebounce(query, 100);
+    const [debouncedQuery] = useDebounce(query, 300);
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -147,7 +163,9 @@ export default function SearchBar() {
                             }`}
                         >
                             <div className="flex items-center justify-between">
-                                <span className="font-mono text-xl font-black uppercase">{result.word}</span>
+                                <span className="font-mono text-xl font-black uppercase">
+                                    <HighlightMatch text={result.word} query={debouncedQuery} />
+                                </span>
                                 {result.partOfSpeech && (
                                     <span className="border-2 border-black bg-purple-400 px-2 py-1 text-xs font-bold uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-none transition-shadow">
                                         {result.partOfSpeech}
@@ -156,7 +174,7 @@ export default function SearchBar() {
                             </div>
                             {result.translation && (
                                 <span className="mt-1 text-sm font-bold text-gray-600 group-hover:text-black">
-                                    {result.translation}
+                                    <HighlightMatch text={result.translation} query={debouncedQuery} />
                                 </span>
                             )}
                         </Link>
