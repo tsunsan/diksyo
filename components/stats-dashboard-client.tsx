@@ -214,6 +214,30 @@ const getMemoryLabel = (rate: number) => {
 
 // CustomTooltip moved to stats-charts.tsx
 
+const LeaderboardAvatar = ({ src, alt }: { src: string; alt: string }) => {
+  const [error, setError] = useState(false);
+  if (error || !src) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-black"
+      >
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    );
+  }
+  return <img src={src} alt={alt} className="w-full h-full object-cover" onError={() => setError(true)} />;
+};
+
 // ─── Animation Variants ──────────────────────────────────────────────────────
 
 const containerVariants = {
@@ -1572,9 +1596,9 @@ export default function StatsDashboardClient({
                               )}
                               <div className="w-8 h-8 rounded-full border-2 border-black bg-white flex items-center justify-center shrink-0 overflow-hidden">
                                 {user.showAvatar && user.avatarUrl ? (
-                                  <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
+                                  <LeaderboardAvatar src={user.avatarUrl} alt={user.username} />
                                 ) : (
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-black"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-black"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 )}
                               </div>
                               <span
@@ -1666,7 +1690,7 @@ export default function StatsDashboardClient({
                             )}
                             <div className="w-8 h-8 rounded-full border-2 border-black bg-white flex items-center justify-center shrink-0 overflow-hidden">
                               {user.showAvatar && user.avatarUrl ? (
-                                <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
+                                <LeaderboardAvatar src={user.avatarUrl} alt={user.username} />
                               ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-black"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                               )}

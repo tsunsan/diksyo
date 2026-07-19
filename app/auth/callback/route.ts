@@ -17,11 +17,11 @@ export async function GET(request: Request) {
                 
                 const existing = await db.select().from(userProfiles).where(eq(userProfiles.userId, data.user.id)).limit(1);
                 
+                const meta = data.user.user_metadata || {};
+                const avatar_url = meta.avatar_url || meta.picture || null;
+                const full_name = meta.full_name || meta.name || null;
+                
                 if (existing.length === 0) {
-                    const meta = data.user.user_metadata || {};
-                    const avatar_url = meta.avatar_url || meta.picture || null;
-                    const full_name = meta.full_name || meta.name || null;
-                    
                     const username = `user${Math.floor(Math.random() * 1000000)}`;
                     
                     await db.insert(userProfiles).values({
@@ -30,6 +30,10 @@ export async function GET(request: Request) {
                         displayName: full_name || username,
                         avatarUrl: avatar_url,
                     }).onConflictDoNothing();
+                } else if (avatar_url && existing[0].avatarUrl !== avatar_url) {
+                    await db.update(userProfiles)
+                        .set({ avatarUrl: avatar_url })
+                        .where(eq(userProfiles.userId, data.user.id));
                 }
             } catch (e) {
                 console.error("Error creating profile in auth callback:", e);

@@ -33,6 +33,7 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div className="h-screen flex bg-[#f4f1ea] font-sans overflow-hidden">
@@ -78,13 +79,14 @@ export function AppSidebar({
             {user && (
               <div className="flex items-center gap-3 p-3 border-b-4 border-black bg-[#f4f1ea]">
                 <div className="w-10 h-10 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center shrink-0 overflow-hidden">
-                  {user.avatar_url ? (
+                  {user.avatar_url && !imgError ? (
                     <Image 
                       src={user.avatar_url} 
                       alt={user.username} 
                       width={40} 
                       height={40} 
                       className="w-full h-full object-cover" 
+                      onError={() => setImgError(true)}
                     />
                   ) : (
                     <svg
