@@ -13,21 +13,14 @@ export default async function DictionaryDataWrapper({
     matchedWord?: any;
     showOnboarding?: boolean;
 }) {
-    // Execute all heavy queries concurrently to eliminate waterfall delays
+    // Execute queries sequentially to prevent connection pool exhaustion
     const supabase = await createClient();
-    const [
-        initialWords,
-        initialSavedWordIds,
-        discoverWordsList,
-        dailyWord,
-        { data: { user } }
-    ] = await Promise.all([
-        searchWords(initialSearch || ""),
-        getUserSavedWordIds(),
-        getRandomDiscoverWords(),
-        getWordOfTheDay(),
-        supabase.auth.getUser()
-    ]);
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const initialWords = await searchWords(initialSearch || "");
+    const initialSavedWordIds = await getUserSavedWordIds();
+    const discoverWordsList = await getRandomDiscoverWords();
+    const dailyWord = await getWordOfTheDay();
 
     const initialDiscoverWords = matchedWord
         ? [matchedWord, ...discoverWordsList.filter((w: any) => w.id !== matchedWord.id)]
@@ -39,7 +32,7 @@ export default async function DictionaryDataWrapper({
             initialSavedWordIds={initialSavedWordIds} 
             initialDiscoverWords={initialDiscoverWords as any}
             initialWordOfTheDay={dailyWord as any}
-            isAuthenticated={!!user}
+            isAuthenticated={!!session}
             initialSearch={initialSearch}
             initialSaveWordId={initialSaveWordId}
             showOnboarding={showOnboarding}

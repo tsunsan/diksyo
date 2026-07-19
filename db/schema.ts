@@ -54,6 +54,7 @@ export const userProgress = pgTable("user_progress", {
 }, (table) => [
     index("user_progress_user_archived_idx").on(table.userId, table.isArchived),
     index("user_progress_user_word_idx").on(table.userId, table.wordId),
+    index("user_progress_due_idx").on(table.userId, table.isArchived, table.nextReview),
     pgPolicy("Users can view own progress", {
         as: "permissive",
         for: "select",

@@ -38,11 +38,11 @@ export const metadata: Metadata = {
     ],
 };
 
+export const revalidate = 3600; // Revalidate every hour to update the Word of the Day
+
 export default async function LandingPage() {
-    const [dailyWord, stats] = await Promise.all([
-        getWordOfTheDay(),
-        getLandingPageStats(),
-    ]);
+    const dailyWord = await getWordOfTheDay();
+    const stats = await getLandingPageStats();
 
     // Fallback if DB returns null (empty database edge case)
     const wotd = dailyWord ?? {

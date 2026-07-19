@@ -310,33 +310,36 @@ export async function searchWordSuggestions(term: string, limit = 8) {
         return [];
     }
 
-    const [exactBaseWordMatches, slugPrefixMatches, fuzzyMatches] = await Promise.all([
-        db.query.words.findMany({
-            where: sql`lower(${words.word}) = ${normalizedTerm}`,
-            with: { rootWord: true },
-            orderBy: (word, { asc }) => [asc(word.partOfSpeech), asc(word.slug)],
-            limit,
-        }),
-        db.query.words.findMany({
-            where: ilike(words.slug, `${normalizedTerm}%`),
-            with: { rootWord: true },
-            orderBy: (word, { asc }) => [asc(word.slug)],
-            limit,
-        }),
-        db.query.words.findMany({
-            where: or(
-                ilike(words.slug, `%${normalizedTerm}%`),
-                ilike(words.word, `%${normalizedTerm}%`),
-                ilike(words.translation, `%${normalizedTerm}%`)
-            ),
-            with: { rootWord: true },
-            orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
-            limit,
-        })
-    ]);
+    // Fetch a generous amount of fuzzy matches in a SINGLE query
+    // This prevents connection pool exhaustion AND keeps latency extremely low (1 network trip)
+    const rawMatches = await db.query.words.findMany({
+        where: or(
+            ilike(words.slug, `%${normalizedTerm}%`),
+            ilike(words.word, `%${normalizedTerm}%`),
+            ilike(words.translation, `%${normalizedTerm}%`)
+        ),
+        with: { rootWord: true },
+        limit: 30, // Fetch enough to sort and filter down to the limit
+    });
 
-    const merged = [...exactBaseWordMatches, ...slugPrefixMatches, ...fuzzyMatches];
-    const deduped = merged.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
+    // Sort in memory to enforce priority: Exact match > Prefix match > Fuzzy match
+    const sorted = rawMatches.sort((a, b) => {
+        const aWordExact = a.word.toLowerCase() === normalizedTerm;
+        const bWordExact = b.word.toLowerCase() === normalizedTerm;
+        if (aWordExact && !bWordExact) return -1;
+        if (!aWordExact && bWordExact) return 1;
+
+        const aPrefix = a.slug?.startsWith(normalizedTerm) || a.word.toLowerCase().startsWith(normalizedTerm);
+        const bPrefix = b.slug?.startsWith(normalizedTerm) || b.word.toLowerCase().startsWith(normalizedTerm);
+        if (aPrefix && !bPrefix) return -1;
+        if (!aPrefix && bPrefix) return 1;
+
+        // Fallback to alphabetical sorting
+        return a.word.localeCompare(b.word);
+    });
+
+    // Deduplicate (just in case, though findMany shouldn't return dupes)
+    const deduped = sorted.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
 
     return deduped.slice(0, limit);
     });

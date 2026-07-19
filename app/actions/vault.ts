@@ -199,8 +199,7 @@ export async function getDueWordCount() {
 
     try {
         const now = new Date();
-        const [dueResult, totalResult] = await Promise.all([
-            withExponentialBackoff(() => db
+        const dueResult = await withExponentialBackoff(() => db
                 .select({ count: sql<number>`count(*)::int` })
                 .from(userProgress)
                 .where(and(
@@ -208,15 +207,15 @@ export async function getDueWordCount() {
                     eq(userProgress.isArchived, false),
                     lte(userProgress.nextReview, now),
                     lt(userProgress.mastery, 100)
-                ))),
-            withExponentialBackoff(() => db
+                )));
+                
+        const totalResult = await withExponentialBackoff(() => db
                 .select({ count: sql<number>`count(*)::int` })
                 .from(userProgress)
                 .where(and(
                     eq(userProgress.userId, user.id),
                     eq(userProgress.isArchived, false)
-                )))
-        ]);
+                )));
 
         return { 
             success: true, 

@@ -321,12 +321,10 @@ export default function DictionaryClient({
     async function loadDictionary() {
       if (initialWords) return;
       try {
-        const [w, s, d, dw] = await Promise.all([
-          searchWords(""),
-          isAuthenticated ? getUserSavedWordIds() : Promise.resolve([]),
-          getRandomDiscoverWords(),
-          getWordOfTheDay()
-        ]);
+        const w = await searchWords("");
+        const s = isAuthenticated ? await getUserSavedWordIds() : [];
+        const d = await getRandomDiscoverWords();
+        const dw = await getWordOfTheDay();
         setWords(w as any);
         setSavedIds(new Set(s));
         setDiscoverWords(d as any);
