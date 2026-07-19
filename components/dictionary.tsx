@@ -29,6 +29,7 @@ import {
   Sparkles,
   Send,
   Copy,
+  RefreshCw,
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds } from "@/app/actions/dictionary";
 import { login, signup, type AuthState } from "@/app/actions/auth";
@@ -327,6 +328,7 @@ export default function DictionaryClient({
   const [modalWord, setModalWord] = useState<any | null>(null);
   const [shareWord, setShareWord] = useState<any | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   /* ─── Filter State ─── */
   const [showFilters, setShowFilters] = useState(false);
@@ -899,7 +901,7 @@ export default function DictionaryClient({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShareWord(null)}
+            onClick={() => { setShareWord(null); setImageLoaded(false); }}
           >
             <motion.div
               initial={{ scale: 0.92, y: 20 }}
@@ -924,7 +926,7 @@ export default function DictionaryClient({
                   </div>
                 </div>
                 <button
-                  onClick={() => setShareWord(null)}
+                  onClick={() => { setShareWord(null); setImageLoaded(false); }}
                   className="w-10 h-10 flex items-center justify-center bg-[#FF007F] border-[3px] border-black hover:bg-black transition-colors shadow-[3px_3px_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none rounded-full"
                 >
                   <X className="w-5 h-5 text-white" />
@@ -938,19 +940,34 @@ export default function DictionaryClient({
                     LINK PREVIEW
                   </p>
                   <div className="w-full aspect-[1200/630] bg-[radial-gradient(circle_at_center,_#000_2px,_transparent_2px)] bg-[size:16px_16px] bg-[#FFE500]/20 border-[4px] border-black flex items-center justify-center relative shadow-[6px_6px_0_#000] rounded-3xl p-4 sm:p-6">
-                    <div className="w-full h-full rounded-2xl overflow-hidden border-[3px] border-black shadow-[4px_4px_0_#000] relative">
+                    <div className="w-full h-full rounded-2xl overflow-hidden border-[3px] border-black shadow-[4px_4px_0_#000] relative bg-white">
+                      {!imageLoaded && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+                          <motion.div 
+                            animate={{ rotate: 360 }} 
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                            className="w-12 h-12 bg-[#FFE500] border-[3px] border-black shadow-[3px_3px_0_0_#000] flex items-center justify-center mb-3 relative"
+                          >
+                            <RefreshCw className="w-5 h-5 text-black" strokeWidth={3} />
+                          </motion.div>
+                          <span className="text-black font-black uppercase tracking-widest text-[9px] sm:text-[10px] border-[2px] border-black px-2 py-1 bg-white shadow-[3px_3px_0_0_#000]">
+                            GENERATING PREVIEW...
+                          </span>
+                        </div>
+                      )}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}/opengraph-image`} 
                         alt="Opengraph Preview" 
-                        className="absolute inset-0 w-full h-full object-cover scale-[1.06]" 
+                        onLoad={() => setImageLoaded(true)}
+                        className={`absolute inset-0 w-full h-full object-cover scale-[1.06] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
                       />
                     </div>
                   </div>
                 </div>
                 
-                <div className="w-full flex gap-3">
-                  <div className="flex-1 bg-white border-[3px] border-black px-4 py-3 text-sm font-bold text-black truncate flex items-center shadow-[4px_4px_0_#000] rounded-xl">
+                <div className="w-full flex gap-2 sm:gap-3">
+                  <div className="flex-1 bg-white border-[3px] border-black px-3 py-2 sm:px-4 sm:py-3 text-[10px] sm:text-xs font-bold text-black truncate flex items-center shadow-[4px_4px_0_#000] rounded-xl">
                     {`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}`}
                   </div>
                   <button
@@ -1630,7 +1647,7 @@ export default function DictionaryClient({
 
                   <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
                     <button
-                      onClick={() => setShareWord(word)}
+                      onClick={() => { setShareWord(word); setImageLoaded(false); }}
                       className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center hover:bg-[#0057FF] hover:text-white transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                       aria-label="Share word"
                     >

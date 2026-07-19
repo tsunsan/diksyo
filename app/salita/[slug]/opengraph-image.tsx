@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { ImageResponse } from "next/og";
 import { getWordByExactSlug } from "@/app/actions/dictionary";
 import { WordOgImage } from "@/components/word-og-image";
@@ -21,12 +23,10 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     // Dynamic font size for long words
     const termFontSize = term.length > 18 ? 64 : term.length > 12 ? 84 : 120;
 
-    // Load fonts for sharp rendering
-    const [interBlack, interBoldItalic, interBold] = await Promise.all([
-        fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-900-normal.woff").then(r => r.arrayBuffer()),
-        fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-italic.woff").then(r => r.arrayBuffer()),
-        fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff").then(r => r.arrayBuffer())
-    ]);
+    // Load fonts for sharp rendering synchronously
+    const interBlack = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-900.woff"));
+    const interBoldItalic = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700-italic.woff"));
+    const interBold = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700.woff"));
 
     return new ImageResponse(
         (
