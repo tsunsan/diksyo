@@ -18,8 +18,11 @@ export async function GET(request: Request) {
                 const existing = await db.select().from(userProfiles).where(eq(userProfiles.userId, data.user.id)).limit(1);
                 
                 const meta = data.user.user_metadata || {};
-                const avatar_url = meta.avatar_url || meta.picture || null;
-                const full_name = meta.full_name || meta.name || null;
+                const googleIdentity = data.user.identities?.find((id: any) => id.provider === 'google');
+                const googleMeta = googleIdentity?.identity_data || {};
+                
+                const avatar_url = meta.avatar_url || meta.picture || googleMeta.avatar_url || googleMeta.picture || null;
+                const full_name = meta.full_name || meta.name || googleMeta.full_name || googleMeta.name || null;
                 
                 if (existing.length === 0) {
                     const username = `user${Math.floor(Math.random() * 1000000)}`;
