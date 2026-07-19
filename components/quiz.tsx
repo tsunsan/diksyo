@@ -467,7 +467,7 @@ export function QuizModeClient() {
       </div>
 
       {/* ── Two Column Layout ── */}
-      <div className="flex flex-col md:flex-row gap-10 items-start pb-28 md:pb-0">
+      <div className="flex flex-col md:flex-row gap-10 items-start">
         
         {/* ── Left Column: Modes Selection (65%) ── */}
         <div className="w-full md:w-[65%] flex flex-col gap-12">
@@ -633,9 +633,9 @@ export function QuizModeClient() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="mt-16 mb-12 md:mb-0"
+        className="mt-12 md:mt-16 mb-32 md:mb-0"
       >
-        <div className="border-[4px] border-black bg-white shadow-[8px_8px_0_0_#000] overflow-hidden">
+        <div className="border-[4px] border-black bg-white shadow-[4px_4px_0_0_#000] sm:shadow-[8px_8px_0_0_#000] overflow-hidden">
           {/* Section header */}
           <div className="bg-black px-5 sm:px-6 py-4 flex items-center gap-3">
             <Info className="w-5 h-5 text-[#FFE500]" />
@@ -722,17 +722,17 @@ export function QuizModeClient() {
       <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
         <DialogContent
           showCloseButton={!isPending}
-          className="!rounded-none border-[4px] border-black shadow-[8px_8px_0_#000] bg-white p-0 max-w-md overflow-hidden"
+          className="!rounded-none border-[4px] border-black shadow-[6px_6px_0_#000] sm:shadow-[8px_8px_0_#000] bg-white p-0 w-[92vw] sm:w-full max-w-md overflow-hidden"
         >
           {/* Header banner */}
-          <div className="bg-[#FFE500] border-b-[3px] border-black px-6 py-5">
+          <div className="bg-[#FFE500] border-b-[3px] border-black px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex items-center gap-3">
-              <div className="border-[3px] border-black bg-white p-2">
-                <BookOpenCheck className="w-6 h-6 text-black" />
+              <div className="border-[3px] border-black bg-white p-1.5 sm:p-2 shrink-0">
+                <BookOpenCheck className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
               </div>
               <div>
                 <DialogHeader>
-                  <DialogTitle className="text-black uppercase tracking-tight text-lg" style={{ fontWeight: 900 }}>
+                  <DialogTitle className="text-black uppercase tracking-tight text-base sm:text-lg" style={{ fontWeight: 900 }}>
                     More words needed
                   </DialogTitle>
                 </DialogHeader>
@@ -741,14 +741,14 @@ export function QuizModeClient() {
           </div>
 
           {/* Body */}
-          <div className="px-6 py-5">
-            <DialogDescription className="text-[#333] text-sm leading-relaxed mb-1" style={{ fontWeight: 600 }}>
+          <div className="px-4 py-4 sm:px-6 sm:py-5">
+            <DialogDescription className="text-[#333] text-xs sm:text-sm leading-relaxed mb-1" style={{ fontWeight: 600 }}>
               Mastery modes use <span className="font-black">spaced repetition</span> to train you on words saved in your vault. You need at least 10 words to get started.
             </DialogDescription>
 
-            <div className="flex items-center gap-2 mt-3 mb-6">
-              <Brain className="w-3.5 h-3.5 text-[#888]" />
-              <span className="text-[#888] text-[11px] uppercase tracking-wider" style={{ fontWeight: 700 }}>Powered by the FSRS algorithm</span>
+            <div className="flex items-center gap-2 mt-3 mb-5 sm:mb-6">
+              <Brain className="w-3.5 h-3.5 text-[#888] shrink-0" />
+              <span className="text-[#888] text-[10px] sm:text-[11px] uppercase tracking-wider" style={{ fontWeight: 700 }}>Powered by the FSRS algorithm</span>
             </div>
 
             {/* Options */}
@@ -756,18 +756,18 @@ export function QuizModeClient() {
               <button
                 onClick={handleSeedStarterPack}
                 disabled={isPending}
-                className="group w-full flex items-center gap-4 p-4 border-[3px] border-black bg-[#7C3AED] text-white shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-70 disabled:cursor-wait"
+                className="group w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border-[3px] border-black bg-[#7C3AED] text-white shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-70 disabled:cursor-wait"
               >
                 {isPending ? (
-                  <Loader2 className="w-6 h-6 animate-spin shrink-0" />
+                  <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin shrink-0" />
                 ) : (
-                  <Package className="w-6 h-6 shrink-0 group-hover:rotate-12 transition-transform" />
+                  <Package className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 group-hover:rotate-12 transition-transform" />
                 )}
                 <div className="text-left">
-                  <span className="block uppercase text-sm" style={{ fontWeight: 900 }}>
+                  <span className="block uppercase text-xs sm:text-sm" style={{ fontWeight: 900 }}>
                     {isPending ? "Adding words..." : "Add Starter Pack"}
                   </span>
-                  <span className="block text-[11px] text-white/70" style={{ fontWeight: 600 }}>10 common Tagalog words added to your vault</span>
+                  <span className="block text-[10px] sm:text-[11px] text-white/70" style={{ fontWeight: 600 }}>10 common Tagalog words added to your vault</span>
                 </div>
               </button>
 
@@ -777,12 +777,12 @@ export function QuizModeClient() {
                   router.push("/dictionary?onboarding=true");
                 }}
                 disabled={isPending}
-                className="group w-full flex items-center gap-4 p-4 border-[3px] border-black bg-white text-black shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
+                className="group w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border-[3px] border-black bg-white text-black shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
               >
-                <Search className="w-6 h-6 shrink-0 group-hover:scale-110 transition-transform" />
+                <Search className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 group-hover:scale-110 transition-transform" />
                 <div className="text-left">
-                  <span className="block uppercase text-sm" style={{ fontWeight: 900 }}>Explore Dictionary</span>
-                  <span className="block text-[11px] text-[#666]" style={{ fontWeight: 600 }}>Pick your own words to learn</span>
+                  <span className="block uppercase text-xs sm:text-sm" style={{ fontWeight: 900 }}>Explore Dictionary</span>
+                  <span className="block text-[10px] sm:text-[11px] text-[#666]" style={{ fontWeight: 600 }}>Pick your own words to learn</span>
                 </div>
               </button>
             </div>
