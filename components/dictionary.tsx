@@ -101,16 +101,36 @@ function SpotlightTour({ step, totalSteps, onNext, onSkip }: {
   }, [tourStep.target]);
 
   useEffect(() => {
-    // Small delay to let DOM settle
-    const timer = setTimeout(updateRect, 300);
+    // Small delay to let DOM settle, then scroll into view and update rect
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[${tourStep.target}]`);
+      if (el) {
+        // Only scroll if it's completely out of view or partially hidden to improve UX
+        const r = el.getBoundingClientRect();
+        if (r.top < 0 || r.bottom > window.innerHeight) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      updateRect();
+    }, 300);
+    
+    // Track scroll events during scrollIntoView
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      updateRect();
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(updateRect, 100);
+    };
+
     window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect);
+    window.addEventListener("scroll", handleScroll);
     return () => {
       clearTimeout(timer);
+      clearTimeout(scrollTimeout);
       window.removeEventListener("resize", updateRect);
-      window.removeEventListener("scroll", updateRect);
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, [updateRect]);
+  }, [updateRect, tourStep.target]);
 
   if (!rect) return null;
 
@@ -118,17 +138,34 @@ function SpotlightTour({ step, totalSteps, onNext, onSkip }: {
   const isLast = step === totalSteps - 1;
 
   // Calculate tooltip position
-  let tooltipStyle: React.CSSProperties = {};
-  if (tourStep.position === "bottom") {
-    tooltipStyle = {
-      top: rect.bottom + pad + 12,
-      left: Math.min(Math.max(16, rect.left + rect.width / 2 - 160), window.innerWidth - 336),
-    };
-  } else if (tourStep.position === "right") {
-    tooltipStyle = {
-      top: rect.top + rect.height / 2 - 60,
-      left: Math.min(rect.right + pad + 12, window.innerWidth - 340),
-    };
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const actualPosition = isMobile ? "bottom" : tourStep.position;
+  const tooltipWidth = typeof window !== 'undefined' ? Math.min(320, window.innerWidth - 32) : 320;
+  
+  let tooltipStyle: React.CSSProperties = {
+    width: tooltipWidth
+  };
+
+  if (actualPosition === "bottom") {
+    let topPos = rect.bottom + pad + 12;
+    const estHeight = 180; // Estimated tooltip height
+    
+    // If placing at bottom overflows the screen, place above the element instead
+    if (typeof window !== 'undefined' && topPos + estHeight > window.innerHeight) {
+      topPos = Math.max(16, rect.top - pad - 12 - estHeight);
+    }
+    
+    tooltipStyle.top = topPos;
+    tooltipStyle.left = typeof window !== 'undefined' ? Math.min(
+      Math.max(16, rect.left + rect.width / 2 - tooltipWidth / 2),
+      window.innerWidth - tooltipWidth - 16
+    ) : 16;
+  } else if (actualPosition === "right") {
+    tooltipStyle.top = rect.top + rect.height / 2 - 60;
+    tooltipStyle.left = typeof window !== 'undefined' ? Math.min(
+      rect.right + pad + 12,
+      window.innerWidth - tooltipWidth - 16
+    ) : rect.right + pad + 12;
   }
 
   return (
@@ -171,8 +208,8 @@ function SpotlightTour({ step, totalSteps, onNext, onSkip }: {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         key={step}
-        className="absolute w-[320px] bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-0 overflow-hidden"
-        style={{ ...tooltipStyle, pointerEvents: "auto" }}
+        className="absolute bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-0 overflow-hidden"
+        style={{ ...tooltipStyle, pointerEvents: "auto", maxWidth: 'calc(100vw - 32px)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Tooltip header */}
