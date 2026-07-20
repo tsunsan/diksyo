@@ -311,6 +311,10 @@ export default function VaultClient() {
       const res = await addWordToVault(wordId);
       if (res.success) {
         toast.success(`${word.toUpperCase()} ADDED TO VAULT!`);
+        const updatedVault = await getVaultWords();
+        if (updatedVault.success && updatedVault.data) {
+          setInitialWords(updatedVault.data as any);
+        }
       } else {
         toast.error(res.error || "FAILED TO ADD WORD");
       }

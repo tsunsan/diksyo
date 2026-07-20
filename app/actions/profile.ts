@@ -89,11 +89,11 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
     }
 
     if (needsEmailUpdate) {
-        revalidatePath('/profile')
+        revalidatePath('/', 'layout')
         return { success: 'Profile updated. Please verify your new email address.' }
     }
 
-    revalidatePath('/profile')
+    revalidatePath('/', 'layout')
     return { success: 'Profile successfully updated.' }
     });
 }

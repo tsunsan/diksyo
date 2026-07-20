@@ -99,7 +99,19 @@ export async function getVaultWords(excludeMastered: boolean = false) {
                 excludeMastered ? lt(userProgress.stability, 50) : undefined
             ),
             with: {
-                word: true,
+                word: {
+                    columns: {
+                        id: true,
+                        word: true,
+                        pronunciation: true,
+                        translation: true,
+                        partOfSpeech: true,
+                        level: true,
+                        frequency: true,
+                        rootWordId: true,
+                        rootWordString: true,
+                    }
+                },
             },
             orderBy: (progress, { desc }) => [desc(progress.nextReview)],
         }));

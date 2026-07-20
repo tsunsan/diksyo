@@ -1408,14 +1408,12 @@ export default function DictionaryClient({
               <p className="text-[#555] text-xs uppercase mb-4 leading-relaxed" style={{ fontWeight: 700 }}>
                 Can't find what you're looking for? Help us grow our dictionary!
               </p>
-              <button 
-                className="w-full bg-[#0057FF] border-[2px] border-black py-3 text-white text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] relative group/btn transition-all hover:bg-black cursor-not-allowed" style={{ fontWeight: 900 }}
+              <Link 
+                href="/community"
+                className="w-full bg-[#0057FF] border-[2px] border-black py-3 text-white text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] transition-all hover:bg-black block text-center hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]" style={{ fontWeight: 900 }}
               >
                 SUGGEST A WORD
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover/btn:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
-                  Coming Soon
-                </span>
-              </button>
+              </Link>
             </div>
           )}
         </div>
@@ -2018,14 +2016,12 @@ export default function DictionaryClient({
               <p className="text-[#555] text-xs uppercase mb-4 leading-relaxed" style={{ fontWeight: 700 }}>
                 Can't find what you're looking for? Help us grow our dictionary!
               </p>
-              <button 
-                className="w-full bg-[#0057FF] border-[2px] border-black py-3 text-white text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] relative group/btn transition-all hover:bg-black cursor-not-allowed" style={{ fontWeight: 900 }}
+              <Link 
+                href="/community"
+                className="w-full bg-[#0057FF] border-[2px] border-black py-3 text-white text-xs uppercase tracking-widest shadow-[4px_4px_0_#000] transition-all hover:bg-black block text-center hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]" style={{ fontWeight: 900 }}
               >
                 SUGGEST A WORD
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover/btn:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
-                  Coming Soon
-                </span>
-              </button>
+              </Link>
             </div>
           )}
         </div>
