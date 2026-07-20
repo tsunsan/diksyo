@@ -1702,26 +1702,27 @@ export default function DictionaryClient({
                         Coming Soon
                       </span>
                     </button>
-                    {/* Upvote Button */}
-                    <button
-                      className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
-                      aria-label="Upvote (Coming Soon)"
-                    >
-                      <ThumbsUp className="w-5 h-5 text-[#888]" />
-                      <span className="absolute -bottom-10 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                    {/* Upvote / Downvote Combined Box */}
+                    <div className="flex items-center h-10 bg-[#f0f0f0] border-[2px] border-black shadow-[2px_2px_0_#000] relative group cursor-not-allowed">
+                      <button
+                        className="w-10 h-10 flex items-center justify-center transition-colors"
+                        aria-label="Upvote (Coming Soon)"
+                        tabIndex={-1}
+                      >
+                        <ThumbsUp className="w-4 h-4 text-[#888]" />
+                      </button>
+                      <div className="w-[2px] h-full bg-black/20" />
+                      <button
+                        className="w-10 h-10 flex items-center justify-center transition-colors"
+                        aria-label="Downvote (Coming Soon)"
+                        tabIndex={-1}
+                      >
+                        <ThumbsDown className="w-4 h-4 text-[#888]" />
+                      </button>
+                      <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
                         Coming Soon
                       </span>
-                    </button>
-                    {/* Downvote Button */}
-                    <button
-                      className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
-                      aria-label="Downvote (Coming Soon)"
-                    >
-                      <ThumbsDown className="w-5 h-5 text-[#888]" />
-                      <span className="absolute -bottom-10 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
-                        Coming Soon
-                      </span>
-                    </button>
+                    </div>
                     <button
                       data-tour-save
                       onClick={() => handleSaveToVault(word.id)}
