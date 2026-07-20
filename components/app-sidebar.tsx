@@ -13,15 +13,17 @@ import {
   X,
   Flame,
   Settings,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 
 const navItems = [
-  { href: "/dictionary", icon: BookOpen, label: "Dictionary" },
-  { href: "/vault", icon: BookMarked, label: "Vocabulary Vault" },
-  { href: "/quiz", icon: Zap, label: "Quick Quiz" },
-  { href: "/stats", icon: LayoutDashboard, label: "Statistics" },
+  { href: "/dictionary", icon: BookOpen, label: "Dictionary", comingSoon: false },
+  { href: "/vault", icon: BookMarked, label: "Vocabulary Vault", comingSoon: false },
+  { href: "/quiz", icon: Zap, label: "Quick Quiz", comingSoon: false },
+  { href: "/stats", icon: LayoutDashboard, label: "Statistics", comingSoon: false },
+  { href: "/community", icon: Users, label: "Community", comingSoon: true },
 ];
 
 export function AppSidebar({
@@ -52,14 +54,14 @@ export function AppSidebar({
 
         {/* Nav */}
         <nav className="flex-1 px-4 py-6 flex flex-col gap-4">
-          {navItems.map(({ href, icon: Icon, label }) => {
+          {navItems.map(({ href, icon: Icon, label, comingSoon }) => {
             const isActive = pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 border-4 border-black transition-all uppercase tracking-tighter text-sm font-bold rounded-none
+                className={`relative flex items-center gap-3 px-4 py-3 border-4 border-black transition-all uppercase tracking-tighter text-sm font-bold rounded-none overflow-hidden
                 ${
                   isActive
                     ? "bg-yellow-400 shadow-[4px_4px_0_0_#000] translate-x-[-2px] translate-y-[-2px]"
@@ -68,6 +70,11 @@ export function AppSidebar({
               >
                 <Icon className="w-5 h-5" />
                 {label}
+                {comingSoon && (
+                  <span className="absolute -right-1 top-0.5 bg-yellow-400 border-2 border-black px-2 py-0.5 font-black uppercase text-[7px] tracking-tight rotate-12 shadow-[2px_2px_0_0_#000] leading-none">
+                    Soon
+                  </span>
+                )}
               </Link>
             );
           })}

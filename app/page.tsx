@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Flame, Shuffle, Zap, List, Dices } from "lucide-react";
+import { ArrowRight, BookOpen, Flame, Shuffle, Zap, List, Dices, Users, MessageCircle, ThumbsUp } from "lucide-react";
 import SearchBar from "@/components/search-bar";
 import LandingNav from "@/components/landing-nav";
 import LandingMarquee from "@/components/landing-marquee";
@@ -413,6 +413,77 @@ export default async function LandingPage() {
                                     Build your own skill tree. Curate personalized vocabulary lists for your job, school, or daily life.
                                 </p>
                             </div>
+                        </div>
+                    </section>
+
+                    {/* =========================================
+                        COMMUNITY TEASER SECTION
+                        ========================================= */}
+                    <section className="scroll-section mb-24">
+                        <div className="flex flex-col items-stretch gap-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:flex-row md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+
+                            {/* Left: Copy */}
+                            <div className="flex w-full flex-col items-start justify-center bg-pink-400 p-6 md:w-1/2 md:p-12">
+                                <div className="mb-4 inline-block border-2 border-black bg-white px-3 py-1 text-sm font-bold uppercase tracking-widest">
+                                    For the Community
+                                </div>
+                                <h2 className="mb-4 text-3xl font-black uppercase tracking-tighter sm:text-4xl md:text-5xl">
+                                    Help build the dictionary
+                                </h2>
+                                <p className="mb-8 text-lg font-bold sm:text-xl">
+                                    Submit new slang, upvote accurate definitions, and leave comments. The best community-verified words earn a ✅ verified badge.
+                                </p>
+                                <Link
+                                    href="/community"
+                                    className="group flex items-center gap-2 border-4 border-black bg-white px-6 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                                >
+                                    Explore Community <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </Link>
+                            </div>
+
+                            {/* Right: Mockup Card */}
+                            <div className="relative flex min-h-[350px] w-full items-center justify-center overflow-hidden border-t-4 border-black bg-amber-100 p-4 sm:p-8 md:w-1/2 md:border-t-0 md:border-l-4">
+                                {/* Decorative shapes */}
+                                <div className="absolute -right-10 -top-10 h-32 w-32 rotate-12 border-4 border-black bg-yellow-400 opacity-20 pointer-events-none"></div>
+                                <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full border-4 border-black bg-purple-400 opacity-20 pointer-events-none"></div>
+
+                                {/* Fake Community Card */}
+                                <div className="relative z-10 w-full max-w-sm border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -rotate-1 hover:rotate-0 transition-transform duration-300">
+                                    {/* Card Header */}
+                                    <div className="flex items-center gap-2 px-4 py-2.5 border-b-4 border-black bg-gray-50">
+                                        <div className="w-7 h-7 rounded-full border-2 border-black bg-sky-200 flex items-center justify-center text-[10px] font-black">
+                                            M
+                                        </div>
+                                        <span className="text-xs font-black uppercase tracking-tight">@maria_santos</span>
+                                        <span className="ml-auto text-[10px] font-bold text-gray-400 uppercase">2h ago</span>
+                                    </div>
+                                    {/* Card Body */}
+                                    <div className="p-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-2xl font-black uppercase tracking-tight">LODI</span>
+                                            <span className="px-2 py-0.5 border-2 border-black bg-purple-500 text-white text-[9px] font-black uppercase">NOUN</span>
+                                            <span className="flex items-center gap-0.5 px-2 py-0.5 border-2 border-black bg-blue-500 text-white text-[9px] font-black uppercase">
+                                                ✅ VERIFIED
+                                            </span>
+                                        </div>
+                                        <p className="text-sm font-semibold text-gray-700 mb-3">
+                                            An idol, or someone you look up to. Derived from spelling &apos;idol&apos; backwards.
+                                        </p>
+                                        {/* Action Bar */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-1 border-2 border-black px-2 py-1 bg-green-100">
+                                                <ThumbsUp className="h-3.5 w-3.5" />
+                                                <span className="text-xs font-black">847</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-gray-500">
+                                                <MessageCircle className="h-3.5 w-3.5" />
+                                                <span className="text-xs font-bold">34 comments</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </section>
 

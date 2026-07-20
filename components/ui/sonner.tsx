@@ -31,7 +31,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         unstyled: true,
         classNames: {
-          toast: "flex items-center gap-4 w-full rounded-none border-4 border-black p-4 text-black shadow-[8px_8px_0_0_#000]",
+          toast: "flex items-center gap-4 w-full rounded-none border-4 border-black p-4 text-black shadow-[8px_8px_0_0_#000] bg-white",
           title: "text-lg font-black uppercase tracking-tighter",
           description: "font-bold text-xs text-black/90 uppercase",
           icon: "text-black",

@@ -30,8 +30,13 @@ import {
   Send,
   Copy,
   RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  Users,
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds } from "@/app/actions/dictionary";
+import Link from "next/link";
 import { login, signup, type AuthState } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
@@ -1697,6 +1702,26 @@ export default function DictionaryClient({
                         Coming Soon
                       </span>
                     </button>
+                    {/* Upvote Button */}
+                    <button
+                      className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
+                      aria-label="Upvote (Coming Soon)"
+                    >
+                      <ThumbsUp className="w-5 h-5 text-[#888]" />
+                      <span className="absolute -bottom-10 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                        Coming Soon
+                      </span>
+                    </button>
+                    {/* Downvote Button */}
+                    <button
+                      className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
+                      aria-label="Downvote (Coming Soon)"
+                    >
+                      <ThumbsDown className="w-5 h-5 text-[#888]" />
+                      <span className="absolute -bottom-10 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
+                        Coming Soon
+                      </span>
+                    </button>
                     <button
                       data-tour-save
                       onClick={() => handleSaveToVault(word.id)}
@@ -1814,6 +1839,25 @@ export default function DictionaryClient({
                   </div>
                 )}
               </div>
+
+              {/* ── Community Discussion Hook ── */}
+              <Link
+                href="/community"
+                className="flex items-center gap-3 bg-[#E8F0FF] border-[3px] border-black shadow-[4px_4px_0_#000] p-4 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all group"
+              >
+                <div className="w-10 h-10 bg-[#7C3AED] border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000] shrink-0 group-hover:bg-[#FF007F] transition-colors">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-black text-xs uppercase tracking-tight" style={{ fontWeight: 900 }}>
+                    💬 JOIN THE COMMUNITY DISCUSSION
+                  </p>
+                  <p className="text-[#666] text-[10px] uppercase tracking-widest" style={{ fontWeight: 600 }}>
+                    VOTE, COMMENT, AND HELP IMPROVE THIS DEFINITION
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-black/40 group-hover:text-black group-hover:translate-x-1 transition-all shrink-0" />
+              </Link>
 
               {/* Example Sentences */}
               {word.usageExamples && word.usageExamples.length > 0 && (
