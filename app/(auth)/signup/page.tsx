@@ -1,6 +1,15 @@
 import { SignupForm } from "@/components/signup-form"
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
-export default function SignupPage() {
+export default async function SignupPage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+        redirect('/dictionary')
+    }
+
     return (
         <div className="relative min-h-svh flex flex-col items-center justify-center p-6 md:p-10 font-mono bg-zinc-50 overflow-hidden">
             <div
