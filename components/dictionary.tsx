@@ -462,13 +462,16 @@ export default function DictionaryClient({
                 setSelectedId(discoverWords[0].id);
             }
         } else if (results.length > 0) {
-            const exactMatch = results.find(w => w.word.toLowerCase() === debouncedSearch.toLowerCase());
-            const hasSelected = selectedId && results.find(w => w.id === selectedId);
+            const trimmedSearch = debouncedSearch.trim().toLowerCase();
+            const exactMatch = results.find(w => w.word.toLowerCase() === trimmedSearch);
             
-            if (exactMatch && exactMatch.id !== selectedId) {
+            if (exactMatch) {
                 setSelectedId(exactMatch.id);
-            } else if (!hasSelected) {
-                setSelectedId(results[0].id);
+            } else {
+                const hasSelected = selectedId && results.find(w => w.id === selectedId);
+                if (!hasSelected) {
+                    setSelectedId(results[0].id);
+                }
             }
         } else if (results.length === 0) {
             setSelectedId(null);
