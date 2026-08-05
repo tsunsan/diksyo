@@ -41,6 +41,29 @@ const getCachedWordOfTheDay = unstable_cache(
     { revalidate: 86400, tags: ['dictionary'] }
 );
 
+const getCachedDiscoverWords = unstable_cache(
+    async () => {
+        const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
+        const count = countResult[0]?.count ?? 0;
+
+        if (count === 0) return [];
+
+        const maxOffset = Math.max(0, count - 5);
+        const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+        // Use a multiplier (e.g., 7) so it doesn't overlap exactly with the word of the day index
+        const stableIndex = (daysSinceEpoch * 7) % Math.max(1, maxOffset);
+
+        return db.query.words.findMany({
+            orderBy: (words, { asc }) => [asc(words.word)],
+            offset: stableIndex,
+            with: { rootWord: true },
+            limit: 5
+        });
+    },
+    ['discover-words'],
+    { revalidate: 86400, tags: ['dictionary'] }
+);
+
 export async function searchWordBySlug(slug: string) {
     return withExponentialBackoff(async () => {
 
@@ -230,20 +253,7 @@ export async function getUserSavedWordIds() {
 
 export async function getRandomDiscoverWords() {
     return withExponentialBackoff(async () => {
-        const countResult = await db.select({ count: sql<number>`count(*)::int` }).from(words);
-        const count = countResult[0]?.count ?? 0;
-
-        if (count === 0) return [];
-
-        const maxOffset = Math.max(0, count - 5);
-        const randomOffset = Math.floor(Math.random() * maxOffset);
-
-        return db.query.words.findMany({
-            orderBy: (words, { asc }) => [asc(words.word)],
-            offset: randomOffset,
-            with: { rootWord: true },
-            limit: 5
-        });
+        return getCachedDiscoverWords();
     });
 }
 
