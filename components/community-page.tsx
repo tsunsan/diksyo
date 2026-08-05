@@ -294,7 +294,7 @@ function ScrollCard({ children, index }: { children: React.ReactNode; index: num
 /*  COMPONENT                                      */
 /* ═══════════════════════════════════════════════ */
 
-export default function CommunityPage() {
+export function CommunityContent() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("trending");
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [showRules, setShowRules] = useState(true);
