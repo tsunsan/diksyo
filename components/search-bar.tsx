@@ -26,7 +26,7 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
 export default function SearchBar() {
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [debouncedQuery] = useDebounce(query, 300);
+    const [debouncedQuery] = useDebounce(query, 500);
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -154,6 +154,7 @@ export default function SearchBar() {
                         <Link
                             key={result.id || result.word}
                             href={`/salita/${result.slug || result.word.toLowerCase()}`}
+                            prefetch={false}
                             onClick={() => {
                                 setIsOpen(false);
                                 setSelectedIndex(-1);

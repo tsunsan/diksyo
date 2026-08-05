@@ -363,7 +363,7 @@ export default function DictionaryClient({
   const [selectedId, setSelectedId] = useState<string | null>(initialSaveWordId || defaultSelectedId);
   
   const [search, setSearch] = useState(initialSearch || "");
-  const [debouncedSearch] = useDebounce(search, 100);
+  const [debouncedSearch] = useDebounce(search, 500);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
   const [shareWord, setShareWord] = useState<any | null>(null);
@@ -1845,6 +1845,7 @@ export default function DictionaryClient({
               {/* ── Community Discussion Hook ── */}
               <Link
                 href="/community"
+                prefetch={false}
                 className="flex items-center gap-3 bg-[#E8F0FF] border-[3px] border-black shadow-[4px_4px_0_#000] p-4 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all group"
               >
                 <div className="w-10 h-10 bg-[#7C3AED] border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000] shrink-0 group-hover:bg-[#FF007F] transition-colors">
