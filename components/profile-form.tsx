@@ -59,21 +59,21 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
   }, [deleteState?.error, deleteState?.success])
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-      <div className="lg:col-span-7 flex flex-col gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div className="lg:col-span-7 flex flex-col gap-6">
         {/* Update Profile Section */}
-        <section className="border-4 border-black bg-white p-6 md:p-8 shadow-[8px_8px_0_0_#000] relative overflow-hidden group h-full flex flex-col">
+        <section className="border-4 border-black bg-white p-5 md:p-6 shadow-[8px_8px_0_0_#000] relative overflow-hidden group h-full flex flex-col">
           {/* Decorative Pattern */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400 rounded-bl-full -z-10 border-b-4 border-l-4 border-black transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform" />
           
-          <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-b-4 border-black pb-4 flex items-center gap-3">
-            <span className="bg-yellow-400 p-3 border-4 border-black inline-flex shadow-[4px_4px_0_0_#000]">
-              <UserRoundPen className="w-8 h-8 stroke-black stroke-[2.5]" />
+          <h2 className="text-2xl font-black uppercase tracking-tighter mb-5 border-b-4 border-black pb-3 flex items-center gap-3">
+            <span className="bg-yellow-400 p-2.5 border-4 border-black inline-flex shadow-[4px_4px_0_0_#000]">
+              <UserRoundPen className="w-7 h-7 stroke-black stroke-[2.5]" />
             </span>
             Update Information
           </h2>
 
-        <form id="profile-update-form" action={updateAction} className="flex flex-col gap-6 flex-1">
+        <form id="profile-update-form" action={updateAction} className="flex flex-col gap-4 flex-1">
           {updateState?.error && (
             <Alert className="rounded-none border-2 border-black shadow-[4px_4px_0_0_#000] bg-orange-400 text-black mb-2">
               <TriangleAlert className="h-4 w-4 stroke-black" />
@@ -131,7 +131,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
             </div>
           </div>
 
-          <div className="border-4 border-black p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-[8px_8px_0_0_#000] bg-zinc-100 relative overflow-hidden">
+          <div className="border-4 border-black p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-[8px_8px_0_0_#000] bg-zinc-100 relative overflow-hidden">
             {/* Under Construction Stripes Background */}
             <div className="absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_10px,#e4e4e7_10px,#e4e4e7_20px)] opacity-50 pointer-events-none" />
             
@@ -169,9 +169,9 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
         </form>
       </section>
       </div>
-      <div className="lg:col-span-5 flex flex-col gap-8">
+      <div className="lg:col-span-5 flex flex-col gap-6">
         {/* Google Connect Section */}
-        <section className="border-4 border-black bg-blue-50 p-6 md:p-8 shadow-[8px_8px_0_0_#000] relative">
+        <section className="border-4 border-black bg-blue-50 p-5 md:p-6 shadow-[8px_8px_0_0_#000] relative">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4 border-b-4 border-blue-200 pb-4 mb-2 mt-2">
                <span className="bg-blue-300 p-3 border-4 border-black inline-flex shadow-[4px_4px_0_0_#000]">
@@ -192,7 +192,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
              )}
           </div>
 
-          <div className={`mt-6 border-4 border-black p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-[4px_4px_0_0_#000] group ${!user.isGoogleConnected ? 'bg-white opacity-60' : 'bg-white hover:bg-yellow-100 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000]'}`}>
+          <div className={`mt-4 border-4 border-black p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-[4px_4px_0_0_#000] group ${!user.isGoogleConnected ? 'bg-white opacity-60' : 'bg-white hover:bg-yellow-100 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000]'}`}>
             <div className="flex flex-col gap-1.5">
               <span className={`font-black uppercase text-sm tracking-tight ${!user.isGoogleConnected ? 'text-zinc-500' : 'text-black group-hover:text-yellow-900'}`}>
                  Google Profile Picture
@@ -224,7 +224,7 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
           </div>
 
           {!user.isGoogleConnected && (
-            <div className="shrink-0 flex flex-col gap-3 mt-6">
+            <div className="shrink-0 flex flex-col gap-3 mt-4">
                <Button
                  type="button"
                  onClick={async () => {
@@ -248,13 +248,13 @@ export function ProfileForm({ user }: { user: { username: string; email: string;
         </section>
 
       {/* Danger Zone Section */}
-      <section className="border-4 border-black bg-red-50 p-6 md:p-8 shadow-[8px_8px_0_0_#000] relative overflow-hidden">
+      <section className="border-4 border-black bg-red-50 p-5 md:p-6 shadow-[8px_8px_0_0_#000] relative overflow-hidden">
         {/* Warning stripes pattern */}
         <div className="absolute top-0 left-0 w-full h-2 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,transparent_10px,transparent_20px)] border-b-2 border-black" />
         
-        <h2 className="text-2xl font-black uppercase tracking-tighter text-red-700 mb-6 border-b-4 border-red-200 pb-4 flex items-center gap-4 mt-2">
-          <span className="bg-red-400 p-3 border-4 border-black inline-flex shadow-[4px_4px_0_0_#000]">
-            <TriangleAlert className="w-8 h-8 stroke-black stroke-[2.5]" />
+        <h2 className="text-2xl font-black uppercase tracking-tighter text-red-700 mb-4 border-b-4 border-red-200 pb-3 flex items-center gap-3 mt-2">
+          <span className="bg-red-400 p-2.5 border-4 border-black inline-flex shadow-[4px_4px_0_0_#000]">
+            <TriangleAlert className="w-7 h-7 stroke-black stroke-[2.5]" />
           </span>
           Danger Zone
         </h2>

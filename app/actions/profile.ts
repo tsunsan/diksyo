@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { AuthState } from './auth'
 import { db } from "@/db"
-import { userProfiles } from "@/db/schema"
+import { userProfiles, userProgress, userAchievements, dailyActivity } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 import { mutationRateLimit } from "@/lib/rate-limit"
 import { headers } from "next/headers"
@@ -119,6 +119,16 @@ export async function deleteAccount(prevState: AuthState, formData: FormData): P
 
     if (!user) {
         return { error: 'Not authenticated', errorTitle: 'ACCESS DENIED' }
+    }
+
+    // Delete user data via Drizzle to ensure it's removed even if the RPC is outdated
+    try {
+        await db.delete(userProgress).where(eq(userProgress.userId, user.id))
+        await db.delete(userAchievements).where(eq(userAchievements.userId, user.id))
+        await db.delete(dailyActivity).where(eq(dailyActivity.userId, user.id))
+        await db.delete(userProfiles).where(eq(userProfiles.userId, user.id))
+    } catch (e) {
+        console.error("Failed to delete user data via Drizzle:", e)
     }
 
     // Call custom RPC to securely delete the user from auth.users
