@@ -1000,7 +1000,7 @@ export default function DictionaryClient({
                         </div>
                       )}
                       <Image 
-                        src={`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}/opengraph-image`} 
+                        src={`/salita/${shareWord.slug}/opengraph-image`} 
                         alt="Opengraph Preview" 
                         fill
                         unoptimized
@@ -1013,7 +1013,7 @@ export default function DictionaryClient({
                 
                 <div className="w-full flex gap-2 sm:gap-3">
                   <div className="flex-1 bg-white border-[3px] border-black px-3 py-2 sm:px-4 sm:py-3 text-[10px] sm:text-xs font-bold text-black truncate flex items-center shadow-[4px_4px_0_#000] rounded-xl">
-                    {`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}`}
+                    {`${process.env.NEXT_PUBLIC_SITE_URL || 'https://diksyo.app'}/salita/${shareWord.slug}`}
                   </div>
                   <button
                     onClick={() => {

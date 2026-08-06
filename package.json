@@ -43,6 +43,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "^1.0.0",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "eslint": "^9",
