@@ -13,14 +13,16 @@ export default async function DictionaryDataWrapper({
     matchedWord?: any;
     showOnboarding?: boolean;
 }) {
-    // Execute queries sequentially to prevent connection pool exhaustion
+    // Execute queries concurrently to slash load times
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     
-    const initialWords = await searchWords(initialSearch || "");
-    const initialSavedWordIds = await getUserSavedWordIds();
-    const discoverWordsList = await getRandomDiscoverWords();
-    const dailyWord = await getWordOfTheDay();
+    const [initialWords, initialSavedWordIds, discoverWordsList, dailyWord] = await Promise.all([
+        searchWords(initialSearch || ""),
+        getUserSavedWordIds(),
+        getRandomDiscoverWords(),
+        getWordOfTheDay()
+    ]);
 
     const initialDiscoverWords = matchedWord
         ? [matchedWord, ...discoverWordsList.filter((w: any) => w.id !== matchedWord.id)]

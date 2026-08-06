@@ -139,7 +139,8 @@ export const getFSRSStats = cache(async () => {
         const user = await getUserId();
         if (!user) return null;
 
-        const progressStatsRaw = await db.select({
+        const [progressStatsRaw, topStruggled] = await Promise.all([
+            db.select({
                 totalMastery: sql<number>`sum(coalesce(${userProgress.mastery}, 0))::int`,
                 reviewedCount: sql<number>`count(case when ${userProgress.lastReview} is not null then 1 end)::int`,
                 learning: sql<number>`count(case when ${userProgress.lastReview} is not null and coalesce(${userProgress.mastery}, 0) < 50 then 1 end)::int`,
@@ -149,9 +150,9 @@ export const getFSRSStats = cache(async () => {
                 upcomingReviewsCount: sql<number>`count(case when ${userProgress.nextReview} <= now() then 1 end)::int`,
             })
             .from(userProgress)
-            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false)));
+            .where(and(eq(userProgress.userId, user.id), eq(userProgress.isArchived, false))),
 
-        const topStruggled = await db.query.userProgress.findMany({
+            db.query.userProgress.findMany({
                 where: and(
                     eq(userProgress.userId, user.id),
                     eq(userProgress.isArchived, false),
@@ -159,7 +160,8 @@ export const getFSRSStats = cache(async () => {
                 ),
                 orderBy: [desc(userProgress.difficulty)],
                 limit: 5,
-            });
+            })
+        ]);
 
         const progressStats = progressStatsRaw[0] || {
             totalMastery: 0, reviewedCount: 0, learning: 0, reviewing: 0, mastered: 0, newWords: 0, upcomingReviewsCount: 0
@@ -215,10 +217,12 @@ export const getAchievementsStats = cache(async () => {
         const user = await getUserId();
         if (!user) return null;
 
-        const dynamicAchievements = await db.query.achievementsConfig.findMany();
-        const unlocked = await db.query.userAchievements.findMany({
+        const [dynamicAchievements, unlocked] = await Promise.all([
+            db.query.achievementsConfig.findMany(),
+            db.query.userAchievements.findMany({
                 where: eq(userAchievements.userId, user.id)
-            });
+            })
+        ]);
 
         const unlockedIds = new Set(unlocked.map(a => a.achievementId));
         const achievementsList = dynamicAchievements.map(ach => ({
@@ -235,7 +239,8 @@ export const getLeaderboard = unstable_cache(async () => {
         const sevenDaysAgo = getPHTDate();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const topXp = await db.query.userProfiles.findMany({
+        const [topXp, topWords, weeklyTopXpRaw] = await Promise.all([
+            db.query.userProfiles.findMany({
                 orderBy: [desc(userProfiles.xp)],
                 limit: 10,
                 columns: {
@@ -246,9 +251,8 @@ export const getLeaderboard = unstable_cache(async () => {
                     avatarUrl: true,
                     showAvatar: true
                 }
-            });
-            
-        const topWords = await db.query.userProfiles.findMany({
+            }),
+            db.query.userProfiles.findMany({
                 orderBy: [desc(userProfiles.wordsMastered)],
                 limit: 10,
                 columns: {
@@ -259,9 +263,8 @@ export const getLeaderboard = unstable_cache(async () => {
                     avatarUrl: true,
                     showAvatar: true
                 }
-            });
-            
-        const weeklyTopXpRaw = await db.select({
+            }),
+            db.select({
                 userId: dailyActivity.userId,
                 username: userProfiles.username,
                 level: userProfiles.level,
@@ -280,7 +283,8 @@ export const getLeaderboard = unstable_cache(async () => {
                 userProfiles.showAvatar
             )
             .orderBy(desc(sql`sum(${dailyActivity.xpEarned})`))
-            .limit(10);
+            .limit(10)
+        ]);
 
         const weeklyTopXp = weeklyTopXpRaw.map(row => ({
             userId: row.userId,
