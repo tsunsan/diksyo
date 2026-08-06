@@ -106,6 +106,7 @@ export async function getVaultWords(excludeMastered: boolean = false) {
                         pronunciation: true,
                         translation: true,
                         partOfSpeech: true,
+                        tags: true,
                         level: true,
                         frequency: true,
                         rootWordId: true,

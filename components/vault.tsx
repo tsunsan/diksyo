@@ -149,25 +149,9 @@ function highlightBold(text: string) {
   );
 }
 
-export default function VaultClient() {
-  const [initialWords, setInitialWords] = useState<VaultEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadVault() {
-      try {
-        const res = await getVaultWords();
-        if (res.success && res.data) {
-          setInitialWords(res.data as any);
-        }
-      } catch (err) {
-        console.error("Failed to fetch vault words", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadVault();
-  }, []);
+export default function VaultClient({ initialData = [] }: { initialData?: VaultEntry[] }) {
+  const [initialWords, setInitialWords] = useState<VaultEntry[]>(initialData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const masteredCount = initialWords.filter(w => w.mastery && w.mastery >= 90).length;
 
@@ -237,6 +221,13 @@ export default function VaultClient() {
   const [isSearching, setIsSearching] = useState(false);
   const [addingWordId, setAddingWordId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setDialogQuery("");
+      setDialogResults([]);
+    }
+  }, [isDialogOpen]);
 
   useEffect(() => {
     async function fetchSuggestions() {
@@ -546,8 +537,8 @@ export default function VaultClient() {
                   {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-[#888]" />}
                 </div>
 
-                <div className="flex flex-col gap-2 max-h-[50vh] sm:max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                  {dialogResults.length === 0 && debouncedDialogQuery && !isSearching && (
+                <div className="flex flex-col gap-2 max-h-[50vh] sm:max-h-[300px] overflow-y-auto overscroll-contain" style={{ scrollbarWidth: "thin", WebkitOverflowScrolling: "touch" }}>
+                  {dialogResults.length === 0 && debouncedDialogQuery && !isSearching && dialogQuery === debouncedDialogQuery && (
                      <div className="p-4 text-center text-xs font-bold uppercase text-[#888] border-[2.5px] border-dashed border-[#ccc]">
                        NO WORDS FOUND
                      </div>
