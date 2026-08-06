@@ -25,17 +25,6 @@ export default function LandingMarquee() {
                     </div>
                 ))}
             </div>
-
-            <style jsx>{`
-                @keyframes marquee-scroll {
-                    from {
-                        transform: translateX(0);
-                    }
-                    to {
-                        transform: translateX(-50%);
-                    }
-                }
-            `}</style>
         </div>
     );
 }
