@@ -131,7 +131,7 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
     }
 
     // Check if username is taken in userProfiles (just to be absolutely sure)
-    const existingProfile = await db.select().from(userProfiles).where(sql`${userProfiles.username} = ${username}`).limit(1)
+    const existingProfile = await db.select({ userId: userProfiles.userId }).from(userProfiles).where(sql`${userProfiles.username} = ${username}`).limit(1)
     if (existingProfile.length > 0) {
         return { error: 'Username is already taken.', errorTitle: 'VALIDATION FAILED' }
     }

@@ -62,7 +62,7 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
         }
 
         // Check if username is taken in userProfiles (just to be absolutely sure)
-        const existingProfile = await db.select().from(userProfiles).where(eq(userProfiles.username, username)).limit(1)
+        const existingProfile = await db.select({ userId: userProfiles.userId }).from(userProfiles).where(eq(userProfiles.username, username)).limit(1)
         if (existingProfile.length > 0 && existingProfile[0].userId !== user.id) {
             return { error: 'Username is already taken.', errorTitle: 'VALIDATION FAILED' }
         }
