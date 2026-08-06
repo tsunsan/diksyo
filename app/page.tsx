@@ -95,12 +95,16 @@ export default async function LandingPage() {
                             src="/images/Whoa.svg"
                             alt=""
                             aria-hidden="true"
+                            loading="lazy"
+                            fetchPriority="low"
                             className="svg-float absolute -bottom-4 -left-12 hidden w-64 drop-shadow-[8px_8px_0_rgba(0,0,0,1)] md:block lg:w-80"
                         />
                         <img
                             src="/images/Entertainment.svg"
                             alt=""
                             aria-hidden="true"
+                            loading="lazy"
+                            fetchPriority="low"
                             className="svg-float absolute -top-4 -right-16 hidden w-56 drop-shadow-[8px_8px_0_rgba(0,0,0,1)] md:block lg:w-72"
                         />
 
