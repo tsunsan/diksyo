@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds } from "@/app/actions/dictionary";
 import Link from "next/link";
+import Image from "next/image";
 import { login, signup, type AuthState } from "@/app/actions/auth";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
@@ -998,12 +999,13 @@ export default function DictionaryClient({
                           </span>
                         </div>
                       )}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
+                      <Image 
                         src={`${typeof window !== 'undefined' ? window.location.origin : ''}/salita/${shareWord.slug}/opengraph-image`} 
                         alt="Opengraph Preview" 
+                        fill
+                        unoptimized
                         onLoad={() => setImageLoaded(true)}
-                        className={`absolute inset-0 w-full h-full object-cover scale-[1.06] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                        className={`object-cover scale-[1.06] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
                       />
                     </div>
                   </div>

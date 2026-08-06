@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   JeepneySVG, 
   JeepneySignboard,
@@ -235,7 +236,7 @@ const LeaderboardAvatar = ({ src, alt }: { src: string; alt: string }) => {
       </svg>
     );
   }
-  return <img src={src} alt={alt} className="w-full h-full object-cover" onError={() => setError(true)} />;
+  return <Image src={src} alt={alt} width={64} height={64} className="w-full h-full object-cover" onError={() => setError(true)} />;
 };
 
 // ─── Animation Variants ──────────────────────────────────────────────────────
