@@ -12,6 +12,13 @@ export const size = {
 };
 export const contentType = "image/png";
 
+// Cache font buffers in memory outside the request handler to prevent reading from disk on every single request
+const interBlack = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-900.woff"));
+const interBoldItalic = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700-italic.woff"));
+const interBold = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700.woff"));
+
+export const revalidate = 86400; // Cache the generated image for 24 hours on the CDN
+
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
     const word = await getWordByExactSlug(slug);
@@ -22,11 +29,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
 
     // Dynamic font size for long words
     const termFontSize = term.length > 18 ? 64 : term.length > 12 ? 84 : 120;
-
-    // Load fonts for sharp rendering synchronously
-    const interBlack = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-900.woff"));
-    const interBoldItalic = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700-italic.woff"));
-    const interBold = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700.woff"));
 
     return new ImageResponse(
         (
