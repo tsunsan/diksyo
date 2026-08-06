@@ -171,6 +171,9 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
 
             // Update Daily Activity
             const today = getPHTDate();
+            
+            // Check if this was a brand new word being learned today
+            const isNewWord = progressRecord ? !progressRecord.lastReview : true;
 
             const activity = await db.query.dailyActivity.findFirst({
                 where: and(eq(dailyActivity.userId, user.id), eq(dailyActivity.date, today))
@@ -182,6 +185,7 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                             xpEarned: activity.xpEarned + xpGained,
                             totalAnswers: activity.totalAnswers + 1,
                             correctAnswers: activity.correctAnswers + (isCorrect ? 1 : 0),
+                            wordsLearned: activity.wordsLearned + (isNewWord ? 1 : 0),
                         })
                         .where(eq(dailyActivity.id, activity.id));
                 } else {
@@ -191,7 +195,7 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
                         xpEarned: xpGained,
                         totalAnswers: 1,
                         correctAnswers: isCorrect ? 1 : 0,
-                        wordsLearned: 1, // Assume 1 word learned on first activity
+                        wordsLearned: isNewWord ? 1 : 0,
                     });
                 }
         });

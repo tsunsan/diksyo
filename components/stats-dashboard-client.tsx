@@ -150,9 +150,9 @@ const formatQuizTime = (ms: number) => {
 
 const getHeatmapColor = (xp: number): string => {
   if (xp === 0) return "#e5e1d8";
-  if (xp < 15) return "#FFF3B0";
-  if (xp < 40) return "#FFE500";
-  if (xp < 80) return "#FF6D00";
+  if (xp < 50) return "#FFF3B0";
+  if (xp < 150) return "#FFE500";
+  if (xp < 300) return "#FF6D00";
   return "#000000";
 };
 
