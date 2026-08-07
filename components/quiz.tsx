@@ -631,8 +631,9 @@ export function QuizModeClient() {
       {/* ── How It Works Section ── */}
       <motion.section
         initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ delay: 0.2 }}
         className="mt-12 md:mt-16 mb-32 md:mb-0"
       >
         <div className="border-[4px] border-black bg-white shadow-[4px_4px_0_0_#000] sm:shadow-[8px_8px_0_0_#000] overflow-hidden">
@@ -707,8 +708,8 @@ export function QuizModeClient() {
                 <h3 className="text-black uppercase text-sm mb-1" style={{ fontWeight: 900 }}>Why only 10 words per session?</h3>
                 <p className="text-[#555] text-xs leading-relaxed" style={{ fontWeight: 600 }}>
                   Research shows that shorter, focused sessions lead to better long-term retention than marathon study sessions. 
-                  We use the <span className="text-black" style={{ fontWeight: 800 }}>FSRS (Free Spaced Repetition Scheduler)</span> algorithm 
-                  to scientifically schedule when each word should reappear — right before you&apos;re about to forget it. 
+                  We use the <span className="text-black" style={{ fontWeight: 800 }}>FSRS (Free Spaced Repetition Scheduler)</span>{" "}
+                  algorithm to scientifically schedule when each word should reappear — right before you&apos;re about to forget it. 
                   This means every quiz session is maximally efficient. After clearing your daily queue, you can continue with extra practice, 
                   but those sessions won&apos;t schedule new reviews.
                 </p>

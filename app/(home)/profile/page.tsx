@@ -32,7 +32,7 @@ export default async function ProfilePage() {
   const isGoogleConnected = user.identities?.some(id => id.provider === 'google') || false
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative h-full">
       {/* Background Pattern */}
       <div 
         className="fixed inset-0 z-0 opacity-[0.07] pointer-events-none"
@@ -44,7 +44,7 @@ export default async function ProfilePage() {
         }}
       />
       
-      <div className="relative z-10 max-w-5xl mx-auto flex flex-col gap-6 px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+      <div className="relative z-10 max-w-5xl mx-auto flex flex-col gap-6 px-4 sm:px-6 lg:px-8 pt-0 pb-12 md:pt-0 md:pb-24">
         <header className="bg-white p-5 md:p-6 border-4 border-black shadow-[8px_8px_0_0_#000] relative overflow-hidden">
           {/* Neo-brutalistic circle accent */}
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FF007F] border-4 border-black rounded-full shadow-[inset_4px_4px_0_0_#000] pointer-events-none" />

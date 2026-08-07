@@ -1851,26 +1851,6 @@ export default function DictionaryClient({
                 )}
               </div>
 
-              {/* ── Community Discussion Hook ── */}
-              <Link
-                href="/community"
-                prefetch={false}
-                className="flex items-center gap-3 bg-[#E8F0FF] border-[3px] border-black shadow-[4px_4px_0_#000] p-4 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all group"
-              >
-                <div className="w-10 h-10 bg-[#7C3AED] border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000] shrink-0 group-hover:bg-[#FF007F] transition-colors">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-black text-xs uppercase tracking-tight" style={{ fontWeight: 900 }}>
-                    💬 JOIN THE COMMUNITY DISCUSSION
-                  </p>
-                  <p className="text-[#666] text-[10px] uppercase tracking-widest" style={{ fontWeight: 600 }}>
-                    VOTE, COMMENT, AND HELP IMPROVE THIS DEFINITION
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-black/40 group-hover:text-black group-hover:translate-x-1 transition-all shrink-0" />
-              </Link>
-
               {/* Example Sentences */}
               {word.usageExamples && word.usageExamples.length > 0 && (
                 <div className="bg-white border-[3px] border-black shadow-[6px_6px_0_#000] p-4">
@@ -1913,6 +1893,26 @@ export default function DictionaryClient({
                   </div>
                 </div>
               )}
+
+              {/* ── Community Discussion Hook ── */}
+              <Link
+                href="/community"
+                prefetch={false}
+                className="flex items-center gap-3 bg-[#E8F0FF] border-[3px] border-black shadow-[4px_4px_0_#000] p-4 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all group"
+              >
+                <div className="w-10 h-10 bg-[#7C3AED] border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0_#000] shrink-0 group-hover:bg-[#FF007F] transition-colors">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-black text-xs uppercase tracking-tight" style={{ fontWeight: 900 }}>
+                    💬 JOIN THE COMMUNITY DISCUSSION
+                  </p>
+                  <p className="text-[#666] text-[10px] uppercase tracking-widest" style={{ fontWeight: 600 }}>
+                    VOTE, COMMENT, AND HELP IMPROVE THIS DEFINITION
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-black/40 group-hover:text-black group-hover:translate-x-1 transition-all shrink-0" />
+              </Link>
 
               {/* Related Words + Tags */}
               {((word.related && word.related.length > 0) || (word.tags && word.tags.length > 0) || word.level) && (
