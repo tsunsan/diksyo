@@ -8,7 +8,7 @@ import { userProfiles } from "@/db/schema"
 import { sql } from "drizzle-orm"
 import { authRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
-
+import { updateTag } from 'next/cache';
 
 export type AuthState = {
     error?: string;
@@ -167,6 +167,8 @@ export async function signup(prevState: AuthState, formData: FormData): Promise<
                 username: username,
                 displayName: fullName,
             }).onConflictDoNothing()
+            
+            updateTag('leaderboard-cache')
         } catch (dbError) {
             console.error("Failed to insert user profile:", dbError)
             // Even if profile creation fails, we allow the signup to proceed.
