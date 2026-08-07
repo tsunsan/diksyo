@@ -381,6 +381,13 @@ export default function DictionaryClient({
   const [tourStep, setTourStep] = useState(showOnboarding ? 0 : -1);
   const tourRouter = useRouter();
 
+  // Sync showOnboarding prop → tourStep (covers soft navigations where component stays mounted)
+  useEffect(() => {
+    if (showOnboarding) {
+      setTourStep(0);
+    }
+  }, [showOnboarding]);
+
   // Auth form states
   const [loginState, loginAction, loginPending] = useActionState(login, authInitialState);
   const [signupState, signupAction, signupPending] = useActionState(signup, authInitialState);
