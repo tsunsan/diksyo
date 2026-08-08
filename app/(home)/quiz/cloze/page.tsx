@@ -574,7 +574,7 @@ export default function ClozeQuizPage() {
   const cardTextColor = '#000';
 
   return (
-    <div style={{ fontFamily: "'Geist', 'Inter', sans-serif" }} className="max-w-3xl mx-auto px-4 py-2 sm:py-8">
+    <div style={{ fontFamily: "'Geist', 'Inter', sans-serif", zoom: "80%" } as React.CSSProperties} className="max-w-4xl mx-auto px-4 py-2 sm:py-8 overflow-x-hidden">
       
       {/* HUD Header */}
       <div className="flex items-center justify-between mb-3 sm:mb-8 flex-wrap gap-3 sm:gap-6">
@@ -704,7 +704,7 @@ export default function ClozeQuizPage() {
               </div>
 
               {/* The Sentence */}
-              <div className="min-h-[100px] sm:min-h-[140px] flex items-center justify-center text-center my-8 sm:my-10 mt-14 sm:mt-16">
+              <div className="min-h-[100px] sm:min-h-[140px] max-h-[160px] sm:max-h-[220px] overflow-y-auto flex items-center justify-center text-center my-8 sm:my-10 mt-14 sm:mt-16 px-2">
                 <h3 className="text-xl sm:text-2xl md:text-4xl font-black leading-snug text-black">
                    {sentenceParts.map((part, i) => {
                       if (i % 2 === 0) return <span key={i}>{part}</span>;
