@@ -12,10 +12,19 @@ export const size = {
 };
 export const contentType = "image/png";
 
-// Cache font buffers in memory outside the request handler to prevent reading from disk on every single request
-const interBlack = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-900.woff"));
-const interBoldItalic = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700-italic.woff"));
-const interBold = fs.readFileSync(path.join(process.cwd(), "public/fonts/inter-700.woff"));
+function loadFont(filename: string): ArrayBuffer {
+    try {
+        const filePath = path.join(process.cwd(), "public/fonts", filename);
+        const buffer = fs.readFileSync(filePath);
+        return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+    } catch {
+        return new ArrayBuffer(0);
+    }
+}
+
+const interBlack = loadFont("inter-900.woff");
+const interBoldItalic = loadFont("inter-700-italic.woff");
+const interBold = loadFont("inter-700.woff");
 
 export const revalidate = 86400; // Cache the generated image for 24 hours on the CDN
 
@@ -28,7 +37,19 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     const definition = word?.translation || "Alamin ang kahulugan sa Diksyo";
 
     // Dynamic font size for long words
-    const termFontSize = term.length > 18 ? 64 : term.length > 12 ? 84 : 120;
+    const termFontSize = term.length > 22 ? 56 : term.length > 15 ? 72 : term.length > 10 ? 92 : 110;
+
+    const fonts: Array<{ name: string; data: ArrayBuffer; weight: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900; style: "normal" | "italic" }> = [];
+
+    if (interBlack.byteLength > 0) {
+        fonts.push({ name: 'Inter', data: interBlack, weight: 900, style: 'normal' });
+    }
+    if (interBoldItalic.byteLength > 0) {
+        fonts.push({ name: 'Inter', data: interBoldItalic, weight: 700, style: 'italic' });
+    }
+    if (interBold.byteLength > 0) {
+        fonts.push({ name: 'Inter', data: interBold, weight: 700, style: 'normal' });
+    }
 
     return new ImageResponse(
         (
@@ -41,26 +62,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         ),
         {
             ...size,
-            fonts: [
-                {
-                    name: 'Inter',
-                    data: interBlack,
-                    weight: 900,
-                    style: 'normal',
-                },
-                {
-                    name: 'Inter',
-                    data: interBoldItalic,
-                    weight: 700,
-                    style: 'italic',
-                },
-                {
-                    name: 'Inter',
-                    data: interBold,
-                    weight: 700,
-                    style: 'normal',
-                }
-            ],
+            fonts: fonts.length > 0 ? fonts : undefined,
         }
     );
 }

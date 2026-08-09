@@ -1084,8 +1084,8 @@ export default function DictionaryClient({
                   <p className="text-center text-[11px] font-black uppercase tracking-widest text-black bg-white border-[2px] border-black shadow-[2px_2px_0_#000] py-1.5 px-4 self-center rounded-full">
                     LINK PREVIEW
                   </p>
-                  <div className="w-full aspect-[1200/630] bg-[radial-gradient(circle_at_center,_#000_2px,_transparent_2px)] bg-[size:16px_16px] bg-[#FFE500]/20 border-[4px] border-black flex items-center justify-center relative shadow-[6px_6px_0_#000] rounded-3xl p-4 sm:p-6">
-                    <div className="w-full h-full rounded-2xl overflow-hidden border-[3px] border-black shadow-[4px_4px_0_#000] relative bg-white">
+                  <div className="w-full bg-[radial-gradient(circle_at_center,_#000_2px,_transparent_2px)] bg-[size:16px_16px] bg-[#FFE500]/20 border-[4px] border-black flex items-center justify-center relative shadow-[6px_6px_0_#000] rounded-3xl p-3 sm:p-5">
+                    <div className="w-full aspect-[1200/630] rounded-2xl overflow-hidden border-[3px] border-black shadow-[4px_4px_0_#000] relative bg-[#FFFBF0]">
                       {!imageLoaded && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
                           <motion.div 
@@ -1106,7 +1106,7 @@ export default function DictionaryClient({
                         fill
                         unoptimized
                         onLoad={() => setImageLoaded(true)}
-                        className={`object-cover scale-[1.06] transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                        className={`object-contain transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} 
                       />
                     </div>
                   </div>

@@ -11,7 +11,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://diksyo.app";
 
 function toTitleCase(value: string) {
     if (!value) return value;
@@ -19,8 +19,6 @@ function toTitleCase(value: string) {
 }
 
 export const revalidate = 3600;
-
-
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
@@ -30,11 +28,38 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         const baseMatches = await searchWordsByBaseWord(slug);
 
         if (baseMatches.length > 1) {
+            const title = `Mga kahulugan ng ${toTitleCase(slug)}`;
+            const description = `Pumili ng tamang kahulugan para sa salitang '${slug}' mula sa maramihang entries sa Diksyo.`;
+            const url = `${siteUrl}/salita/${slug}`;
+            const ogImageUrl = `${url}/opengraph-image`;
+
             return {
-                title: `Mga kahulugan ng ${toTitleCase(slug)}`,
-                description: `Pumili ng tamang kahulugan para sa salitang '${slug}' mula sa maramihang entries sa Diksyo.`,
+                title,
+                description,
                 alternates: {
-                    canonical: `${siteUrl}/salita/${slug}`,
+                    canonical: url,
+                },
+                openGraph: {
+                    title: `${title} | Diksyo`,
+                    description,
+                    url,
+                    siteName: "Diksyo",
+                    locale: "en_PH",
+                    type: "article",
+                    images: [
+                        {
+                            url: ogImageUrl,
+                            width: 1200,
+                            height: 630,
+                            alt: title,
+                        },
+                    ],
+                },
+                twitter: {
+                    card: "summary_large_image",
+                    title: `${title} | Diksyo`,
+                    description,
+                    images: [ogImageUrl],
                 },
             };
         }
@@ -47,15 +72,42 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             ? `Kahulugan ng ${toTitleCase(exactWord.word)} (${exactWord.partOfSpeech})`
             : `Kahulugan ng ${toTitleCase(exactWord.word)}`;
 
-        const description = exactWord.partOfSpeech
+        const description = exactWord.translation
+            ? `Definition: "${exactWord.translation}". Alamin ang kahulugan at paggamit ng salitang '${exactWord.word}' sa Diksyo.`
+            : exactWord.partOfSpeech
             ? `Alamin ang kahulugan at paggamit ng salitang '${exactWord.word}' bilang ${exactWord.partOfSpeech}. May mga witty na halimbawa at pormal na definisyon.`
             : `Alamin ang kahulugan at paggamit ng salitang '${exactWord.word}'. May mga witty na halimbawa at pormal na definisyon.`;
+
+        const url = `${siteUrl}/salita/${exactWord.slug}`;
+        const ogImageUrl = `${url}/opengraph-image`;
 
         return {
             title,
             description,
             alternates: {
-                canonical: `${siteUrl}/salita/${exactWord.slug}`,
+                canonical: url,
+            },
+            openGraph: {
+                title: `${title} | Diksyo`,
+                description,
+                url,
+                siteName: "Diksyo",
+                locale: "en_PH",
+                type: "article",
+                images: [
+                    {
+                        url: ogImageUrl,
+                        width: 1200,
+                        height: 630,
+                        alt: title,
+                    },
+                ],
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: `${title} | Diksyo`,
+                description,
+                images: [ogImageUrl],
             },
         };
     }
@@ -63,11 +115,38 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const baseMatches = await searchWordsByBaseWord(slug);
 
     if (baseMatches.length > 1) {
+        const title = `Mga kahulugan ng ${toTitleCase(slug)}`;
+        const description = `Pumili ng tamang kahulugan para sa salitang '${slug}' mula sa maramihang entries sa Diksyo.`;
+        const url = `${siteUrl}/salita/${slug}`;
+        const ogImageUrl = `${url}/opengraph-image`;
+
         return {
-            title: `Mga kahulugan ng ${toTitleCase(slug)}`,
-            description: `Pumili ng tamang kahulugan para sa salitang '${slug}' mula sa maramihang entries sa Diksyo.`,
+            title,
+            description,
             alternates: {
-                canonical: `${siteUrl}/salita/${slug}`,
+                canonical: url,
+            },
+            openGraph: {
+                title: `${title} | Diksyo`,
+                description,
+                url,
+                siteName: "Diksyo",
+                locale: "en_PH",
+                type: "article",
+                images: [
+                    {
+                        url: ogImageUrl,
+                        width: 1200,
+                        height: 630,
+                        alt: title,
+                    },
+                ],
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: `${title} | Diksyo`,
+                description,
+                images: [ogImageUrl],
             },
         };
     }
