@@ -214,41 +214,47 @@ export async function getUserSavedWordIds() {
     });
 }
 
-    export const searchWords = cache(async (query: string) => {
-    return withExponentialBackoff(async () => {
-        if (!query) {
-            return getCachedEmptySearch();
-        }
+export const searchWords = cache(async (query: string) => {
+    if (!query) {
+        return getCachedEmptySearch();
+    }
 
+    const normalizedQuery = query.trim().toLowerCase();
 
-
-        const normalizedQuery = query.trim().toLowerCase();
-    
-    return db.query.words.findMany({
-        where: or(
-            ilike(words.word, `%${query}%`),
-            ilike(words.translation, `%${query}%`),
-            inArray(
-                words.rootWordId,
-                db.select({ id: words.id }).from(words).where(ilike(words.word, `%${query}%`))
-            )
-        ),
-        with: {
-            rootWord: true,
+    const getCachedSearch = unstable_cache(
+        async (q: string, normalizedQ: string) => {
+            return withExponentialBackoff(async () => {
+                return db.query.words.findMany({
+                    where: or(
+                        ilike(words.word, `%${q}%`),
+                        ilike(words.translation, `%${q}%`),
+                        inArray(
+                            words.rootWordId,
+                            db.select({ id: words.id }).from(words).where(ilike(words.word, `%${q}%`))
+                        )
+                    ),
+                    with: {
+                        rootWord: true,
+                    },
+                    orderBy: [
+                        sql`case
+                            when lower(${words.word}) = ${normalizedQ} then 0
+                            when lower(${words.slug}) like ${`${normalizedQ}-%`} then 1
+                            when lower(${words.word}) like ${`${normalizedQ}%`} then 2
+                            else 3
+                        end`,
+                        sql`lower(${words.word}) asc`,
+                        sql`lower(${words.slug}) asc`,
+                    ],
+                    limit: 50,
+                });
+            });
         },
-        orderBy: [
-            sql`case
-                when lower(${words.word}) = ${normalizedQuery} then 0
-                when lower(${words.slug}) like ${`${normalizedQuery}-%`} then 1
-                when lower(${words.word}) like ${`${normalizedQuery}%`} then 2
-                else 3
-            end`,
-            sql`lower(${words.word}) asc`,
-            sql`lower(${words.slug}) asc`,
-        ],
-        limit: 50,
-    });
-    });
+        [`search-words-${normalizedQuery}`],
+        { revalidate: 300, tags: ['dictionary'] }
+    );
+
+    return getCachedSearch(query, normalizedQuery);
 });
 
 export async function getRandomDiscoverWords() {
@@ -311,57 +317,57 @@ export async function getAllDictionaryEntriesForSitemap() {
 }
 
 export async function searchWordSuggestions(term: string, limit = 8) {
-    return withExponentialBackoff(async () => {
-
-
     const normalizedTerm = term.trim().toLowerCase();
 
     if (!normalizedTerm) {
         return [];
     }
 
-    // Fetch a generous amount of fuzzy matches in a SINGLE query
-    // This prevents connection pool exhaustion AND keeps latency extremely low (1 network trip)
-    const rawMatches = await db.query.words.findMany({
-        where: or(
-            ilike(words.slug, `%${normalizedTerm}%`),
-            ilike(words.word, `%${normalizedTerm}%`),
-            ilike(words.translation, `%${normalizedTerm}%`)
-        ),
-        with: { rootWord: true },
-        orderBy: [
-            sql`case
-                when lower(${words.word}) = ${normalizedTerm} then 0
-                when lower(${words.slug}) like ${`${normalizedTerm}-%`} then 1
-                when lower(${words.word}) like ${`${normalizedTerm}%`} then 2
-                else 3
-            end`,
-            sql`lower(${words.word}) asc`,
-        ],
-        limit: 30, // Fetch enough to sort and filter down to the limit
-    });
+    const getCachedSuggestions = unstable_cache(
+        async (normalized: string, limitCount: number) => {
+            return withExponentialBackoff(async () => {
+                const rawMatches = await db.query.words.findMany({
+                    where: or(
+                        ilike(words.slug, `%${normalized}%`),
+                        ilike(words.word, `%${normalized}%`),
+                        ilike(words.translation, `%${normalized}%`)
+                    ),
+                    with: { rootWord: true },
+                    orderBy: [
+                        sql`case
+                            when lower(${words.word}) = ${normalized} then 0
+                            when lower(${words.slug}) like ${`${normalized}-%`} then 1
+                            when lower(${words.word}) like ${`${normalized}%`} then 2
+                            else 3
+                        end`,
+                        sql`lower(${words.word}) asc`,
+                    ],
+                    limit: 30,
+                });
 
-    // Sort in memory to enforce priority: Exact match > Prefix match > Fuzzy match
-    const sorted = rawMatches.sort((a, b) => {
-        const aWordExact = a.word.toLowerCase() === normalizedTerm;
-        const bWordExact = b.word.toLowerCase() === normalizedTerm;
-        if (aWordExact && !bWordExact) return -1;
-        if (!aWordExact && bWordExact) return 1;
+                const sorted = rawMatches.sort((a, b) => {
+                    const aWordExact = a.word.toLowerCase() === normalized;
+                    const bWordExact = b.word.toLowerCase() === normalized;
+                    if (aWordExact && !bWordExact) return -1;
+                    if (!aWordExact && bWordExact) return 1;
 
-        const aPrefix = a.slug?.startsWith(normalizedTerm) || a.word.toLowerCase().startsWith(normalizedTerm);
-        const bPrefix = b.slug?.startsWith(normalizedTerm) || b.word.toLowerCase().startsWith(normalizedTerm);
-        if (aPrefix && !bPrefix) return -1;
-        if (!aPrefix && bPrefix) return 1;
+                    const aPrefix = a.slug?.startsWith(normalized) || a.word.toLowerCase().startsWith(normalized);
+                    const bPrefix = b.slug?.startsWith(normalized) || b.word.toLowerCase().startsWith(normalized);
+                    if (aPrefix && !bPrefix) return -1;
+                    if (!aPrefix && bPrefix) return 1;
 
-        // Fallback to alphabetical sorting
-        return a.word.localeCompare(b.word);
-    });
+                    return a.word.localeCompare(b.word);
+                });
 
-    // Deduplicate (just in case, though findMany shouldn't return dupes)
-    const deduped = sorted.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
+                const deduped = sorted.filter((entry, index, arr) => arr.findIndex((item) => item.id === entry.id) === index);
+                return deduped.slice(0, limitCount);
+            });
+        },
+        [`search-suggestions-${normalizedTerm}-${limit}`],
+        { revalidate: 300, tags: ['dictionary'] }
+    );
 
-    return deduped.slice(0, limit);
-    });
+    return getCachedSuggestions(normalizedTerm, limit);
 }
 
 export async function getLandingPageStats() {
@@ -424,32 +430,34 @@ export async function getRootWordFamily(wordId: string) {
 }
 
 export async function getLevenshteinSuggestions(query: string) {
-    return withExponentialBackoff(async () => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery || normalizedQuery.length < 3) {
+        return [];
+    }
 
+    const getCachedLevenshtein = unstable_cache(
+        async (normalized: string) => {
+            return withExponentialBackoff(async () => {
+                const suggestions = await db.execute<any>(sql`
+                    SELECT 
+                        id, 
+                        word, 
+                        slug, 
+                        part_of_speech AS "partOfSpeech", 
+                        translation, 
+                        root_word_string AS "rootWordString",
+                        levenshtein(lower(word), ${normalized}::text) as distance
+                    FROM words
+                    WHERE length(word) < 255 AND levenshtein(lower(word), ${normalized}::text) <= 3
+                    ORDER BY distance ASC
+                    LIMIT 5
+                `);
+                return suggestions;
+            });
+        },
+        [`search-levenshtein-${normalizedQuery}`],
+        { revalidate: 300, tags: ['dictionary'] }
+    );
 
-        const normalizedQuery = query.trim().toLowerCase();
-        if (!normalizedQuery || normalizedQuery.length < 3) {
-            return [];
-        }
-
-        // We only consider levenshtein distance <= 3 to keep suggestions highly relevant
-        // Postgres requires casting parameter bindings in function calls (::text)
-        // Levenshtein throws an error if any string is > 255 chars, so we filter length first.
-        const suggestions = await db.execute<any>(sql`
-            SELECT 
-                id, 
-                word, 
-                slug, 
-                part_of_speech AS "partOfSpeech", 
-                translation, 
-                root_word_string AS "rootWordString",
-                levenshtein(lower(word), ${normalizedQuery}::text) as distance
-            FROM words
-            WHERE length(word) < 255 AND levenshtein(lower(word), ${normalizedQuery}::text) <= 3
-            ORDER BY distance ASC
-            LIMIT 5
-        `);
-
-        return suggestions;
-    });
+    return getCachedLevenshtein(normalizedQuery);
 }
