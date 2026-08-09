@@ -373,6 +373,7 @@ export default function DictionaryClient({
   const [shareWord, setShareWord] = useState<any | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   /* ─── Filter State ─── */
   const [showFilters, setShowFilters] = useState(false);
@@ -610,6 +611,34 @@ export default function DictionaryClient({
     } finally {
         setSavingId(null);
     }
+  };
+
+  const handlePronounce = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      toast.error("Text-to-speech not supported in this browser.");
+      return;
+    }
+    
+    let voices = window.speechSynthesis.getVoices();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "tl-PH";
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    if (voices.length > 0) {
+      const bestVoice = voices.find(v => v.lang.includes('tl') || v.lang.includes('ph') || v.name.toLowerCase().includes('filipino')) 
+        || voices.find(v => v.lang.startsWith('es')) 
+        || voices[0];
+      utterance.voice = bestVoice;
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   };
 
   // Current auth error state
@@ -1747,12 +1776,52 @@ export default function DictionaryClient({
                       )}
                     </div>
 
-                    <h2
-                      className="text-black uppercase"
-                      style={{ fontWeight: 900, fontSize: "clamp(2rem, 8vw, 2.8rem)", lineHeight: 1, letterSpacing: "-0.02em", wordBreak: "break-word" }}
-                    >
-                      {word.word}
-                    </h2>
+                    <div className="flex items-center gap-3">
+                      <h2
+                        className="text-black uppercase"
+                        style={{ fontWeight: 900, fontSize: "clamp(2rem, 8vw, 2.8rem)", lineHeight: 1, letterSpacing: "-0.02em", wordBreak: "break-word" }}
+                      >
+                        {word.word}
+                      </h2>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handlePronounce(word.word); }}
+                        disabled={isSpeaking}
+                        className={`w-10 h-10 border-[2px] border-black shadow-[3px_3px_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all flex items-center justify-center shrink-0 disabled:cursor-not-allowed ${isSpeaking ? 'bg-black' : 'bg-[#FFE500]'}`}
+                        title="Listen to pronunciation"
+                        aria-label="Listen to pronunciation"
+                      >
+                        {isSpeaking ? (
+                          <span className="flex items-end gap-[3px] h-5">
+                            {[0, 1, 2].map((i) => (
+                              <span
+                                key={i}
+                                style={{
+                                  display: 'block',
+                                  width: '3px',
+                                  borderRadius: '2px',
+                                  backgroundColor: '#FFE500',
+                                  animationName: 'soundWave',
+                                  animationDuration: '0.8s',
+                                  animationTimingFunction: 'ease-in-out',
+                                  animationIterationCount: 'infinite',
+                                  animationDirection: 'alternate',
+                                  animationDelay: `${i * 0.15}s`,
+                                  height: i === 1 ? '16px' : '8px',
+                                }}
+                              />
+                            ))}
+                            <style>{`
+                              @keyframes soundWave {
+                                from { height: 4px; }
+                                to   { height: 18px; }
+                              }
+                            `}</style>
+                          </span>
+                        ) : (
+                          <Volume2 className="w-5 h-5 text-black" />
+                        )}
+                      </button>
+                    </div>
                     {word.pronunciation && (
                         <p className="text-[#888] mt-1 text-sm tracking-widest" style={{ fontWeight: 600 }}>
                           {word.pronunciation}
