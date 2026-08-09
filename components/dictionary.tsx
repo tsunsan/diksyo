@@ -34,6 +34,7 @@ import {
   ThumbsDown,
   MessageCircle,
   Users,
+  TreePine,
 } from "lucide-react";
 import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds } from "@/app/actions/dictionary";
 import Link from "next/link";
@@ -44,6 +45,7 @@ import { toast } from "sonner";
 import { POS_COLORS, LEVEL_COLORS } from "@/lib/utils";
 import { useDebounce } from "use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
+import RootWordTree from "@/components/root-word-tree";
 
 /* ─── Filter Constants ─── */
 const FILTER_POS_OPTIONS: { key: string; label: string; labelEn: string }[] = [
@@ -367,6 +369,7 @@ export default function DictionaryClient({
   const [debouncedSearch] = useDebounce(search, 500);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [modalWord, setModalWord] = useState<any | null>(null);
+  const [treeModalWordId, setTreeModalWordId] = useState<string | null>(null);
   const [shareWord, setShareWord] = useState<any | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -939,6 +942,68 @@ export default function DictionaryClient({
                       </div>
                     </div>
                 )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {treeModalWordId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setTreeModalWordId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="w-full max-w-[600px] bg-white border-[4px] border-black shadow-[10px_10px_0_#000] relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-[#FF007F] border-b-[4px] border-black px-6 py-4 flex items-center justify-between sticky top-0 z-[200]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white border-[3px] border-black flex items-center justify-center shadow-[3px_3px_0_#000] rounded-full">
+                    <TreePine className="w-5 h-5 text-black" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black uppercase tracking-tight text-white leading-none">
+                      WORD FAMILY
+                    </h2>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/90 mt-1">
+                      Pamilya ng Salita
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setTreeModalWordId(null)}
+                  className="w-10 h-10 flex items-center justify-center bg-black hover:bg-[#333] border-[2px] border-black transition-colors shadow-[2px_2px_0_#000] rounded-full"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="p-4 bg-[#FFFBF0]">
+                <RootWordTree
+                  wordId={treeModalWordId}
+                  onSelectWord={(id, text, wordObj) => {
+                    setWords((prev) => {
+                      if (prev.some((w) => w.id === id)) return prev;
+                      return [wordObj, ...prev];
+                    });
+                    
+                    setSelectedId(id);
+                    if (search !== text) {
+                      setSearch(text);
+                      setIsLoading(true);
+                    }
+                    setTreeModalWordId(null);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
               </div>
             </motion.div>
           </motion.div>
@@ -1704,13 +1769,12 @@ export default function DictionaryClient({
                       <Send className="w-5 h-5" />
                     </button>
                     <button
-                      className="w-10 h-10 bg-[#f0f0f0] border-[2px] border-black flex items-center justify-center transition-colors shadow-[2px_2px_0_#000] relative group cursor-not-allowed"
-                      aria-label="Listen (Coming Soon)"
+                      onClick={() => setTreeModalWordId(word.id)}
+                      className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center hover:bg-[#FF007F] hover:text-white transition-colors shadow-[2px_2px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                      aria-label="View Word Family Tree"
+                      title="Word Family Tree"
                     >
-                      <Volume2 className="w-5 h-5 text-[#888]" />
-                      <span className="absolute -bottom-10 z-50 bg-[#FDE047] text-black border-[2px] border-black font-black text-[10px] uppercase px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-[4px_4px_0_#000] whitespace-nowrap pointer-events-none">
-                        Coming Soon
-                      </span>
+                      <TreePine className="w-5 h-5" />
                     </button>
                     {/* Upvote / Downvote Combined Box */}
                     <div className="flex items-center h-10 bg-[#f0f0f0] border-[2px] border-black shadow-[2px_2px_0_#000] relative group cursor-not-allowed">

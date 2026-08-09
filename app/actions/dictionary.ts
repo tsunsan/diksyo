@@ -381,6 +381,48 @@ export async function getLandingPageStats() {
     });
 }
 
+export async function getRootWordFamily(wordId: string) {
+    return withExponentialBackoff(async () => {
+        // 1. Fetch the word itself with its root
+        const targetWord = await db.query.words.findFirst({
+            where: eq(words.id, wordId),
+            with: { rootWord: true },
+        });
+
+        if (!targetWord) return null;
+
+        // 2. Determine the actual root word ID
+        const isRoot = !targetWord.rootWordId && !targetWord.rootWordString;
+        const rootId = isRoot ? targetWord.id : targetWord.rootWordId;
+
+        if (!rootId) {
+            // Word has rootWordString but no rootWordId link — can't build a tree
+            return null;
+        }
+
+        // 3. Fetch the root word with ALL derived words
+        const rootWord = isRoot
+            ? targetWord
+            : await db.query.words.findFirst({
+                where: eq(words.id, rootId),
+            });
+
+        if (!rootWord) return null;
+
+        // 4. Fetch all derived words that share this root
+        const derivedWords = await db.query.words.findMany({
+            where: eq(words.rootWordId, rootId),
+            orderBy: (w, { asc }) => [asc(w.word)],
+        });
+
+        return {
+            rootWord,
+            derivedWords,
+            currentWordId: wordId,
+        };
+    });
+}
+
 export async function getLevenshteinSuggestions(query: string) {
     return withExponentialBackoff(async () => {
 
