@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server"
+import { createClient, getUser } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import { ProfileForm } from "@/components/profile-form"
 import { db } from "@/db"
@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm"
 
 export default async function ProfilePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   if (!user) {
     redirect("/login")

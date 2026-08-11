@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { userProgress, words } from "@/db/schema";
 import { eq, and, sql, lt, lte, notInArray } from "drizzle-orm";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getUser } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { withExponentialBackoff } from "@/lib/db-utils";
 import { mutationRateLimit } from "@/lib/rate-limit";
@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 
 export async function getQuizWords(mode: 'cloze' | 'time' = 'time') {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { success: false, error: "Unauthorized" };
@@ -85,7 +85,7 @@ export async function getQuizWords(mode: 'cloze' | 'time' = 'time') {
 
 export async function getVaultWords(excludeMastered: boolean = false) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { error: "Unauthorized" };
@@ -140,7 +140,7 @@ export async function addWordToVault(wordId: string) {
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { success: false, error: "Unauthorized" };
@@ -183,7 +183,7 @@ export async function addWordToVault(wordId: string) {
 
 export async function getVaultWordCount() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { success: false, count: 0, error: "Unauthorized" };
@@ -204,7 +204,7 @@ export async function getVaultWordCount() {
 
 export async function getDueWordCount() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { success: false, dueCount: 0, totalCount: 0, error: "Unauthorized" };
@@ -257,7 +257,7 @@ export async function seedStarterPack() {
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { success: false, error: "Unauthorized" };

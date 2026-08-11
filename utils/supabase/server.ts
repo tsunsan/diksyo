@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 
 export async function createClient() {
     const cookieStore = await cookies()
@@ -34,22 +35,27 @@ export async function createClient() {
     if (process.env.NODE_ENV === 'development') {
         const originalGetUser = client.auth.getUser.bind(client.auth);
         client.auth.getUser = async (jwt) => {
-            const result = await originalGetUser(jwt);
-            if (!result.data?.user) {
-                return {
-                    data: {
-                        user: {
-                            id: "61b54244-1db4-4cfb-a815-970603b70fe7",
-                            email: "dev@local.com"
-                        } as any
-                    },
-                    error: null
-                };
+            const { data: { session } } = await client.auth.getSession();
+            if (session) {
+                 return await originalGetUser(jwt);
             }
-            return result;
+            return {
+                data: {
+                    user: {
+                        id: "61b54244-1db4-4cfb-a815-970603b70fe7",
+                        email: "dev@local.com"
+                    } as any
+                },
+                error: null
+            };
         };
     }
     // --------------------------------------
 
     return client;
 }
+
+export const getUser = cache(async () => {
+    const supabase = await createClient();
+    return supabase.auth.getUser();
+});

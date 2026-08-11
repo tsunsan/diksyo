@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"; 
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getUser } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { userProfiles, levels } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -11,7 +11,7 @@ export default async function CommunityLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await getUser();
 
   if (!user) {
     return (

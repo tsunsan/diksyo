@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { userProgress, words } from "@/db/schema";
 import { and, eq, ilike, sql, or, inArray } from "drizzle-orm";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getUser } from "@/utils/supabase/server";
 import { withExponentialBackoff } from "@/lib/db-utils";
 import { searchRateLimit, mutationRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
@@ -122,7 +122,7 @@ export async function saveWordToVault(wordId: string) {
         }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { error: "Unauthorized: You must be logged in to save words." };
@@ -177,7 +177,7 @@ export async function removeWordFromVault(wordId: string) {
         }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) {
         return { error: "Unauthorized: You must be logged in to remove words." };
@@ -200,7 +200,7 @@ export async function getUserSavedWordIds() {
     return withExponentialBackoff(async () => {
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
     if (!user) return [];
 
     const saved = await db.query.userProgress.findMany({

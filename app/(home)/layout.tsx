@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"; 
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getUser } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { userProfiles, levels } from "@/db/schema";
@@ -11,7 +11,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await getUser();
 
   if (!user) {
     redirect("/login");

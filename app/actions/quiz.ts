@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { userProgress, words, userProfiles, dailyActivity } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getUser } from "@/utils/supabase/server";
 import { withExponentialBackoff } from "@/lib/db-utils";
 import { calculateNextReview, FSRSGrade } from "@/lib/fsrs-logic";
 import { getPHTDate } from "@/lib/date-utils";
@@ -47,7 +47,7 @@ export async function submitQuizAnswer({ wordId, userAnswer, gameMode, timeTaken
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
 
     if (!user) return { success: false, error: "Unauthorized" };
 
@@ -239,7 +239,7 @@ export async function submitQuizSession({ isPerfect, timeTakenMs, countsForStats
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
     if (!user) return { success: false, error: "Unauthorized" };
 
     try {

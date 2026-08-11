@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient, getUser } from '@/utils/supabase/server'
 import { withExponentialBackoff } from "@/lib/db-utils"
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -28,7 +28,7 @@ export async function updateProfile(prevState: AuthState, formData: FormData): P
         }
 
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await getUser()
 
     if (!user) {
         return { error: 'Not authenticated', errorTitle: 'ACCESS DENIED' }
@@ -115,7 +115,7 @@ export async function deleteAccount(prevState: AuthState, formData: FormData): P
         }
 
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await getUser()
 
     if (!user) {
         return { error: 'Not authenticated', errorTitle: 'ACCESS DENIED' }

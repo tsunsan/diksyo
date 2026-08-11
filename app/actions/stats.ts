@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient, getUser } from '@/utils/supabase/server'
 import { db } from '@/db'
 import { userProfiles, userAchievements, dailyActivity, achievementsConfig, levels, userProgress, words } from '@/db/schema'
 import { eq, desc, and, gte, sql, inArray, isNotNull } from 'drizzle-orm'
@@ -11,7 +11,7 @@ import { unstable_cache } from 'next/cache'
 
 const getUserId = cache(async () => {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getUser();
     return user;
 });
 
