@@ -239,9 +239,11 @@ export const searchWords = cache(async (query: string) => {
                     orderBy: [
                         sql`case
                             when lower(${words.word}) = ${normalizedQ} then 0
-                            when lower(${words.slug}) like ${`${normalizedQ}-%`} then 1
-                            when lower(${words.word}) like ${`${normalizedQ}%`} then 2
-                            else 3
+                            when lower(${words.translation}) = ${normalizedQ} then 1
+                            when lower(${words.slug}) like ${`${normalizedQ}-%`} then 2
+                            when lower(${words.word}) like ${`${normalizedQ}%`} then 3
+                            when ${words.translation} ~* ${`\\y${normalizedQ}\\y`} then 4
+                            else 5
                         end`,
                         sql`lower(${words.word}) asc`,
                         sql`lower(${words.slug}) asc`,
@@ -336,9 +338,11 @@ export async function searchWordSuggestions(term: string, limit = 8) {
                     orderBy: [
                         sql`case
                             when lower(${words.word}) = ${normalized} then 0
-                            when lower(${words.slug}) like ${`${normalized}-%`} then 1
-                            when lower(${words.word}) like ${`${normalized}%`} then 2
-                            else 3
+                            when lower(${words.translation}) = ${normalized} then 1
+                            when lower(${words.slug}) like ${`${normalized}-%`} then 2
+                            when lower(${words.word}) like ${`${normalized}%`} then 3
+                            when ${words.translation} ~* ${`\\y${normalized}\\y`} then 4
+                            else 5
                         end`,
                         sql`lower(${words.word}) asc`,
                     ],
