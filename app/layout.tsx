@@ -36,22 +36,25 @@ export const metadata: Metadata = {
   },
 };
 
+import ChatModal from "@/components/chat-modal";
+
 export default function RootLayout({
-                                     children,
-                                   }: Readonly<{
+  children,
+}: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-      <html
-          lang="en"
-          className={cn("h-full", "antialiased", geistMono.variable, "font-sans", inter.variable)}
-      >
+    <html
+      lang="en"
+      className={cn("h-full", "antialiased", geistMono.variable, "font-sans", inter.variable)}
+    >
       <body className="min-h-full flex flex-col">
-      {children}
-      <Toaster position="top-center" />
-      <Analytics />
-      <SpeedInsights />
+        {children}
+        <ChatModal />
+        <Toaster position="top-center" />
+        <Analytics />
+        <SpeedInsights />
       </body>
-      </html>
+    </html>
   );
 }
