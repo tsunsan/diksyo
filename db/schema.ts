@@ -203,7 +203,14 @@ export const levels = pgTable("levels", {
     name: text("name").notNull(),
     minXp: integer("min_xp").notNull(),
     color: text("color").notNull(),
-});
+}, () => [
+    pgPolicy("Allow public read access on levels", {
+        as: "permissive",
+        for: "select",
+        to: "public",
+        using: sql`true`,
+    })
+]);
 
 export const achievementsConfig = pgTable("achievements_config", {
     id: text("id").primaryKey(),
@@ -212,4 +219,11 @@ export const achievementsConfig = pgTable("achievements_config", {
     description: text("description").notNull(),
     conditionType: text("condition_type").notNull(),
     conditionValue: integer("condition_value").notNull(),
-});
+}, () => [
+    pgPolicy("Allow public read access on achievements_config", {
+        as: "permissive",
+        for: "select",
+        to: "public",
+        using: sql`true`,
+    })
+]);
