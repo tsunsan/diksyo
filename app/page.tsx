@@ -5,6 +5,7 @@ import LandingNav from "@/components/landing-nav";
 import LandingMarquee from "@/components/landing-marquee";
 import LandingHero from "@/components/landing-hero";
 import InteractiveMockup from "@/components/interactive-mockup";
+import OpenSourceSection, { GithubIcon, KaggleIcon } from "@/components/open-source-section";
 import { getWordOfTheDay, getLandingPageStats } from "@/app/actions/dictionary";
 import type { Metadata } from "next";
 
@@ -421,6 +422,11 @@ export default async function LandingPage() {
                     </section>
 
                     {/* =========================================
+                        OPEN SOURCE & OPEN DATA SHOWCASE
+                        ========================================= */}
+                    <OpenSourceSection />
+
+                    {/* =========================================
                         COMMUNITY TEASER SECTION
                         ========================================= */}
                     <section className="scroll-section mb-24">
@@ -530,22 +536,46 @@ export default async function LandingPage() {
                             DIKSYO
                         </div>
                         <div className="text-sm font-bold text-gray-400">
-                            © 2026 DIKSYO. All rights reserved.
+                            © 2026 DIKSYO. Open source &amp; free for everyone.
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap justify-center gap-4 text-sm font-bold uppercase tracking-widest text-gray-300 md:justify-end">
-                        <Link href="/privacy" className="hover:text-yellow-400 hover:underline">
-                            Privacy Policy
-                        </Link>
-                        <span className="hidden md:inline">•</span>
-                        <Link href="/terms" className="hover:text-yellow-400 hover:underline">
-                            Terms & Conditions
-                        </Link>
-                        <span className="hidden md:inline">•</span>
-                        <Link href="/contact-us" className="hover:text-yellow-400 hover:underline">
-                            Contact Us
-                        </Link>
+                    <div className="flex flex-col items-center gap-4 md:items-end">
+                        {/* Open Source Badges */}
+                        <div className="flex items-center gap-3">
+                            <a
+                                href="https://github.com/tsunsan/diksyo"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 border-2 border-white bg-zinc-900 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-white shadow-[2px_2px_0px_0px_#fff] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-yellow-400 hover:text-black hover:border-black hover:shadow-none"
+                            >
+                                <GithubIcon className="h-3.5 w-3.5" />
+                                <span>GitHub</span>
+                            </a>
+                            <a
+                                href="https://www.kaggle.com/datasets/tsunsan/diksyo-tagalog-vocabulary"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 border-2 border-white bg-zinc-900 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-white shadow-[2px_2px_0px_0px_#fff] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-yellow-400 hover:text-black hover:border-black hover:shadow-none"
+                            >
+                                <KaggleIcon className="h-3.5 w-3.5" />
+                                <span>Kaggle</span>
+                            </a>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-4 text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400 md:justify-end">
+                            <Link href="/privacy" className="hover:text-yellow-400 hover:underline">
+                                Privacy Policy
+                            </Link>
+                            <span className="hidden md:inline">•</span>
+                            <Link href="/terms" className="hover:text-yellow-400 hover:underline">
+                                Terms & Conditions
+                            </Link>
+                            <span className="hidden md:inline">•</span>
+                            <Link href="/contact-us" className="hover:text-yellow-400 hover:underline">
+                                Contact Us
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </footer>
