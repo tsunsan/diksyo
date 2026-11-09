@@ -3,13 +3,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { MessageCircle, X, BookOpen, Send, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function ChatModal() {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
   const [input, setInput] = useState('');
+  const prefersReducedMotion = useReducedMotion();
+  const showAttention = !hasOpened && !prefersReducedMotion;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat();
@@ -46,13 +49,31 @@ export default function ChatModal() {
       {/* Floating Action Button */}
       <motion.button
         initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
+        animate={{ scale: 1, rotate: showAttention ? [0, -14, 12, -8, 6, 0] : 0 }}
+        transition={{
+          scale: { type: 'spring', stiffness: 260, damping: 20, delay: 0.5 },
+          rotate: showAttention
+            ? { duration: 0.5, ease: 'linear', delay: 1.5, repeat: Infinity, repeatDelay: 4 }
+            : { duration: 0.1 },
+        }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setHasOpened(true);
+        }}
+        aria-label={isOpen ? 'Close Diksyo AI chat' : 'Open Diksyo AI chat'}
         className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-none border-4 border-black bg-yellow-400 text-black shadow-[6px_6px_0_0_#000] transition-shadow hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_#000] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
       >
+        {/* Pulsing ring + "AI" badge until the chat has been opened once */}
+        {!hasOpened && (
+          <>
+            <span aria-hidden className="pointer-events-none absolute -inset-1 border-4 border-yellow-400 animate-ping motion-reduce:hidden" />
+            <span aria-hidden className="pointer-events-none absolute -top-3 -left-3 border-2 border-black bg-red-500 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none tracking-tight text-white shadow-[2px_2px_0_0_#000]">
+              AI
+            </span>
+          </>
+        )}
         {isOpen ? <X size={28} className="font-black" /> : <MessageCircle size={28} className="font-black" />}
       </motion.button>
 
