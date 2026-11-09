@@ -3,6 +3,7 @@ import path from "path";
 import { ImageResponse } from "next/og";
 import { getWordByExactSlug } from "@/app/actions/dictionary";
 import { WordOgImage } from "@/components/word-og-image";
+import { decodeSlug } from "@/lib/utils";
 
 // Image metadata
 export const alt = "Diksyo Word Definition";
@@ -29,7 +30,7 @@ const interBold = loadFont("inter-700.woff");
 export const revalidate = 86400; // Cache the generated image for 24 hours on the CDN
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
+    const slug = decodeSlug((await params).slug);
     const word = await getWordByExactSlug(slug);
 
     const term = word ? word.word : slug;

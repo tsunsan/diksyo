@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Route params arrive percent-encoded (e.g. "magandang%20umaga"); decode for lookups and display. */
+export function decodeSlug(slug: string): string {
+  try {
+    return decodeURIComponent(slug)
+  } catch {
+    return slug
+  }
+}
+
 export const POS_COLORS: Record<string, { bg: string; text: string }> = {
   // Bases (Filipino)
   "PANGNGALAN": { bg: "#7C3AED", text: "#fff" },

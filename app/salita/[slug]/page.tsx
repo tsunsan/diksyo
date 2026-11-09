@@ -10,6 +10,7 @@ import { DictionarySkeleton } from "@/components/dictionary-skeleton";
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { decodeSlug } from "@/lib/utils";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://diksyo.app";
 
@@ -21,7 +22,7 @@ function toTitleCase(value: string) {
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-    const { slug } = await params;
+    const slug = decodeSlug((await params).slug);
     const slugLooksLikeBaseWord = !slug.includes("-");
 
     if (slugLooksLikeBaseWord) {
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         if (baseMatches.length > 1) {
             const title = `Mga kahulugan ng ${toTitleCase(slug)}`;
             const description = `Pumili ng tamang kahulugan para sa salitang '${slug}' mula sa maramihang entries sa Diksyo.`;
-            const url = `${siteUrl}/salita/${slug}`;
+            const url = `${siteUrl}/salita/${encodeURIComponent(slug)}`;
             const ogImageUrl = `${url}/opengraph-image`;
 
             return {
@@ -117,7 +118,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     if (baseMatches.length > 1) {
         const title = `Mga kahulugan ng ${toTitleCase(slug)}`;
         const description = `Pumili ng tamang kahulugan para sa salitang '${slug}' mula sa maramihang entries sa Diksyo.`;
-        const url = `${siteUrl}/salita/${slug}`;
+        const url = `${siteUrl}/salita/${encodeURIComponent(slug)}`;
         const ogImageUrl = `${url}/opengraph-image`;
 
         return {
@@ -162,16 +163,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function SalitaPage({ params }: { params: Promise<{ slug: string }> }) {
-    const resolvedParams = await params;
-    const slugLooksLikeBaseWord = !resolvedParams.slug.includes("-");
+    const slug = decodeSlug((await params).slug);
+    const slugLooksLikeBaseWord = !slug.includes("-");
 
     if (slugLooksLikeBaseWord) {
-        const baseMatches = await searchWordsByBaseWord(resolvedParams.slug);
+        const baseMatches = await searchWordsByBaseWord(slug);
 
         if (baseMatches.length > 1) {
             return (
                 <BaseWordDisambiguation
-                    baseWord={resolvedParams.slug}
+                    baseWord={slug}
                     entries={baseMatches.map((entry) => ({
                         id: entry.id,
                         slug: entry.slug,
@@ -183,15 +184,15 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
             );
         }
 
-        if (baseMatches.length === 1 && baseMatches[0].slug !== resolvedParams.slug) {
+        if (baseMatches.length === 1 && baseMatches[0].slug !== slug) {
             redirect(`/salita/${baseMatches[0].slug}`);
         }
     }
 
-    const matchedWord = await getWordByExactSlug(resolvedParams.slug);
+    const matchedWord = await getWordByExactSlug(slug);
 
     if (!matchedWord) {
-        const baseMatches = await searchWordsByBaseWord(resolvedParams.slug);
+        const baseMatches = await searchWordsByBaseWord(slug);
 
         if (baseMatches.length === 1) {
             redirect(`/salita/${baseMatches[0].slug}`);
@@ -200,7 +201,7 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
         if (baseMatches.length > 1) {
             return (
                 <BaseWordDisambiguation
-                    baseWord={resolvedParams.slug}
+                    baseWord={slug}
                     entries={baseMatches.map((entry) => ({
                         id: entry.id,
                         slug: entry.slug,
@@ -240,7 +241,7 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                 </div>
                 <Suspense fallback={<DictionarySkeleton />}>
                     <DictionaryDataWrapper 
-                        initialSearch={!matchedWord ? resolvedParams.slug : undefined}
+                        initialSearch={!matchedWord ? slug : undefined}
                         matchedWord={matchedWord}
                     />
                 </Suspense>

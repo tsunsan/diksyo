@@ -75,7 +75,7 @@ export default function SearchBar() {
         if (query.trim()) {
             setIsOpen(false);
             setSelectedIndex(-1);
-            router.push(`/salita/${query.toLowerCase()}`);
+            router.push(`/salita/${encodeURIComponent(query.trim().toLowerCase())}`);
         }
     };
 
