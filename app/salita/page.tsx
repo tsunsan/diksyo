@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Suspense } from "react";
-import DictionaryDataWrapper from "@/components/dictionary-data-wrapper";
-import { DictionarySkeleton } from "@/components/dictionary-skeleton";
+import DictionaryClient from "@/components/dictionary";
+import { searchWords, getRandomDiscoverWords, getWordOfTheDay } from "@/app/actions/dictionary";
 
 import { Metadata } from "next";
 
@@ -10,7 +9,17 @@ export const metadata: Metadata = {
   description: "Explore the full Diksyo Tagalog dictionary. Search for translations, discover new Tagalog words, and improve your Filipino vocabulary.",
 };
 
-export default function DictionaryHubPage() {
+// Cached and re-rendered at most hourly, so the daily words stay current.
+// Keep cookies() and headers() out of this page; the client looks up the session.
+export const revalidate = 3600;
+
+export default async function DictionaryHubPage() {
+  const [initialWords, discoverWords, dailyWord] = await Promise.all([
+    searchWords(""),
+    getRandomDiscoverWords(),
+    getWordOfTheDay(),
+  ]);
+
   return (
     <div className="min-h-screen bg-[#FFFBF0] p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
@@ -19,9 +28,12 @@ export default function DictionaryHubPage() {
                     ← Back Home
                 </Link>
             </div>
-            <Suspense fallback={<DictionarySkeleton />}>
-                <DictionaryDataWrapper />
-            </Suspense>
+            <DictionaryClient
+                initialWords={initialWords}
+                initialDiscoverWords={discoverWords}
+                initialWordOfTheDay={dailyWord}
+                resolveSessionOnClient
+            />
         </div>
     </div>
   );

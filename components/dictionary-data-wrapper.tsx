@@ -2,15 +2,18 @@ import { searchWords, getUserSavedWordIds, getRandomDiscoverWords, getWordOfTheD
 import { createClient } from "@/utils/supabase/server";
 import DictionaryClient from "@/components/dictionary";
 
+/**
+ * Per-request dictionary shell for the signed-in /dictionary route.
+ * It reads cookies, so any page that renders it cannot be cached. The public
+ * /salita pages render DictionaryClient directly for that reason.
+ */
 export default async function DictionaryDataWrapper({
     initialSearch = "",
     initialSaveWordId = "",
-    matchedWord = null,
     showOnboarding = false
 }: {
     initialSearch?: string;
     initialSaveWordId?: string;
-    matchedWord?: any;
     showOnboarding?: boolean;
 }) {
     // Execute queries concurrently to slash load times
@@ -24,15 +27,11 @@ export default async function DictionaryDataWrapper({
         getWordOfTheDay()
     ]);
 
-    const initialDiscoverWords = matchedWord
-        ? [matchedWord, ...discoverWordsList.filter((w: any) => w.id !== matchedWord.id)]
-        : discoverWordsList;
-
     return (
-        <DictionaryClient 
-            initialWords={initialWords as any} 
-            initialSavedWordIds={initialSavedWordIds} 
-            initialDiscoverWords={initialDiscoverWords as any}
+        <DictionaryClient
+            initialWords={initialWords as any}
+            initialSavedWordIds={initialSavedWordIds}
+            initialDiscoverWords={discoverWordsList as any}
             initialWordOfTheDay={dailyWord as any}
             isAuthenticated={!!session}
             initialSearch={initialSearch}

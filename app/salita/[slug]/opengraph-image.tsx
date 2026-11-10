@@ -27,7 +27,12 @@ const interBlack = loadFont("inter-900.woff");
 const interBoldItalic = loadFont("inter-700-italic.woff");
 const interBold = loadFont("inter-700.woff");
 
-export const revalidate = 86400; // Cache the generated image for 24 hours on the CDN
+// Rendered once per word, then served from cache. See the notes in page.tsx.
+export const revalidate = 2592000; // 30 days
+
+export async function generateStaticParams() {
+    return [];
+}
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
     const slug = decodeSlug((await params).slug);

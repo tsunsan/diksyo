@@ -272,6 +272,21 @@ export async function getWordOfTheDay() {
     });
 }
 
+/**
+ * Discover words and word of the day in one round trip. Cached word pages
+ * call this after mount, because both rotate daily and would otherwise go
+ * stale inside the cached HTML.
+ */
+export async function getDailyWords() {
+    return withExponentialBackoff(async () => {
+        const [discoverWords, wordOfTheDay] = await Promise.all([
+            getCachedDiscoverWords(),
+            getCachedWordOfTheDay(),
+        ]);
+        return { discoverWords, wordOfTheDay: wordOfTheDay ?? null };
+    });
+}
+
 export const getWordByExactSlug = cache(async (slug: string) => {
     return withExponentialBackoff(async () => {
 

@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import {
     getWordByExactSlug,
     searchWordsByBaseWord,
-    getAllDictionaryEntriesForSitemap,
+    searchWords,
 } from "@/app/actions/dictionary";
 import BaseWordDisambiguation from "@/components/base-word-disambiguation";
-import DictionaryDataWrapper from "@/components/dictionary-data-wrapper";
-import { DictionarySkeleton } from "@/components/dictionary-skeleton";
-import { Suspense } from "react";
+import DictionaryClient from "@/components/dictionary";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { decodeSlug } from "@/lib/utils";
@@ -19,7 +17,21 @@ function toTitleCase(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-export const revalidate = 3600;
+// Each word is rendered on its first visit, then served from cache (ISR).
+// This page must stay free of cookies(), headers() and searchParams: any of
+// them makes it render on every request again, which is what exhausted the
+// Vercel free tier once crawlers started walking the sitemap.
+//
+// The window is long on purpose. Hits on any one word are weeks apart, so a
+// short window would have nearly every crawler hit trigger a re-render.
+// A new deployment starts with an empty cache, so redeploy to publish edits
+// to the words table sooner.
+export const revalidate = 2592000; // 30 days
+
+// Without this, `revalidate` is ignored for a dynamic segment.
+export async function generateStaticParams() {
+    return [];
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const slug = decodeSlug((await params).slug);
@@ -217,6 +229,9 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
         // with the query pre-filled so the user can refine their search.
     }
 
+    // A matched word needs no result list; an unmatched slug shows its search results.
+    const initialWords = matchedWord ? [] : await searchWords(slug);
+
     const jsonLd = matchedWord ? {
         "@context": "https://schema.org",
         "@type": "DefinedTerm",
@@ -239,12 +254,13 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                         ← Back Home
                     </Link>
                 </div>
-                <Suspense fallback={<DictionarySkeleton />}>
-                    <DictionaryDataWrapper 
-                        initialSearch={!matchedWord ? slug : undefined}
-                        matchedWord={matchedWord}
-                    />
-                </Suspense>
+                <DictionaryClient
+                    initialWords={initialWords}
+                    initialDiscoverWords={matchedWord ? [matchedWord] : []}
+                    initialSearch={matchedWord ? "" : slug}
+                    resolveSessionOnClient
+                    loadDailyWordsOnClient
+                />
             </div>
         </div>
     );

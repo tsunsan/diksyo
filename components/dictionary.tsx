@@ -36,7 +36,7 @@ import {
   Users,
   TreePine,
 } from "lucide-react";
-import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds } from "@/app/actions/dictionary";
+import { searchWords, saveWordToVault, removeWordFromVault, getLevenshteinSuggestions, getWordOfTheDay, getRandomDiscoverWords, getUserSavedWordIds, getDailyWords } from "@/app/actions/dictionary";
 import Link from "next/link";
 import Image from "next/image";
 import { login, signup, type AuthState } from "@/app/actions/auth";
@@ -305,20 +305,28 @@ export default function DictionaryClient({
   initialSavedWordIds,
   initialDiscoverWords,
   initialWordOfTheDay,
-  isAuthenticated = false,
+  isAuthenticated: isAuthenticatedProp = false,
   showOnboarding = false,
   initialSearch = "",
-  initialSaveWordId = ""
-}: { 
-  initialWords?: any[], 
+  initialSaveWordId = "",
+  resolveSessionOnClient = false,
+  loadDailyWordsOnClient = false
+}: {
+  initialWords?: any[],
   initialSavedWordIds?: string[],
   initialDiscoverWords?: any[],
   initialWordOfTheDay?: any,
   isAuthenticated?: boolean,
   showOnboarding?: boolean,
   initialSearch?: string,
-  initialSaveWordId?: string
+  initialSaveWordId?: string,
+  /** For cached pages, which cannot read cookies while rendering: look up the session and saved words after mount instead of taking them as props. */
+  resolveSessionOnClient?: boolean,
+  /** For cached word pages: fetch discover words and word of the day after mount, so the cached HTML does not change every day. */
+  loadDailyWordsOnClient?: boolean
 }) {
+  const [hasClientSession, setHasClientSession] = useState(false);
+  const isAuthenticated = isAuthenticatedProp || hasClientSession;
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [pendingSaveWordId, setPendingSaveWordId] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
@@ -411,6 +419,34 @@ export default function DictionaryClient({
     }
   }, [signupState?.success, signupState?.nextUrl]);
 
+  // Runs again after a signup on this page, since that creates the session.
+  useEffect(() => {
+    if (!resolveSessionOnClient) return;
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await createClient().auth.getSession();
+      if (cancelled || !session) return;
+      setHasClientSession(true);
+      const ids = await getUserSavedWordIds();
+      if (!cancelled) setSavedIds(new Set(ids));
+    })().catch((err) => console.error("Failed to resolve session", err));
+    return () => { cancelled = true; };
+  }, [resolveSessionOnClient, signupState?.success]);
+
+  useEffect(() => {
+    if (!loadDailyWordsOnClient) return;
+    let cancelled = false;
+    getDailyWords()
+      .then(({ discoverWords: daily, wordOfTheDay: dailyWord }) => {
+        if (cancelled) return;
+        // Append, so the page's own word stays first in the list.
+        setDiscoverWords((prev) => [...prev, ...daily.filter((d) => !prev.some((p) => p.id === d.id))]);
+        setWordOfTheDay(dailyWord);
+      })
+      .catch((err) => console.error("Failed to load daily words", err));
+    return () => { cancelled = true; };
+  }, [loadDailyWordsOnClient]);
+
   const pendingWord = useMemo(() => {
     if (!pendingSaveWordId) return null;
     return words.find(w => w.id === pendingSaveWordId) || discoverWords.find(w => w.id === pendingSaveWordId) || (wordOfTheDay?.id === pendingSaveWordId ? wordOfTheDay : null);
@@ -445,6 +481,9 @@ export default function DictionaryClient({
 
 
   useEffect(() => {
+    // The real daily words are on their way; don't stand in for them.
+    if (loadDailyWordsOnClient) return;
+
     if (!initialDiscoverWords || initialDiscoverWords.length === 0) {
       if (initialWords && initialWords.length > 0) {
         const shuffled = [...initialWords].sort(() => 0.5 - Math.random());
@@ -456,7 +495,7 @@ export default function DictionaryClient({
       const sortedWords = [...initialWords].sort((a, b) => a.word.localeCompare(b.word));
       setWordOfTheDay(sortedWords[0]);
     }
-  }, [initialWords, initialDiscoverWords, initialWordOfTheDay]);
+  }, [initialWords, initialDiscoverWords, initialWordOfTheDay, loadDailyWordsOnClient]);
 
   useEffect(() => {
     // Skip initial fetch on mount if search is empty
