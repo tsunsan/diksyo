@@ -280,7 +280,9 @@ export async function logout() {
     return withExponentialBackoff(async () => {
 
     const supabase = await createClient()
-    await supabase.auth.signOut()
+    // 'local' ends this device's session only. The default, 'global', also
+    // signs the user out on every other device.
+    await supabase.auth.signOut({ scope: 'local' })
     redirect('/login')
     });
 }
