@@ -30,8 +30,13 @@ export async function proxy(request: NextRequest) {
     return await updateSession(request)
 }
 
+// Proxy runs as a function before the cache, so every matched request costs
+// CPU even when the page itself is cached. Word pages, share images, the
+// sitemap and robots.txt are what crawlers hit and need no session refresh:
+// those pages resolve the session in the browser, and Server Actions check
+// the user themselves (and can refresh the cookies) through getUser().
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|salita|sitemap\\.xml|robots\\.txt|.*opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

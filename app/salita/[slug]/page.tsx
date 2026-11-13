@@ -7,7 +7,7 @@ import {
 import BaseWordDisambiguation from "@/components/base-word-disambiguation";
 import DictionaryClient from "@/components/dictionary";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { decodeSlug } from "@/lib/utils";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://diksyo.app";
@@ -224,13 +224,16 @@ export default async function SalitaPage({ params }: { params: Promise<{ slug: s
                 />
             );
         }
-
-        // Instead of notFound(), we let it fall through to render the DictionaryClient
-        // with the query pre-filled so the user can refine their search.
     }
 
     // A matched word needs no result list; an unmatched slug shows its search results.
     const initialWords = matchedWord ? [] : await searchWords(slug);
+
+    // Nothing matches at all: answer 404 so crawlers drop made-up URLs.
+    // not-found.tsx still shows the search box with the query and suggestions.
+    if (!matchedWord && initialWords.length === 0) {
+        notFound();
+    }
 
     const jsonLd = matchedWord ? {
         "@context": "https://schema.org",

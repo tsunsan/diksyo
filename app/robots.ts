@@ -14,7 +14,9 @@ export default function robots(): MetadataRoute.Robots {
         '/vault',
         '/quiz',
         '/update-password',
-        '/forgot-password'
+        '/forgot-password',
+        // Uncached redirect to a random word; the words are all in the sitemap.
+        '/salita/random'
       ]
     },
     sitemap: `${siteUrl}/sitemap.xml`,

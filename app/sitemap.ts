@@ -6,6 +6,9 @@ const siteUrl = getSiteUrl();
 
 export const revalidate = 86400; // Cache sitemap for 24 hours
 
+// No lastModified: there is no per-word edit date yet, and stamping every URL
+// with the build time told crawlers all ~21k pages changed every day.
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await db.query.words.findMany({
     columns: {
@@ -14,7 +17,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     orderBy: (word, { asc }) => [asc(word.word), asc(word.slug)],
   });
-  const now = new Date();
 
   const baseWordCounts = new Map<string, number>();
   for (const entry of entries) {
@@ -25,43 +27,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${siteUrl}/`,
-      lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
       url: `${siteUrl}/salita`,
-      lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${siteUrl}/signup`,
-      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${siteUrl}/login`,
-      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${siteUrl}/contact-us`,
-      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/privacy`,
-      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/terms`,
-      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.5,
     },
@@ -69,7 +64,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const wordRoutes: MetadataRoute.Sitemap = entries.map((entry) => ({
     url: `${siteUrl}/salita/${entry.slug}`,
-    lastModified: now,
     changeFrequency: "weekly",
     priority: 0.8,
   }));
@@ -78,7 +72,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter(([, count]) => count > 1)
     .map(([baseWord]) => ({
       url: `${siteUrl}/salita/${baseWord}`,
-      lastModified: now,
       changeFrequency: "weekly",
       priority: 0.6,
     }));
